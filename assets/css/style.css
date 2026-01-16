@@ -1,0 +1,37 @@
+/* ELMS Custom Styles */
+:root {
+    --maroon: #800000;
+    --blue: #003366;
+    --white: #FFFFFF;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.btn-primary {
+    background-color: var(--maroon);
+    border-color: var(--maroon);
+}
+
+.btn-primary:hover {
+    background-color: #660000;
+    border-color: #660000;
+}
+
+.text-primary {
+    color: var(--blue) !important;
+}
+
+.form-control:focus {
+    border-color: var(--maroon);
+    box-shadow: 0 0 0 0.2rem rgba(128, 0, 0, 0.25);
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.min-vh-100 {
+    min-height: 100vh;
+}
