@@ -1,0 +1,144 @@
+:root {
+    --primary-maroon: #800000;
+    --hover-maroon: #600000; 
+    --text-dark: #333333;
+    --text-muted: #6c757d;
+    --input-border: #ced4da;
+    --white: #ffffff;
+}
+
+body {
+    font-family: 'Public Sans', sans-serif;
+    background-color: var(--white);
+    color: var(--text-dark);
+    margin: 0;
+}
+
+/* LEFT PANEL */
+.hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../image/LoginImage.png'); 
+    background-size: cover;
+    background-position: center;
+    transition: transform 10s ease;
+}
+
+/* Professional Maroon Overlay */
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(128, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+}
+
+.brand-logo-small {
+    width: 50px;
+    margin-bottom: 10px;
+    
+}
+
+.brand-name-top {
+    color: var(--white);
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+}
+
+/* Fixed Text Color for Hero */
+.hero-description {
+    color: rgba(255, 255, 255, 0.9); 
+    font-size: 1.15rem;
+    max-width: 500px;
+    line-height: 1.6;
+    font-weight: 300;
+}
+
+/* RIGHT PANEL */
+.login-form-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.main-form-logo {
+    max-width: 180px;
+    height: auto;
+}
+
+/* Input Styling */
+.custom-input {
+    border-radius: 6px;
+    padding: 12px;
+    border: 1px solid var(--input-border);
+    transition: all 0.3s ease;
+}
+
+.custom-input:focus {
+    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.15);
+    border-color: var(--primary-maroon);
+    outline: none;
+}
+
+/* Button & Hover Fix */
+.btn-signin {
+    background-color: var(--primary-maroon);
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-signin:hover {
+    background-color: var(--hover-maroon);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(128, 0, 0, 0.2);
+    color: white;
+}
+
+#btnLoader {
+    border-width: 0.2em; 
+    color: #ffffff !important; 
+    margin-left: 8px; 
+}
+
+/* Forgot Password Link */
+.forgot-link {
+    color: var(--primary-maroon);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+    color: var(--hover-maroon);
+    text-decoration: underline;
+}
+
+/* Footer Styling */
+.powered-by {
+    position: absolute;
+    bottom: 30px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.powered-by img {
+    height: 20px;
+    margin-left: 8px;
+    margin-right: 4px;
+}
