@@ -10,18 +10,20 @@ $page_title = "Program Management";
 
 // Fetch all programs
 $programs_query = "
-    SELECT 
+    SELECT
         p.id,
         p.program_code,
         p.program_name,
         p.degree_level,
         p.is_active,
         s.name as school_name,
-        COUNT(DISTINCT sub.id) as subject_count,
+        COUNT(DISTINCT cs.id) as subject_count,
+        COUNT(DISTINCT yl.id) as year_levels_count,
         p.created_at
     FROM programs p
     INNER JOIN schools s ON p.school_id = s.id
-    LEFT JOIN subjects sub ON p.id = sub.program_id
+    LEFT JOIN curriculum_subjects cs ON p.id = cs.program_id
+    LEFT JOIN program_year_levels yl ON p.id = yl.program_id AND yl.is_active = 1
     GROUP BY p.id
     ORDER BY p.program_name
 ";

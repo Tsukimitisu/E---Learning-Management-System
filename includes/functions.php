@@ -41,9 +41,34 @@ function check_auth() {
  */
 function check_role($allowed_roles = []) {
     check_auth();
-    
+
     if (!empty($allowed_roles) && !in_array($_SESSION['role'], $allowed_roles)) {
         redirect(BASE_URL . 'dashboard.php');
+        exit();
+    }
+    return true;
+}
+
+/**
+ * Check if user is School Admin (curriculum management authority)
+ */
+function check_school_admin() {
+    check_auth();
+
+    if ($_SESSION['role'] != ROLE_SCHOOL_ADMIN && $_SESSION['role'] != ROLE_SUPER_ADMIN) {
+        redirect(BASE_URL . 'dashboard.php');
+        exit();
+    }
+    return true;
+}
+
+/**
+ * Check if user can access curriculum management (School Admin only)
+ */
+function require_curriculum_access() {
+    if (!isset($_SESSION['user_id']) || ($_SESSION['role'] != ROLE_SCHOOL_ADMIN && $_SESSION['role'] != ROLE_SUPER_ADMIN)) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Access denied. Curriculum management requires School Administrator privileges.']);
         exit();
     }
     return true;

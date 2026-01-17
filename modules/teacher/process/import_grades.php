@@ -27,6 +27,28 @@ if ($result->num_rows == 0 || $result->fetch_assoc()['teacher_id'] != $teacher_i
     exit();
 }
 
+// Check if midterm or final grading periods are locked
+$check_lock = $conn->prepare("
+    SELECT grading_period, is_locked, locked_by
+    FROM grade_locks
+    WHERE class_id = ? AND grading_period IN ('midterm', 'final') AND is_locked = 1
+");
+$check_lock->bind_param("i", $class_id);
+$check_lock->execute();
+$locked_periods = $check_lock->get_result();
+
+if ($locked_periods->num_rows > 0) {
+    $locked_list = [];
+    while ($row = $locked_periods->fetch_assoc()) {
+        $locked_list[] = ucfirst($row['grading_period']);
+    }
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Cannot import grades. The following grading periods are locked: ' . implode(', ', $locked_list)
+    ]);
+    exit();
+}
+
 // Check file upload
 if (!isset($_FILES['excel_file']) || $_FILES['excel_file']['error'] != 0) {
     echo json_encode(['status' => 'error', 'message' => 'No file uploaded']);
@@ -78,25 +100,27 @@ try {
                 $final_grade = ($midterm * 0.4) + ($final * 0.6);
                 $remarks = $final_grade >= 75 ? 'PASSED' : 'FAILED';
                 
-                // Check if grade exists
-                $check = $conn->prepare("SELECT id FROM grades WHERE student_id = ? AND class_id = ?");
+                // Check if grade exists and lock for update
+                $check = $conn->prepare("SELECT id, version FROM grades WHERE student_id = ? AND class_id = ? FOR UPDATE");
                 $check->bind_param("ii", $student_id, $class_id);
                 $check->execute();
-                $exists = $check->get_result()->num_rows > 0;
-                
+                $grade_result = $check->get_result();
+                $exists = $grade_result->num_rows > 0;
+
                 if ($exists) {
-                    // Update
+                    $current_grade = $grade_result->fetch_assoc();
+                    // Update with version increment
                     $stmt = $conn->prepare("
-                        UPDATE grades 
-                        SET midterm = ?, final = ?, final_grade = ?, remarks = ? 
+                        UPDATE grades
+                        SET midterm = ?, final = ?, final_grade = ?, remarks = ?, version = version + 1
                         WHERE student_id = ? AND class_id = ?
                     ");
                     $stmt->bind_param("dddsii", $midterm, $final, $final_grade, $remarks, $student_id, $class_id);
                 } else {
                     // Insert
                     $stmt = $conn->prepare("
-                        INSERT INTO grades (student_id, class_id, midterm, final, final_grade, remarks) 
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO grades (student_id, class_id, midterm, final, final_grade, remarks, version)
+                        VALUES (?, ?, ?, ?, ?, ?, 1)
                     ");
                     $stmt->bind_param("iiddds", $student_id, $class_id, $midterm, $final, $final_grade, $remarks);
                 }

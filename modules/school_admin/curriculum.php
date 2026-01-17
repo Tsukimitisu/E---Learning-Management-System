@@ -6,65 +6,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_SCHOOL_ADMIN) {
     exit();
 }
 
-$page_title = "SHS Curriculum Management";
+$page_title = "Curriculum Management";
 
-// Fetch data for different curriculum components
-// For now, we'll use placeholder queries - in production these would be real tables
-
-    // Mock data for tracks (in production, this would be from shs_tracks table)
-$tracks = [
-    ['id' => 1, 'name' => 'Academic', 'description' => 'Academic Track', 'is_active' => 1],
-    ['id' => 2, 'name' => 'TVL', 'description' => 'Technical-Vocational-Livelihood Track', 'is_active' => 1],
-    ['id' => 3, 'name' => 'Arts & Design', 'description' => 'Arts and Design Track', 'is_active' => 1],
-    ['id' => 4, 'name' => 'Sports', 'description' => 'Sports Track', 'is_active' => 1]
-];
-
-// Mock data for strands (in production, this would be from shs_strands table)
-$strands = [
-    ['id' => 1, 'name' => 'STEM', 'track_id' => 1, 'description' => 'Science, Technology, Engineering, Mathematics', 'is_active' => 1],
-    ['id' => 2, 'name' => 'ABM', 'track_id' => 1, 'description' => 'Accountancy, Business, Management', 'is_active' => 1],
-    ['id' => 3, 'name' => 'HUMSS', 'track_id' => 1, 'description' => 'Humanities and Social Sciences', 'is_active' => 1],
-    ['id' => 4, 'name' => 'GAS', 'track_id' => 1, 'description' => 'General Academic Strand', 'is_active' => 1],
-    ['id' => 5, 'name' => 'TVL-ICT', 'track_id' => 2, 'description' => 'Technical-Vocational Livelihood - Information and Communications Technology', 'is_active' => 1]
-];
-
-// Mock data for grade levels (in production, this would be from shs_grade_levels table)
-$grade_levels = [
-    ['id' => 1, 'name' => 'Grade 11', 'semesters' => 2, 'is_active' => 1],
-    ['id' => 2, 'name' => 'Grade 12', 'semesters' => 2, 'is_active' => 1]
-];
-
-// Mock data for college programs (in production, this would be from college_programs table)
-$college_programs = [
-    ['id' => 1, 'name' => 'Bachelor of Science in Computer Science', 'code' => 'BSCS', 'degree_level' => 'Bachelor', 'duration_years' => 4, 'is_active' => 1],
-    ['id' => 2, 'name' => 'Bachelor of Science in Information Technology', 'code' => 'BSIT', 'degree_level' => 'Bachelor', 'duration_years' => 4, 'is_active' => 1],
-    ['id' => 3, 'name' => 'Bachelor of Science in Business Administration', 'code' => 'BSBA', 'degree_level' => 'Bachelor', 'duration_years' => 4, 'is_active' => 1],
-    ['id' => 4, 'name' => 'Associate in Computer Technology', 'code' => 'ACT', 'degree_level' => 'Associate', 'duration_years' => 2, 'is_active' => 1]
-];
-
-// Mock data for college year levels (in production, this would be from college_year_levels table)
-$college_year_levels = [
-    ['id' => 1, 'name' => '1st Year', 'year_number' => 1, 'semesters' => 2, 'is_active' => 1],
-    ['id' => 2, 'name' => '2nd Year', 'year_number' => 2, 'semesters' => 2, 'is_active' => 1],
-    ['id' => 3, 'name' => '3rd Year', 'year_number' => 3, 'semesters' => 2, 'is_active' => 1],
-    ['id' => 4, 'name' => '4th Year', 'year_number' => 4, 'semesters' => 2, 'is_active' => 1]
-];
-
-// Fetch existing subjects (keeping existing functionality)
-$subjects_result = $conn->query("
-    SELECT
-        s.id,
-        s.subject_code,
-        s.subject_title,
-        s.units,
-        s.year_level,
-        s.semester,
-        s.is_active,
-        p.program_name
-    FROM subjects s
-    LEFT JOIN programs p ON s.program_id = p.id
-    ORDER BY s.subject_code
-");
+// Fetch data for stats
+$track_count = $conn->query("SELECT COUNT(*) as count FROM shs_tracks WHERE is_active = 1")->fetch_assoc()['count'];
+$program_count = $conn->query("SELECT COUNT(*) as count FROM programs WHERE is_active = 1")->fetch_assoc()['count'];
+$shs_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type IN ('shs_core', 'shs_applied', 'shs_specialized') AND is_active = 1")->fetch_assoc()['count'];
+$college_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type = 'college' AND is_active = 1")->fetch_assoc()['count'];
 
 include '../../includes/header.php';
 ?>
@@ -80,47 +28,147 @@ include '../../includes/header.php';
             <small class="text-muted">Design and control SHS & College curriculum</small>
         </div>
 
-        <div id="alertContainer"></div>
-
-        <!-- Curriculum Management Tabs -->
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="curriculumTabs" role="tablist">
-                    <!-- SHS Curriculum -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                            <i class="bi bi-mortarboard"></i> SHS Curriculum
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#tracks" data-bs-toggle="tab">Tracks</a></li>
-                            <li><a class="dropdown-item" href="#strands" data-bs-toggle="tab">Strands</a></li>
-                            <li><a class="dropdown-item" href="#shs-grades" data-bs-toggle="tab">Grade Levels</a></li>
-                            <li><a class="dropdown-item" href="#shs-subjects" data-bs-toggle="tab">SHS Subjects</a></li>
-                            <li><a class="dropdown-item" href="#shs-assignments" data-bs-toggle="tab">Subject Assignments</a></li>
+        <div class="row mt-4">
+            <!-- SHS Curriculum Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-mortarboard"></i> Senior High School (SHS) Curriculum
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Manage SHS academic tracks, strands, grade levels, and subject assignments.</p>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success"></i> Academic Tracks (STEM, ABM, HUMSS, etc.)</li>
+                            <li><i class="bi bi-check-circle text-success"></i> Specialized Strands</li>
+                            <li><i class="bi bi-check-circle text-success"></i> Grade 11 & 12 Levels</li>
+                            <li><i class="bi bi-check-circle text-success"></i> Subject Assignments</li>
                         </ul>
-                    </li>
-
-                    <!-- College Curriculum -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                            <i class="bi bi-building"></i> College Curriculum
+                    </div>
+                    <div class="card-footer">
+                        <a href="shs_curriculum.php" class="btn btn-primary btn-sm">
+                            <i class="bi bi-arrow-right"></i> Manage SHS Curriculum
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#programs" data-bs-toggle="tab">Programs</a></li>
-                            <li><a class="dropdown-item" href="#college-courses" data-bs-toggle="tab">College Courses</a></li>
-                            <li><a class="dropdown-item" href="#college-yearlevels" data-bs-toggle="tab">Year Levels</a></li>
-                            <li><a class="dropdown-item" href="#course-assignments" data-bs-toggle="tab">Course Assignments</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- General Settings -->
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="grading-tab" data-bs-toggle="tab" data-bs-target="#grading" type="button">
-                            <i class="bi bi-calculator"></i> Grading Rules
-                        </button>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
+
+            <!-- College Curriculum Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-building"></i> College Curriculum
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Manage college programs, year levels, subjects, and course assignments.</p>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success"></i> Degree Programs (BSIT, BSCS, etc.)</li>
+                            <li><i class="bi bi-check-circle text-success"></i> Year Level Structure</li>
+                            <li><i class="bi bi-check-circle text-success"></i> Subject Prerequisites</li>
+                            <li><i class="bi bi-check-circle text-success"></i> Course Assignments</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="college_curriculum.php" class="btn btn-info btn-sm">
+                            <i class="bi bi-arrow-right"></i> Manage College Curriculum
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">
+                            <?php
+                            $track_count = $conn->query("SELECT COUNT(*) as count FROM shs_tracks WHERE is_active = 1")->fetch_assoc()['count'];
+                            echo $track_count;
+                            ?>
+                        </h3>
+                        <p class="text-muted mb-0">SHS Tracks</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">
+                            <?php
+                            $program_count = $conn->query("SELECT COUNT(*) as count FROM programs WHERE is_active = 1")->fetch_assoc()['count'];
+                            echo $program_count;
+                            ?>
+                        </h3>
+                        <p class="text-muted mb-0">College Programs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning">
+                            <?php
+                            $shs_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type IN ('shs_core', 'shs_applied', 'shs_specialized') AND is_active = 1")->fetch_assoc()['count'];
+                            echo $shs_subject_count;
+                            ?>
+                        </h3>
+                        <p class="text-muted mb-0">SHS Subjects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-danger">
+                            <?php
+                            $college_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type = 'college' AND is_active = 1")->fetch_assoc()['count'];
+                            echo $college_subject_count;
+                            ?>
+                        </h3>
+                        <p class="text-muted mb-0">College Subjects</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-activity"></i> Recent Curriculum Activity</h6>
+            </div>
+            <div class="card-body">
+                <?php
+                $recent_activity = $conn->query("
+                    SELECT al.action, al.timestamp as created_at, u.first_name, u.last_name
+                    FROM audit_logs al
+                    LEFT JOIN users u ON al.user_id = u.id
+                    WHERE al.action LIKE '%curriculum%' OR al.action LIKE '%subject%' OR al.action LIKE '%program%' OR al.action LIKE '%track%'
+                    ORDER BY al.timestamp DESC
+                    LIMIT 5
+                ");
+
+                if ($recent_activity->num_rows > 0) {
+                    echo '<div class="list-group list-group-flush">';
+                    while ($activity = $recent_activity->fetch_assoc()) {
+                        echo '<div class="list-group-item px-0">';
+                        echo '<small class="text-muted">' . date('M d, Y H:i', strtotime($activity['created_at'])) . '</small><br>';
+                        echo '<span>' . htmlspecialchars($activity['action']) . '</span>';
+                        echo '</div>';
+                    }
+                    echo '</div>';
+                } else {
+                    echo '<p class="text-muted mb-0">No recent curriculum activity</p>';
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+</div>
 
             <div class="card-body">
                 <div class="tab-content" id="curriculumTabContent">
@@ -138,10 +186,10 @@ include '../../includes/header.php';
                             <div class="col-md-3 mb-3">
                                 <div class="card h-100 border-primary">
                                     <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0"><?php echo htmlspecialchars($track['name']); ?></h6>
+                                        <h6 class="mb-0"><?php echo htmlspecialchars($track['name'] ?? 'Unknown Track'); ?></h6>
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text small"><?php echo htmlspecialchars($track['description']); ?></p>
+                                        <p class="card-text small"><?php echo htmlspecialchars($track['description'] ?? 'No description available'); ?></p>
                                         <div class="d-flex justify-content-between">
                                             <span class="badge bg-<?php echo $track['is_active'] ? 'success' : 'secondary'; ?>">
                                                 <?php echo $track['is_active'] ? 'Active' : 'Inactive'; ?>
@@ -175,11 +223,11 @@ include '../../includes/header.php';
                             <div class="col-md-4 mb-3">
                                 <div class="card h-100 border-success">
                                     <div class="card-header bg-success text-white d-flex justify-content-between">
-                                        <h6 class="mb-0"><?php echo htmlspecialchars($strand['name']); ?></h6>
-                                        <small><?php echo htmlspecialchars($tracks[array_search($strand['track_id'], array_column($tracks, 'id'))]['name'] ?? 'Unknown'); ?></small>
+                                        <h6 class="mb-0"><?php echo htmlspecialchars($strand['name'] ?? 'Unknown Strand'); ?></h6>
+                                        <small><?php echo htmlspecialchars($strand['track_name'] ?? 'Unknown Track'); ?></small>
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text small"><?php echo htmlspecialchars($strand['description']); ?></p>
+                                        <p class="card-text small"><?php echo htmlspecialchars($strand['description'] ?? 'No description available'); ?></p>
                                         <div class="d-flex justify-content-between">
                                             <span class="badge bg-<?php echo $strand['is_active'] ? 'success' : 'secondary'; ?>">
                                                 <?php echo $strand['is_active'] ? 'Active' : 'Inactive'; ?>
@@ -586,6 +634,52 @@ include '../../includes/header.php';
                     <div class="mb-3">
                         <label class="form-label">Track Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="track_name" required placeholder="e.g. Academic, TVL, Arts & Design">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the track"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Add Track
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Track Modal -->
+<div class="modal fade" id="addTrackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Academic Track</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addTrackForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Track Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="track_name" required placeholder="e.g. Academic, TVL, Arts & Design">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Track Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="track_code" required placeholder="e.g. ACAD, TVL, ARTS">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Written Work Weight (%)</label>
+                        <input type="number" class="form-control" name="written_work_weight" min="0" max="100" value="30">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Performance Task Weight (%)</label>
+                        <input type="number" class="form-control" name="performance_task_weight" min="0" max="100" value="50">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quarterly Exam Weight (%)</label>
+                        <input type="number" class="form-control" name="quarterly_exam_weight" min="0" max="100" value="20">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
@@ -2091,7 +2185,7 @@ function editCollegeCourse(code) {
 }
 
 function assignCollegeCourse(code) {
-    // Pre-select the course in the assignment modal
+   
     document.querySelector('select[name="course_id"]').value = code;
     new bootstrap.Modal(document.getElementById('assignCollegeCourseModal')).show();
 }
@@ -2110,7 +2204,7 @@ function editCollegeYear(id) {
 }
 
 function assignSubject(id) {
-    // Pre-select the subject in the assignment modal
+    
     document.querySelector('select[name="subject_id"]').value = id;
     new bootstrap.Modal(document.getElementById('assignSubjectModal')).show();
 }

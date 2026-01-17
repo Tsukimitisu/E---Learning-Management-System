@@ -272,9 +272,9 @@ INSERT INTO `branches` (`id`, `school_id`, `name`, `address`) VALUES
 
 CREATE TABLE `classes` (
   `id` int(10) UNSIGNED NOT NULL,
-  `course_id` int(10) UNSIGNED NOT NULL,
+  `course_id` int(10) UNSIGNED DEFAULT NULL,
   `academic_year_id` int(10) UNSIGNED DEFAULT NULL,
-  `subject_id` int(10) UNSIGNED DEFAULT NULL,
+  `curriculum_subject_id` int(10) UNSIGNED DEFAULT NULL,
   `shs_track_id` int(10) UNSIGNED DEFAULT NULL,
   `section_name` varchar(50) DEFAULT NULL,
   `branch_id` int(10) UNSIGNED DEFAULT NULL,
@@ -354,7 +354,8 @@ CREATE TABLE `grades` (
   `midterm` decimal(5,2) DEFAULT NULL,
   `final` decimal(5,2) DEFAULT NULL,
   `final_grade` decimal(5,2) DEFAULT NULL,
-  `remarks` varchar(50) DEFAULT NULL
+  `remarks` varchar(50) DEFAULT NULL,
+  `version` int(10) UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -459,6 +460,134 @@ INSERT INTO `programs` (`id`, `program_code`, `program_name`, `degree_level`, `s
 (1, 'BSIT', 'Bachelor of Science in Information Technology', 'Bachelor', 1, 1, '2026-01-16 13:28:17'),
 (2, 'BSCS', 'Bachelor of Science in Computer Science', 'Bachelor', 1, 1, '2026-01-16 13:28:17'),
 (3, 'BSIS', 'Bachelor of Science in Information Systems', 'Bachelor', 1, 1, '2026-01-16 13:28:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `program_year_levels`
+--
+
+CREATE TABLE `program_year_levels` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `program_id` int(10) UNSIGNED NOT NULL,
+  `year_level` tinyint(3) UNSIGNED NOT NULL,
+  `year_name` varchar(20) NOT NULL,
+  `semesters_count` tinyint(3) UNSIGNED DEFAULT 2,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `program_year_levels`
+--
+
+INSERT INTO `program_year_levels` (`id`, `program_id`, `year_level`, `year_name`, `semesters_count`, `is_active`, `created_at`) VALUES
+(1, 1, 1, '1st Year', 2, 1, '2026-01-16 13:28:17'),
+(2, 1, 2, '2nd Year', 2, 1, '2026-01-16 13:28:17'),
+(3, 1, 3, '3rd Year', 2, 1, '2026-01-16 13:28:17'),
+(4, 1, 4, '4th Year', 2, 1, '2026-01-16 13:28:17'),
+(5, 2, 1, '1st Year', 2, 1, '2026-01-16 13:28:17'),
+(6, 2, 2, '2nd Year', 2, 1, '2026-01-16 13:28:17'),
+(7, 2, 3, '3rd Year', 2, 1, '2026-01-16 13:28:17'),
+(8, 2, 4, '4th Year', 2, 1, '2026-01-16 13:28:17'),
+(9, 3, 1, '1st Year', 2, 1, '2026-01-16 13:28:17'),
+(10, 3, 2, '2nd Year', 2, 1, '2026-01-16 13:28:17'),
+(11, 3, 3, '3rd Year', 2, 1, '2026-01-16 13:28:17'),
+(12, 3, 4, '4th Year', 2, 1, '2026-01-16 13:28:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `shs_strands`
+--
+
+CREATE TABLE `shs_strands` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `track_id` int(10) UNSIGNED NOT NULL,
+  `strand_code` varchar(20) NOT NULL,
+  `strand_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `shs_strands`
+--
+
+INSERT INTO `shs_strands` (`id`, `track_id`, `strand_code`, `strand_name`, `description`, `is_active`, `created_at`) VALUES
+(1, 1, 'STEM', 'Science, Technology, Engineering and Mathematics', 'Focuses on scientific and technical skills', 1, '2026-01-16 13:28:17'),
+(2, 2, 'ABM', 'Accountancy, Business and Management', 'Prepares students for business and finance careers', 1, '2026-01-16 13:28:17'),
+(3, 3, 'HUMSS', 'Humanities and Social Sciences', 'Develops critical thinking and communication skills', 1, '2026-01-16 13:28:17'),
+(4, 3, 'GAS', 'General Academic Strand', 'Provides a general education foundation', 1, '2026-01-16 13:28:17'),
+(5, 4, 'ICT', 'Information and Communications Technology', 'Technical skills in IT and programming', 1, '2026-01-16 13:28:17'),
+(6, 4, 'HE', 'Home Economics', 'Culinary arts and hospitality management', 1, '2026-01-16 13:28:17'),
+(7, 5, 'VA', 'Visual Arts', 'Creative expression through visual media', 1, '2026-01-16 13:28:17'),
+(8, 6, 'SP', 'Sports', 'Athletic training and sports science', 1, '2026-01-16 13:28:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `shs_grade_levels`
+--
+
+CREATE TABLE `shs_grade_levels` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `strand_id` int(10) UNSIGNED NOT NULL,
+  `grade_level` tinyint(3) UNSIGNED NOT NULL,
+  `grade_name` varchar(20) NOT NULL,
+  `semesters_count` tinyint(3) UNSIGNED DEFAULT 2,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `shs_grade_levels`
+--
+
+INSERT INTO `shs_grade_levels` (`id`, `strand_id`, `grade_level`, `grade_name`, `semesters_count`, `is_active`, `created_at`) VALUES
+(1, 1, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(2, 1, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(3, 2, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(4, 2, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(5, 3, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(6, 3, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(7, 4, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(8, 4, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(9, 5, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(10, 5, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(11, 6, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(12, 6, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(13, 7, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(14, 7, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17'),
+(15, 8, 11, 'Grade 11', 2, 1, '2026-01-16 13:28:17'),
+(16, 8, 12, 'Grade 12', 2, 1, '2026-01-16 13:28:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `curriculum_subjects`
+--
+
+CREATE TABLE `curriculum_subjects` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `subject_code` varchar(20) NOT NULL,
+  `subject_title` varchar(100) NOT NULL,
+  `units` decimal(3,1) DEFAULT 3.0,
+  `lecture_hours` int(10) UNSIGNED DEFAULT 0,
+  `lab_hours` int(10) UNSIGNED DEFAULT 0,
+  `subject_type` enum('college','shs_core','shs_applied','shs_specialized') NOT NULL,
+  `program_id` int(10) UNSIGNED DEFAULT NULL,
+  `year_level_id` int(10) UNSIGNED DEFAULT NULL,
+  `shs_strand_id` int(10) UNSIGNED DEFAULT NULL,
+  `shs_grade_level_id` int(10) UNSIGNED DEFAULT NULL,
+  `semester` tinyint(3) UNSIGNED DEFAULT 1,
+  `prerequisites` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_by` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -863,7 +992,7 @@ ALTER TABLE `classes`
   ADD KEY `idx_course` (`course_id`),
   ADD KEY `idx_teacher` (`teacher_id`),
   ADD KEY `idx_academic_year` (`academic_year_id`),
-  ADD KEY `idx_subject` (`subject_id`),
+  ADD KEY `idx_curriculum_subject` (`curriculum_subject_id`),
   ADD KEY `idx_branch` (`branch_id`),
   ADD KEY `fk_class_track` (`shs_track_id`),
   ADD KEY `idx_section` (`section_name`);
@@ -928,6 +1057,44 @@ ALTER TABLE `programs`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `program_code` (`program_code`),
   ADD KEY `idx_school` (`school_id`);
+
+--
+-- Indexes for table `program_year_levels`
+--
+ALTER TABLE `program_year_levels`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_program_year` (`program_id`,`year_level`),
+  ADD KEY `fk_yearlevel_program` (`program_id`);
+
+--
+-- Indexes for table `shs_strands`
+--
+ALTER TABLE `shs_strands`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `strand_code` (`strand_code`),
+  ADD KEY `fk_strand_track` (`track_id`);
+
+--
+-- Indexes for table `shs_grade_levels`
+--
+ALTER TABLE `shs_grade_levels`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_strand_grade` (`strand_id`,`grade_level`),
+  ADD KEY `fk_gradelevel_strand` (`strand_id`);
+
+--
+-- Indexes for table `curriculum_subjects`
+--
+ALTER TABLE `curriculum_subjects`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `subject_code` (`subject_code`),
+  ADD KEY `idx_program_year` (`program_id`,`year_level_id`,`semester`),
+  ADD KEY `idx_shs_strand_grade` (`shs_strand_id`,`shs_grade_level_id`,`semester`),
+  ADD KEY `fk_curriculum_program` (`program_id`),
+  ADD KEY `fk_curriculum_yearlevel` (`year_level_id`),
+  ADD KEY `fk_curriculum_shs_strand` (`shs_strand_id`),
+  ADD KEY `fk_curriculum_shs_gradelevel` (`shs_grade_level_id`),
+  ADD KEY `fk_curriculum_created_by` (`created_by`);
 
 --
 -- Indexes for table `roles`
@@ -1150,6 +1317,30 @@ ALTER TABLE `programs`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `program_year_levels`
+--
+ALTER TABLE `program_year_levels`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `shs_strands`
+--
+ALTER TABLE `shs_strands`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `shs_grade_levels`
+--
+ALTER TABLE `shs_grade_levels`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `curriculum_subjects`
+--
+ALTER TABLE `curriculum_subjects`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
@@ -1278,8 +1469,8 @@ ALTER TABLE `branches`
 ALTER TABLE `classes`
   ADD CONSTRAINT `fk_class_academic_year` FOREIGN KEY (`academic_year_id`) REFERENCES `academic_years` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_class_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_class_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_class_subject` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_class_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_class_curriculum_subject` FOREIGN KEY (`curriculum_subject_id`) REFERENCES `curriculum_subjects` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_class_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_class_track` FOREIGN KEY (`shs_track_id`) REFERENCES `shs_tracks` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -1332,6 +1523,34 @@ ALTER TABLE `payments`
 --
 ALTER TABLE `programs`
   ADD CONSTRAINT `fk_program_school` FOREIGN KEY (`school_id`) REFERENCES `schools` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `program_year_levels`
+--
+ALTER TABLE `program_year_levels`
+  ADD CONSTRAINT `fk_yearlevel_program` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `shs_strands`
+--
+ALTER TABLE `shs_strands`
+  ADD CONSTRAINT `fk_strand_track` FOREIGN KEY (`track_id`) REFERENCES `shs_tracks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `shs_grade_levels`
+--
+ALTER TABLE `shs_grade_levels`
+  ADD CONSTRAINT `fk_gradelevel_strand` FOREIGN KEY (`strand_id`) REFERENCES `shs_strands` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `curriculum_subjects`
+--
+ALTER TABLE `curriculum_subjects`
+  ADD CONSTRAINT `fk_curriculum_program` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_curriculum_yearlevel` FOREIGN KEY (`year_level_id`) REFERENCES `program_year_levels` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_curriculum_shs_strand` FOREIGN KEY (`shs_strand_id`) REFERENCES `shs_strands` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_curriculum_shs_gradelevel` FOREIGN KEY (`shs_grade_level_id`) REFERENCES `shs_grade_levels` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_curriculum_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `security_logs`
@@ -1396,3 +1615,44 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+--
+-- Migration: Add database-level concurrency controls
+-- This migration adds unique constraints and indexes to prevent data corruption
+--
+
+-- Step 1: Clean up any potential duplicate data before adding constraints
+-- (In production, you would need to handle duplicates appropriately)
+
+-- For enrollments: Remove duplicates keeping the most recent approved enrollment
+DELETE e1 FROM enrollments e1
+INNER JOIN enrollments e2
+WHERE e1.student_id = e2.student_id
+  AND e1.class_id = e2.class_id
+  AND e1.id < e2.id;
+
+-- For grades: Remove duplicates keeping the most recent grade record
+DELETE g1 FROM grades g1
+INNER JOIN grades g2
+WHERE g1.student_id = g2.student_id
+  AND g1.class_id = g2.class_id
+  AND g1.id < g2.id;
+
+-- Step 2: Add unique constraints to prevent duplicate enrollments and grades
+ALTER TABLE `enrollments`
+  ADD UNIQUE KEY `unique_student_class_enrollment` (`student_id`, `class_id`);
+
+ALTER TABLE `grades`
+  ADD UNIQUE KEY `unique_student_class_grade` (`student_id`, `class_id`);
+
+-- Step 3: Add composite indexes for better performance and duplicate detection
+ALTER TABLE `attendance`
+  ADD KEY `idx_class_student_date` (`class_id`, `student_id`, `attendance_date`);
+
+ALTER TABLE `learning_materials`
+  ADD KEY `idx_class_file_path` (`class_id`, `file_path`);
+
+-- Step 4: Add version column to grades table for optimistic locking
+ALTER TABLE `grades`
+  ADD COLUMN `version` int(10) UNSIGNED NOT NULL DEFAULT 1 AFTER `remarks`;
+
