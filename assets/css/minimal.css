@@ -89,8 +89,8 @@ body {
 }
 
 #sidebar {
-    background: var(--navy);
-}
+    background: var(--white);
+}   
 
 #sidebar .sidebar-header {
     background: var(--maroon);

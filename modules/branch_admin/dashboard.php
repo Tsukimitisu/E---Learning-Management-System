@@ -182,8 +182,20 @@ include '../../includes/header.php';
                             <a href="scheduling.php" class="btn btn-outline-primary">
                                 <i class="bi bi-calendar-plus"></i> Schedule Classes
                             </a>
+                            <a href="sectioning.php" class="btn btn-outline-dark">
+                                <i class="bi bi-diagram-3"></i> Manage Sections
+                            </a>
+                            <a href="teachers.php" class="btn btn-outline-info">
+                                <i class="bi bi-person-badge"></i> Manage Teachers
+                            </a>
+                            <a href="students.php" class="btn btn-outline-secondary">
+                                <i class="bi bi-people"></i> Manage Students
+                            </a>
                             <a href="announcements.php" class="btn btn-outline-success">
                                 <i class="bi bi-megaphone"></i> Branch Announcements
+                            </a>
+                            <a href="monitoring.php" class="btn btn-outline-danger">
+                                <i class="bi bi-eye"></i> Monitor & Comply
                             </a>
                             <a href="reports.php" class="btn btn-outline-warning">
                                 <i class="bi bi-file-earmark-text"></i> Generate Reports

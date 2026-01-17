@@ -78,31 +78,51 @@ if ($_SESSION['role_id'] == ROLE_SUPER_ADMIN) {
 }
         
         // Branch Admin Menu
-       // Branch Admin Menu
-if ($_SESSION['role_id'] == ROLE_BRANCH_ADMIN) {
+        // Branch Admin Menu
+ if ($_SESSION['role_id'] == ROLE_BRANCH_ADMIN) {
 ?>
-    <li>
-        <a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
-            <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
-    </li>
-    <li>
-        <a href="scheduling.php" class="<?php echo ($current_page == 'scheduling.php') ? 'active' : ''; ?>">
-            <i class="bi bi-calendar-plus"></i> Class Scheduling
-        </a>
-    </li>
-    <li>
-        <a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>">
-            <i class="bi bi-megaphone"></i> Announcements
-        </a>
-    </li>
-    <li>
-        <a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>">
-            <i class="bi bi-file-earmark-text"></i> Reports
-        </a>
-    </li>
+     <li>
+         <a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
+             <i class="bi bi-speedometer2"></i> Dashboard
+         </a>
+     </li>
+     <li>
+         <a href="scheduling.php" class="<?php echo ($current_page == 'scheduling.php') ? 'active' : ''; ?>">
+             <i class="bi bi-calendar-plus"></i> Class Scheduling
+         </a>
+     </li>
+     <li>
+         <a href="sectioning.php" class="<?php echo ($current_page == 'sectioning.php') ? 'active' : ''; ?>">
+             <i class="bi bi-diagram-3"></i> Section Management
+         </a>
+     </li>
+     <li>
+         <a href="teachers.php" class="<?php echo ($current_page == 'teachers.php') ? 'active' : ''; ?>">
+             <i class="bi bi-person-badge"></i> Teacher Management
+         </a>
+     </li>
+     <li>
+         <a href="students.php" class="<?php echo ($current_page == 'students.php') ? 'active' : ''; ?>">
+             <i class="bi bi-people"></i> Student Management
+         </a>
+     </li>
+     <li>
+         <a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>">
+             <i class="bi bi-megaphone"></i> Announcements
+         </a>
+     </li>
+     <li>
+         <a href="monitoring.php" class="<?php echo ($current_page == 'monitoring.php') ? 'active' : ''; ?>">
+             <i class="bi bi-eye"></i> Monitoring & Compliance
+         </a>
+     </li>
+     <li>
+         <a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>">
+             <i class="bi bi-file-earmark-text"></i> Reports
+         </a>
+     </li>
 <?php
-}
+ }
         
         // Registrar Menu
               if ($_SESSION['role_id'] == ROLE_REGISTRAR) {
