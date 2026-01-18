@@ -109,6 +109,28 @@ $classes_without_grades = $conn->query("
     ORDER BY enrolled_count DESC
 ");
 
+// Grade Lock Status for Class Records
+$grade_lock_classes = $conn->query("
+    SELECT
+        cl.id,
+        cl.section_name,
+        s.subject_code,
+        s.subject_title,
+        CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
+        MAX(CASE WHEN gl.grading_period = 'prelim' THEN gl.is_locked END) as prelim_locked,
+        MAX(CASE WHEN gl.grading_period = 'midterm' THEN gl.is_locked END) as midterm_locked,
+        MAX(CASE WHEN gl.grading_period = 'final' THEN gl.is_locked END) as final_locked,
+        MAX(CASE WHEN gl.grading_period = 'quarterly' THEN gl.is_locked END) as quarterly_locked
+    FROM classes cl
+    LEFT JOIN subjects s ON cl.subject_id = s.id
+    LEFT JOIN users u ON cl.teacher_id = u.id
+    LEFT JOIN user_profiles up ON u.id = up.user_id
+    LEFT JOIN grade_locks gl ON cl.id = gl.class_id
+    WHERE cl.branch_id = $branch_id
+    GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title, up.first_name, up.last_name
+    ORDER BY s.subject_code, cl.section_name
+");
+
 include '../../includes/header.php';
 ?>
 
@@ -338,6 +360,95 @@ include '../../includes/header.php';
             </div>
         </div>
 
+        <!-- Class Record Locks -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header" style="background-color: #0d6efd; color: white;">
+                        <h5 class="mb-0"><i class="bi bi-lock-fill"></i> Class Record Locks</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th>Class</th>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Prelim</th>
+                                        <th>Midterm</th>
+                                        <th>Final</th>
+                                        <th>Quarterly</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while ($class = $grade_lock_classes->fetch_assoc()): ?>
+                                    <?php
+                                        $prelim_locked = (int)($class['prelim_locked'] ?? 0) === 1;
+                                        $midterm_locked = (int)($class['midterm_locked'] ?? 0) === 1;
+                                        $final_locked = (int)($class['final_locked'] ?? 0) === 1;
+                                        $quarterly_locked = (int)($class['quarterly_locked'] ?? 0) === 1;
+                                    ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($class['section_name'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <strong><?php echo htmlspecialchars($class['subject_code'] ?? 'N/A'); ?></strong><br>
+                                            <small class="text-muted"><?php echo htmlspecialchars($class['subject_title'] ?? 'N/A'); ?></small>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($class['teacher_name'] ?? 'Not Assigned'); ?></td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $prelim_locked ? 'danger' : 'success'; ?>">
+                                                <?php echo $prelim_locked ? 'Locked' : 'Open'; ?>
+                                            </span>
+                                            <button class="btn btn-sm btn-<?php echo $prelim_locked ? 'outline-success' : 'outline-danger'; ?> ms-1"
+                                                    onclick="toggleGradeLock(<?php echo $class['id']; ?>, 'prelim', '<?php echo $prelim_locked ? 'unlock' : 'lock'; ?>')">
+                                                <?php echo $prelim_locked ? 'Unlock' : 'Lock'; ?>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $midterm_locked ? 'danger' : 'success'; ?>">
+                                                <?php echo $midterm_locked ? 'Locked' : 'Open'; ?>
+                                            </span>
+                                            <button class="btn btn-sm btn-<?php echo $midterm_locked ? 'outline-success' : 'outline-danger'; ?> ms-1"
+                                                    onclick="toggleGradeLock(<?php echo $class['id']; ?>, 'midterm', '<?php echo $midterm_locked ? 'unlock' : 'lock'; ?>')">
+                                                <?php echo $midterm_locked ? 'Unlock' : 'Lock'; ?>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $final_locked ? 'danger' : 'success'; ?>">
+                                                <?php echo $final_locked ? 'Locked' : 'Open'; ?>
+                                            </span>
+                                            <button class="btn btn-sm btn-<?php echo $final_locked ? 'outline-success' : 'outline-danger'; ?> ms-1"
+                                                    onclick="toggleGradeLock(<?php echo $class['id']; ?>, 'final', '<?php echo $final_locked ? 'unlock' : 'lock'; ?>')">
+                                                <?php echo $final_locked ? 'Unlock' : 'Lock'; ?>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $quarterly_locked ? 'danger' : 'success'; ?>">
+                                                <?php echo $quarterly_locked ? 'Locked' : 'Open'; ?>
+                                            </span>
+                                            <button class="btn btn-sm btn-<?php echo $quarterly_locked ? 'outline-success' : 'outline-danger'; ?> ms-1"
+                                                    onclick="toggleGradeLock(<?php echo $class['id']; ?>, 'quarterly', '<?php echo $quarterly_locked ? 'unlock' : 'lock'; ?>')">
+                                                <?php echo $quarterly_locked ? 'Unlock' : 'Lock'; ?>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                    <?php if ($grade_lock_classes->num_rows == 0): ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">
+                                            <i class="bi bi-inbox"></i> No classes found for grade locking
+                                        </td>
+                                    </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Poor Attendance Students -->
         <div class="row">
             <div class="col-md-12">
@@ -411,6 +522,29 @@ function updateMonitoring() {
     if (startDate && endDate) {
         window.location.href = `monitoring.php?start_date=${startDate}&end_date=${endDate}`;
     }
+}
+
+function toggleGradeLock(classId, period, action) {
+    const actionText = action === 'lock' ? 'lock' : 'unlock';
+    if (!confirm(`Are you sure you want to ${actionText} ${period} records for this class?`)) {
+        return;
+    }
+
+    fetch('process/toggle_grade_lock.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_id: classId, grading_period: period, action: action })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert(data.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(() => showAlert('An error occurred', 'danger'));
 }
 
 function viewAttendanceDetails(classId) {

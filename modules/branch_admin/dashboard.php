@@ -203,6 +203,44 @@ include '../../includes/header.php';
                         </div>
                     </div>
                 </div>
+
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header" style="background-color: #800000; color: white;">
+                        <i class="bi bi-shield-check"></i> Branch Administrator Scope
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Scope:</strong> Single branch / campus</p>
+
+                        <h6 class="mt-3 mb-2">Academic Implementation</h6>
+                        <ul class="mb-3">
+                            <li>Create and manage classes, sections, and class schedules</li>
+                            <li>Assign subjects to teachers</li>
+                            <li>Assign students to sections</li>
+                            <li>Create and manage teacher accounts</li>
+                        </ul>
+
+                        <h6 class="mt-3 mb-2">Academic Monitoring</h6>
+                        <ul class="mb-3">
+                            <li>Monitor student attendance and academic standing</li>
+                            <li>Track teacher compliance</li>
+                            <li>Lock/unlock class records (as permitted)</li>
+                        </ul>
+
+                        <h6 class="mt-3 mb-2">Communication & Reports</h6>
+                        <ul class="mb-3">
+                            <li>Publish branch-level announcements</li>
+                            <li>Generate attendance reports</li>
+                            <li>Generate academic performance summaries</li>
+                            <li>Generate enrollment statistics</li>
+                            <li>Ensure compliance with school policies</li>
+                        </ul>
+
+                        <div class="alert alert-info py-2 mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Implements approved curriculum at branch level.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

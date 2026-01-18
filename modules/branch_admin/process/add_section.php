@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     $academic_year_id = (int)($_POST['academic_year_id'] ?? 0);
-    $subject_id = (int)($_POST['subject_id'] ?? 0);
+    $curriculum_subject_id = (int)($_POST['curriculum_subject_id'] ?? 0);
     $section_name = clean_input($_POST['section_name'] ?? '');
     $teacher_id = (int)($_POST['teacher_id'] ?? 0);
     $room = clean_input($_POST['room'] ?? '');
@@ -25,18 +25,35 @@ try {
     $branch_id = (int)($_POST['branch_id'] ?? 1);
 
     // Validation
-    if (empty($academic_year_id) || empty($subject_id) || empty($section_name) ||
+    if (empty($academic_year_id) || empty($curriculum_subject_id) || empty($section_name) ||
         empty($teacher_id) || empty($room) || empty($schedule)) {
         echo json_encode(['status' => 'error', 'message' => 'All required fields must be filled']);
         exit();
     }
 
+    // Validate subject from approved curriculum
+    $subject_check = $conn->prepare("
+        SELECT id, subject_code, subject_title, subject_type, program_id, shs_strand_id
+        FROM curriculum_subjects
+        WHERE id = ? AND is_active = 1
+    ");
+    $subject_check->bind_param("i", $curriculum_subject_id);
+    $subject_check->execute();
+    $subject_result = $subject_check->get_result();
+
+    if ($subject_result->num_rows === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Invalid subject. Please select from approved curriculum.']);
+        exit();
+    }
+
+    $subject_info = $subject_result->fetch_assoc();
+
     // Check if section name already exists for this subject and academic year
     $check_section = $conn->prepare("
         SELECT id FROM classes
-        WHERE subject_id = ? AND academic_year_id = ? AND section_name = ? AND branch_id = ?
+        WHERE curriculum_subject_id = ? AND academic_year_id = ? AND section_name = ? AND branch_id = ?
     ");
-    $check_section->bind_param("iiis", $subject_id, $academic_year_id, $section_name, $branch_id);
+    $check_section->bind_param("iisi", $curriculum_subject_id, $academic_year_id, $section_name, $branch_id);
     $check_section->execute();
     if ($check_section->get_result()->num_rows > 0) {
         echo json_encode(['status' => 'error', 'message' => 'A section with this name already exists for the selected subject and academic year']);
@@ -47,15 +64,19 @@ try {
     $conn->begin_transaction();
 
     // Insert new class/section
+    $course_id = null;
+    if ($subject_info['subject_type'] === 'college' && !empty($subject_info['program_id'])) {
+        $course_id = (int)$subject_info['program_id'];
+    }
+
     $insert_class = $conn->prepare("
         INSERT INTO classes (
-            academic_year_id, subject_id, section_name, teacher_id,
-            room, schedule, max_capacity, current_enrolled, branch_id,
-            created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), NOW())
+            academic_year_id, curriculum_subject_id, course_id, section_name, teacher_id,
+            room, schedule, max_capacity, current_enrolled, branch_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
     ");
-    $insert_class->bind_param("iisisiiis",
-        $academic_year_id, $subject_id, $section_name, $teacher_id,
+    $insert_class->bind_param("iiisissii",
+        $academic_year_id, $curriculum_subject_id, $course_id, $section_name, $teacher_id,
         $room, $schedule, $max_capacity, $branch_id
     );
 
@@ -67,7 +88,7 @@ try {
 
     // Log the action
     $ip = get_client_ip();
-    $action = "Created new section '$section_name' for subject ID $subject_id, assigned to teacher ID $teacher_id";
+    $action = "Created new section '$section_name' for subject {$subject_info['subject_code']} ({$subject_info['subject_title']}), assigned to teacher ID $teacher_id";
     $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
     $audit->bind_param("iss", $_SESSION['user_id'], $action, $ip);
     $audit->execute();

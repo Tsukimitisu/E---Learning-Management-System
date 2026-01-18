@@ -23,12 +23,12 @@ $teachers_query = "
         up.last_name,
         up.address,
         COUNT(DISTINCT cl.id) as assigned_classes,
-        GROUP_CONCAT(DISTINCT s.subject_code SEPARATOR ', ') as subjects
+        GROUP_CONCAT(DISTINCT cs.subject_code SEPARATOR ', ') as subjects
     FROM users u
     INNER JOIN user_profiles up ON u.id = up.user_id
     INNER JOIN user_roles ur ON u.id = ur.user_id
     LEFT JOIN classes cl ON cl.teacher_id = u.id AND cl.branch_id = $branch_id
-    LEFT JOIN subjects s ON cl.subject_id = s.id
+    LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
     WHERE ur.role_id = " . ROLE_TEACHER . "
     GROUP BY u.id, u.email, u.status, u.created_at, up.first_name, up.last_name, up.address
     ORDER BY up.first_name, up.last_name
@@ -95,23 +95,31 @@ include '../../includes/header.php';
                                 SELECT
                                     cl.id,
                                     cl.section_name,
-                                    s.subject_code,
-                                    s.subject_title,
+                                    cs.subject_code,
+                                    cs.subject_title,
                                     p.program_name,
+                                    ss.strand_name,
+                                    pyl.year_name as program_year_name,
+                                    sgl.grade_name as shs_grade_name,
                                     ay.year_name,
                                     cl.schedule,
                                     cl.room,
                                     cl.current_enrolled,
                                     cl.max_capacity
                                 FROM classes cl
-                                LEFT JOIN subjects s ON cl.subject_id = s.id
-                                LEFT JOIN programs p ON s.program_id = p.id
+                                LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
+                                LEFT JOIN programs p ON cs.program_id = p.id
+                                LEFT JOIN shs_strands ss ON cs.shs_strand_id = ss.id
+                                LEFT JOIN program_year_levels pyl ON cs.year_level_id = pyl.id
+                                LEFT JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
                                 LEFT JOIN academic_years ay ON cl.academic_year_id = ay.id
                                 WHERE cl.teacher_id = $view_teacher_sections AND cl.branch_id = $branch_id
-                                ORDER BY ay.year_name DESC, s.subject_code, cl.section_name
+                                ORDER BY ay.year_name DESC, cs.subject_code, cl.section_name
                             ");
 
                             while ($section = $teacher_sections->fetch_assoc()):
+                                $curriculum_label = $section['program_name'] ?? $section['strand_name'] ?? 'General';
+                                $year_label = $section['program_year_name'] ?? $section['shs_grade_name'] ?? 'N/A';
                             ?>
                             <tr>
                                 <td><strong><?php echo htmlspecialchars($section['section_name']); ?></strong></td>
@@ -119,7 +127,10 @@ include '../../includes/header.php';
                                     <strong><?php echo htmlspecialchars($section['subject_code']); ?></strong><br>
                                     <small class="text-muted"><?php echo htmlspecialchars($section['subject_title']); ?></small>
                                 </td>
-                                <td><?php echo htmlspecialchars($section['program_name'] ?? 'N/A'); ?></td>
+                                <td>
+                                    <?php echo htmlspecialchars($curriculum_label); ?><br>
+                                    <small class="text-muted">Year Level: <?php echo htmlspecialchars($year_label); ?></small>
+                                </td>
                                 <td><?php echo htmlspecialchars($section['year_name'] ?? 'N/A'); ?></td>
                                 <td><small><?php echo htmlspecialchars($section['schedule'] ?? '-'); ?></small></td>
                                 <td><?php echo htmlspecialchars($section['room'] ?? '-'); ?></td>
