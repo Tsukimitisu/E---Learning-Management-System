@@ -15,10 +15,19 @@ $students_query = "
         s.student_no,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
         c.course_code,
-        c.title as course_title
+        c.title as course_title,
+        COALESCE(p.verified_amount, 0) as verified_amount,
+        COALESCE(p.pending_count, 0) as pending_count
     FROM students s
     INNER JOIN user_profiles up ON s.user_id = up.user_id
     LEFT JOIN courses c ON s.course_id = c.id
+    LEFT JOIN (
+        SELECT student_id,
+               SUM(CASE WHEN status = 'verified' THEN amount ELSE 0 END) as verified_amount,
+               COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count
+        FROM payments
+        GROUP BY student_id
+    ) p ON s.user_id = p.student_id
     ORDER BY up.first_name, up.last_name
 ";
 $students_result = $conn->query($students_query);
@@ -78,7 +87,9 @@ include '../../includes/header.php';
                                 <a href="#" class="list-group-item list-group-item-action student-item" 
                                    data-student-id="<?php echo $student['user_id']; ?>"
                                    data-student-name="<?php echo htmlspecialchars($student['full_name']); ?>"
-                                   data-student-no="<?php echo htmlspecialchars($student['student_no']); ?>">
+                                   data-student-no="<?php echo htmlspecialchars($student['student_no']); ?>"
+                                   data-verified="<?php echo $student['verified_amount']; ?>"
+                                   data-pending="<?php echo $student['pending_count']; ?>">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1"><?php echo htmlspecialchars($student['full_name']); ?></h6>
                                         <small class="text-muted"><?php echo htmlspecialchars($student['student_no']); ?></small>
@@ -87,6 +98,15 @@ include '../../includes/header.php';
                                         <?php echo htmlspecialchars($student['course_code'] ?? 'No Course'); ?> - 
                                         <?php echo htmlspecialchars($student['course_title'] ?? 'N/A'); ?>
                                     </small>
+                                    <div class="mt-1">
+                                        <?php if (($student['verified_amount'] ?? 0) > 0): ?>
+                                            <span class="badge bg-success">Payment Cleared</span>
+                                        <?php elseif (($student['pending_count'] ?? 0) > 0): ?>
+                                            <span class="badge bg-warning text-dark">Payment Pending</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger">No Payment</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </a>
                                 <?php endwhile; ?>
                             </div>
@@ -103,6 +123,9 @@ include '../../includes/header.php';
                         <span id="selectedStudentBadge" class="badge bg-light text-dark ms-2" style="display:none;"></span>
                     </div>
                     <div class="card-body">
+                        <div id="paymentWarning" class="alert alert-warning" style="display:none;">
+                            <i class="bi bi-exclamation-triangle"></i> Student has no verified payment. Enrollment is disabled.
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -166,6 +189,7 @@ include '../../includes/header.php';
 <script>
 let selectedStudentId = null;
 let selectedStudentName = '';
+let selectedPaymentCleared = false;
 
 // Student search functionality
 document.getElementById('studentSearch').addEventListener('input', function(e) {
@@ -198,14 +222,24 @@ document.querySelectorAll('.student-item').forEach(item => {
         // Store selected student
         selectedStudentId = this.getAttribute('data-student-id');
         selectedStudentName = this.getAttribute('data-student-name');
+        const verifiedAmount = parseFloat(this.getAttribute('data-verified') || '0');
+        const pendingCount = parseInt(this.getAttribute('data-pending') || '0', 10);
+        selectedPaymentCleared = verifiedAmount > 0;
         
         // Update badge
         const badge = document.getElementById('selectedStudentBadge');
         badge.textContent = 'Selected: ' + selectedStudentName;
         badge.style.display = 'inline-block';
+
+        const warning = document.getElementById('paymentWarning');
+        if (!selectedPaymentCleared) {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
         
         // Enable enroll buttons
-        document.querySelectorAll('.enroll-btn').forEach(btn => btn.disabled = false);
+        document.querySelectorAll('.enroll-btn').forEach(btn => btn.disabled = !selectedPaymentCleared);
     });
 });
 
@@ -214,6 +248,11 @@ document.querySelectorAll('.enroll-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
         if (!selectedStudentId) {
             showAlert('Please select a student first', 'warning');
+            return;
+        }
+
+        if (!selectedPaymentCleared) {
+            showAlert('Student has no verified payment. Enrollment is disabled.', 'danger');
             return;
         }
         

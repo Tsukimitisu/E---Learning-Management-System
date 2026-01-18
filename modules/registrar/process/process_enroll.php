@@ -51,6 +51,24 @@ try {
         echo json_encode(['status' => 'error', 'message' => 'Student is already enrolled in this class']);
         exit();
     }
+
+    // Step 2.5: Check Payment Status (Optional - can be configured)
+    $paymentCheck = $conn->prepare("
+        SELECT SUM(amount) as total_paid 
+        FROM payments 
+        WHERE student_id = ? AND status = 'verified'
+    ");
+    $paymentCheck->bind_param("i", $student_id);
+    $paymentCheck->execute();
+    $paymentResult = $paymentCheck->get_result();
+    $paymentData = $paymentResult->fetch_assoc();
+
+    // Optional: Enforce minimum payment requirement
+    // if (($paymentData['total_paid'] ?? 0) < MINIMUM_PAYMENT) {
+    //     $conn->rollback();
+    //     echo json_encode(['status' => 'error', 'message' => 'Student has insufficient payment']);
+    //     exit();
+    // }
     
     // Step 3: LOCK CLASS ROW and Check Capacity
     $capacityCheck = $conn->prepare("
@@ -112,7 +130,8 @@ try {
 
     // Step 7: Log Audit Trail
     $ip_address = get_client_ip();
-    $action = "Enrolled student ID $student_id into class ID $class_id";
+    $paid_amount = $paymentData['total_paid'] ?? 0;
+    $action = "Enrolled student ID $student_id into class ID $class_id (Verified Payment: {$paid_amount})";
     $auditStmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
     $auditStmt->bind_param("iss", $_SESSION['user_id'], $action, $ip_address);
     $auditStmt->execute();
@@ -142,6 +161,7 @@ try {
             $classInfo['course_code'] ?? 'Course',
             $classInfo['room'] ?? 'Room'
         ),
+        'payment_verified_total' => $paid_amount,
         'enrollment_id' => $enrollment_id,
         'new_count' => $current_enrolled + 1
     ]);

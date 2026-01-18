@@ -51,6 +51,10 @@
             <li><a href="enroll.php" class="<?php echo ($current_page == 'enroll.php') ? 'active' : ''; ?>"><i class="bi bi-pencil-square"></i> <span>Enrollment</span></a></li>
             <li><a href="classes.php" class="<?php echo ($current_page == 'classes.php') ? 'active' : ''; ?>"><i class="bi bi-door-open-fill"></i> <span>Classes</span></a></li>
             <li><a href="students.php" class="<?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"><i class="bi bi-person-badge-fill"></i> <span>Students</span></a></li>
+            <li><a href="records.php" class="<?php echo ($current_page == 'records.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-text"></i> <span>Academic Records</span></a></li>
+            <li><a href="certificates.php" class="<?php echo ($current_page == 'certificates.php') ? 'active' : ''; ?>"><i class="bi bi-award"></i> <span>Certificates</span></a></li>
+            <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-bar-graph"></i> <span>Reports</span></a></li>
+            <li><a href="payments.php" class="<?php echo ($current_page == 'payments.php') ? 'active' : ''; ?>"><i class="bi bi-cash-coin"></i> <span>Payments</span></a></li>
         <?php }
 
         // --- 5. TEACHER MENU ---
