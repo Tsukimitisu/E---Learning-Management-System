@@ -35,8 +35,6 @@ include '../../includes/sidebar.php';
         overflow: hidden;
         background-color: #f4f7f6;
     }
-
-    /* 1. This header stays at the top */
     .static-header {
         flex: 0 0 auto; 
         background: white;
@@ -44,8 +42,6 @@ include '../../includes/sidebar.php';
         border-bottom: 1px solid #eee;
         z-index: 10;
     }
-
-    /* 2. This area fills the rest of the screen and SCROLLS */
     .scrollable-settings-body {
         flex: 1 1 auto; 
         overflow-y: auto; 

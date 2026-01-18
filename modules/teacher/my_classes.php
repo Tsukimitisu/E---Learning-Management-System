@@ -9,8 +9,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
 $page_title = "My Classes";
 $teacher_id = $_SESSION['user_id'];
 
-// Fetch unique subjects/courses assigned to this teacher
-// FIXED: Handle NULL values properly
+/** 
+ * BACKEND LOGIC - UNTOUCHED 
+ */
 $subjects_query = "
     SELECT 
         COALESCE(s.subject_code, c.course_code, CONCAT('CLASS-', cl.id)) as subject_code,
@@ -36,91 +37,177 @@ $stmt->execute();
 $subjects_result = $stmt->get_result();
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<link rel="stylesheet" href="../../assets/css/minimal.css">
+<style>
+  
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+    .header-fixed-part {
+        flex: 0 0 auto;
+        background: white;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+    }
 
-    <div id="content">
-        <div class="minimal-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="mb-1" style="color: var(--navy); font-weight: 600;">My Classes</h4>
-                    <small class="text-muted">Select a subject to view sections</small>
-                </div>
-                <a href="dashboard.php" class="btn btn-minimal">
-                    <i class="bi bi-arrow-left"></i> Back
-                </a>
+    .body-scroll-part {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 25px 30px 100px 30px; 
+        background-color: #f8f9fa;
+    }
+
+    .subject-card {
+        background: white;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        cursor: pointer;
+        overflow: hidden;
+        border-top: 6px solid var(--maroon);
+        height: 100%;
+    }
+
+    .subject-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(128, 0, 0, 0.1);
+    }
+
+    .subject-card .card-body { padding: 30px; }
+
+    .subject-icon-box {
+        width: 50px;
+        height: 50px;
+        background: rgba(128, 0, 0, 0.05);
+        color: var(--maroon);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-badge-light {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        transition: 0.3s;
+    }
+    .subject-card:hover .stat-badge-light { background: #fff; border: 1px solid #eee; }
+
+    .card-footer-custom {
+        background: #fcfcfc;
+        padding: 15px;
+        text-align: center;
+        border-top: 1px solid #f1f1f1;
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    /* Staggered Animation delays */
+    <?php for($i=1; $i<=12; $i++): ?>
+        .delay-<?php echo $i; ?> { animation-delay: <?php echo $i * 0.1; ?>s; }
+    <?php endfor; ?>
+
+    /* Mobile Logic */
+    @media (max-width: 576px) {
+        .header-fixed-part { flex-direction: column; gap: 15px; text-align: center; }
+        .body-scroll-part { padding: 15px 15px 100px 15px; }
+    }
+</style>
+
+
+<div class="header-fixed-part d-flex justify-content-between align-items-center animate__animated animate__fadeInDown">
+    <div>
+        <h4 class="fw-bold mb-0" style="color: var(--blue);">My Classes</h4>
+        <p class="text-muted small mb-0">Manage and oversee your assigned subjects and sections</p>
+    </div>
+    <a href="dashboard.php" class="btn btn-outline-secondary btn-sm px-4 shadow-sm">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+    </a>
+</div>
+
+<div class="body-scroll-part">
+    
+    <div class="row">
+        <?php if ($subjects_result->num_rows == 0): ?>
+        <div class="col-12 animate__animated animate__fadeIn">
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                <i class="bi bi-folder-x display-1 text-muted opacity-25"></i>
+                <h5 class="mt-3 text-muted">No assignments found.</h5>
+                <p class="small text-muted">Contact the registrar if you believe this is an error.</p>
             </div>
         </div>
-
-        <div class="row">
-            <?php if ($subjects_result->num_rows == 0): ?>
-            <div class="col-12">
-                <div class="minimal-card">
-                    <div class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle"></i> You have no classes assigned yet.
-                    </div>
-                </div>
-            </div>
-            <?php else: ?>
-            
-            <?php while ($subject = $subjects_result->fetch_assoc()): 
-                $subject_code = $subject['subject_code'];
-                $subject_title = $subject['subject_title'];
-                $section_count = $subject['section_count'];
-                $total_students = $subject['total_students'] ?? 0;
-            ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 shadow-sm" style="border-left: 5px solid var(--maroon); cursor: pointer;" 
-                     onclick="viewSections('<?php echo urlencode($subject_code); ?>')">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h5 class="card-title mb-1" style="color: var(--navy); font-weight: 600;">
-                                    <?php echo htmlspecialchars($subject_code); ?>
-                                </h5>
-                                <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                                    <?php echo htmlspecialchars($subject_title); ?>
-                                </p>
-                            </div>
-                            <i class="bi bi-chevron-right fs-4" style="color: var(--maroon);"></i>
+        <?php else: ?>
+        
+        <?php 
+        $counter = 1;
+        while ($subject = $subjects_result->fetch_assoc()): 
+            $subject_code = $subject['subject_code'];
+            $subject_title = $subject['subject_title'];
+            $section_count = $subject['section_count'];
+            $total_students = $subject['total_students'] ?? 0;
+            $branch = $subject['branch_name'] ?? 'General';
+        ?>
+        <div class="col-md-6 col-lg-4 mb-4 animate__animated animate__zoomIn delay-<?php echo $counter; ?>">
+            <div class="subject-card" onclick="viewSections('<?php echo urlencode($subject_code); ?>')">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="subject-icon-box">
+                            <i class="bi bi-journal-text"></i>
                         </div>
+                        <span class="badge bg-light text-muted border px-3 py-2 small fw-bold">
+                            <i class="bi bi-building me-1"></i> <?php echo htmlspecialchars($branch); ?>
+                        </span>
+                    </div>
 
-                        <div class="row g-3 mt-2">
-                            <div class="col-6">
-                                <div class="text-center p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-                                    <h3 class="mb-1" style="color: var(--maroon);"><?php echo $section_count; ?></h3>
-                                    <small class="text-muted">Sections</small>
-                                </div>
+                    <h5 class="fw-bold mb-1" style="color: var(--blue);">
+                        <?php echo htmlspecialchars($subject_code); ?>
+                    </h5>
+                    <p class="text-muted mb-4" style="font-size: 0.9rem; min-height: 40px; line-height: 1.4;">
+                        <?php echo htmlspecialchars($subject_title); ?>
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stat-badge-light">
+                                <h4 class="mb-0 fw-bold" style="color: var(--maroon);"><?php echo $section_count; ?></h4>
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Sections</small>
                             </div>
-                            <div class="col-6">
-                                <div class="text-center p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-                                    <h3 class="mb-1" style="color: var(--navy);"><?php echo $total_students; ?></h3>
-                                    <small class="text-muted">Students</small>
-                                </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-badge-light">
+                                <h4 class="mb-0 fw-bold" style="color: var(--blue);"><?php echo $total_students; ?></h4>
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Students</small>
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer bg-transparent text-center" style="border-top: 1px solid #e0e0e0;">
-                        <small class="text-muted">
-                            <i class="bi bi-box-arrow-in-right"></i> Click to view sections
-                        </small>
-                    </div>
+                </div>
+                <div class="card-footer-custom">
+                    <i class="bi bi-arrow-right-circle me-2 text-maroon"></i> View Section Details
                 </div>
             </div>
-            <?php endwhile; ?>
-            
-            <?php endif; ?>
         </div>
+        <?php 
+            $counter++;
+            endwhile; 
+        ?>
+        
+        <?php endif; ?>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php include '../../includes/footer.php'; ?>
+
+<!-- --- JAVASCRIPT LOGIC - UNTOUCHED --- -->
 <script>
 function viewSections(subjectCode) {
+    // Original Function Logic
     window.location.href = 'class_sections.php?subject=' + encodeURIComponent(subjectCode);
 }
 </script>

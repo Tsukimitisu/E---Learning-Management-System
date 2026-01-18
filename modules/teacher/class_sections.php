@@ -14,10 +14,12 @@ if (empty($subject_code)) {
     exit();
 }
 
+/** 
+ * BACKEND LOGIC - UNTOUCHED 
+ */
 $subject_code = urldecode($subject_code);
 $page_title = "Sections - " . $subject_code;
 
-// Get subject info - FIXED to handle all cases
 $subject_info_query = "
     SELECT DISTINCT
         COALESCE(s.subject_code, c.course_code, CONCAT('CLASS-', cl.id)) as subject_code,
@@ -40,17 +42,10 @@ if (!$subject_info) {
     exit();
 }
 
-// Get all sections for this subject - FIXED
 $sections_query = "
     SELECT 
-        cl.id,
-        cl.section_name,
-        cl.room,
-        cl.schedule,
-        cl.max_capacity,
-        cl.current_enrolled,
-        b.name as branch_name,
-        COUNT(DISTINCT e.student_id) as enrolled_count
+        cl.id, cl.section_name, cl.room, cl.schedule, cl.max_capacity, cl.current_enrolled,
+        b.name as branch_name, COUNT(DISTINCT e.student_id) as enrolled_count
     FROM classes cl
     LEFT JOIN subjects s ON cl.subject_id = s.id
     LEFT JOIN courses c ON cl.course_id = c.id
@@ -68,186 +63,155 @@ $stmt->execute();
 $sections_result = $stmt->get_result();
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<link rel="stylesheet" href="../../assets/css/minimal.css">
+<style>
+    /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+    /* --- SECTION CARD UI --- */
+    .section-card {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        overflow: hidden; height: 100%; display: flex; flex-direction: column;
+    }
+    .section-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0, 51, 102, 0.1); }
 
-    <div id="content">
-        <div class="minimal-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="mb-1" style="color: var(--navy); font-weight: 600;">
-                        <?php echo htmlspecialchars($subject_info['subject_code']); ?> - Sections
-                    </h4>
-                    <small class="text-muted"><?php echo htmlspecialchars($subject_info['subject_title']); ?></small>
-                </div>
-                <a href="my_classes.php" class="btn btn-minimal">
-                    <i class="bi bi-arrow-left"></i> Back to Classes
-                </a>
-            </div>
+    /* --- ACCURATE PROGRESS BAR --- */
+    .progress-container {
+        background-color: #e9ecef; border-radius: 10px; height: 12px;
+        width: 100%; overflow: hidden; margin: 10px 0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .progress-fill { height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
+
+    .btn-enter-section { 
+        background-color: var(--blue); color: white; border-radius: 10px; 
+        font-weight: 700; padding: 12px; transition: 0.3s; border: none; 
+        text-align: center; text-decoration: none; 
+    }
+    .btn-enter-section:hover { background-color: #002244; color: white; transform: scale(1.02); }
+
+    /* Breadcrumbs */
+    .breadcrumb-modern { background: transparent; padding: 0; margin-bottom: 5px; }
+    .breadcrumb-item { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .breadcrumb-item a { color: var(--maroon); text-decoration: none; }
+    .breadcrumb-item + .breadcrumb-item::before { content: "›"; color: #ccc; font-size: 1.2rem; vertical-align: middle; }
+
+    @media (max-width: 576px) { .header-fixed-part { padding: 15px; } .body-scroll-part { padding: 15px; } }
+</style>
+
+<!-- Part 1: Fixed Header -->
+<div class="header-fixed-part animate__animated animate__fadeInDown">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-modern">
+                    <li class="breadcrumb-item"><a href="my_classes.php">My Classes</a></li>
+                    <li class="breadcrumb-item active"><?php echo htmlspecialchars($subject_info['subject_code']); ?></li>
+                </ol>
+            </nav>
+            <h4 class="fw-bold mb-0" style="color: var(--blue);">
+                <?php echo htmlspecialchars($subject_info['subject_title']); ?>
+            </h4>
         </div>
-
-        <?php if ($sections_result->num_rows == 0): ?>
-        <div class="minimal-card">
-            <div class="alert alert-warning mb-0">
-                <i class="bi bi-exclamation-triangle"></i> No sections found for this subject.
-            </div>
-        </div>
-        <?php else: ?>
-
-        <div class="row">
-            <?php while ($section = $sections_result->fetch_assoc()): 
-                $percentage = ($section['max_capacity'] > 0) ? 
-                    ($section['enrolled_count'] / $section['max_capacity']) * 100 : 0;
-                
-                if ($percentage >= 100) {
-                    $border_color = '#dc3545';
-                    $status_badge = 'danger';
-                    $status_text = 'Full';
-                } elseif ($percentage >= 90) {
-                    $border_color = '#ffc107';
-                    $status_badge = 'warning';
-                    $status_text = 'Almost Full';
-                } else {
-                    $border_color = '#28a745';
-                    $status_badge = 'success';
-                    $status_text = 'Available';
-                }
-                
-                $section_name = $section['section_name'] ?: 'Unnamed Section';
-                $room = $section['room'] ?: 'Not Set';
-                $schedule = $section['schedule'] ?: 'Not Set';
-                $branch_name = $section['branch_name'] ?: 'N/A';
-            ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 shadow-sm" style="border-left: 5px solid <?php echo $border_color; ?>;">
-                    <div class="card-body">
-                        <!-- Section Header -->
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h5 class="card-title mb-1" style="color: var(--maroon); font-weight: 600;">
-                                    <?php echo htmlspecialchars($section_name); ?>
-                                </h5>
-                                <small class="text-muted">
-                                    <i class="bi bi-building"></i> <?php echo htmlspecialchars($branch_name); ?>
-                                </small>
-                            </div>
-                            <span class="badge bg-<?php echo $status_badge; ?>">
-                                <?php echo $status_text; ?>
-                            </span>
-                        </div>
-
-                        <!-- Section Details -->
-                        <div class="mb-3">
-                            <div class="row g-2">
-                                <div class="col-12">
-                                    <small class="text-muted">
-                                        <i class="bi bi-door-closed"></i> 
-                                        <strong>Room:</strong> <?php echo htmlspecialchars($room); ?>
-                                    </small>
-                                </div>
-                                <div class="col-12">
-                                    <small class="text-muted">
-                                        <i class="bi bi-clock"></i> 
-                                        <strong>Schedule:</strong> <?php echo htmlspecialchars($schedule); ?>
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Student Count -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small class="text-muted">
-                                    <i class="bi bi-people"></i> Students Enrolled
-                                </small>
-                                <strong style="color: var(--navy);">
-                                    <?php echo $section['enrolled_count']; ?> / <?php echo $section['max_capacity']; ?>
-                                </strong>
-                            </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar" 
-                                     style="width: <?php echo min($percentage, 100); ?>%; background-color: <?php echo $border_color; ?>;"
-                                     role="progressbar">
-                                </div>
-                            </div>
-                            <small class="text-muted"><?php echo round($percentage); ?>% capacity</small>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="d-grid gap-2">
-                            <a href="classroom.php?id=<?php echo $section['id']; ?>" class="btn btn-primary-minimal">
-                                <i class="bi bi-box-arrow-in-right"></i> Enter Section
-                            </a>
-                            <div class="btn-group">
-                                <a href="gradebook.php?class_id=<?php echo $section['id']; ?>" 
-                                   class="btn btn-minimal btn-sm">
-                                    <i class="bi bi-journal-text"></i> Grades
-                                </a>
-                                <a href="attendance_sheet.php?class_id=<?php echo $section['id']; ?>" 
-                                   class="btn btn-minimal btn-sm">
-                                    <i class="bi bi-calendar-check"></i> Attendance
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-footer bg-transparent" style="border-top: 1px solid #e0e0e0;">
-                        <small class="text-muted">
-                            <i class="bi bi-hash"></i> Class ID: <?php echo $section['id']; ?>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <?php endwhile; ?>
-        </div>
-
-        <!-- Section Summary -->
-        <div class="minimal-card mt-4">
-            <h5 class="section-title">Section Summary</h5>
-            <div class="row text-center">
-                <?php
-                // Calculate summary
-                $sections_result->data_seek(0);
-                $total_sections = 0;
-                $total_students = 0;
-                $total_capacity = 0;
-                
-                while ($section = $sections_result->fetch_assoc()) {
-                    $total_sections++;
-                    $total_students += $section['enrolled_count'];
-                    $total_capacity += $section['max_capacity'];
-                }
-                
-                $avg_utilization = $total_capacity > 0 ? round(($total_students / $total_capacity) * 100) : 0;
-                ?>
-                
-                <div class="col-md-3">
-                    <h3 style="color: var(--maroon);"><?php echo $total_sections; ?></h3>
-                    <p class="text-muted mb-0">Total Sections</p>
-                </div>
-                <div class="col-md-3">
-                    <h3 style="color: var(--navy);"><?php echo $total_students; ?></h3>
-                    <p class="text-muted mb-0">Total Students</p>
-                </div>
-                <div class="col-md-3">
-                    <h3 style="color: #17a2b8;"><?php echo $total_capacity; ?></h3>
-                    <p class="text-muted mb-0">Total Capacity</p>
-                </div>
-                <div class="col-md-3">
-                    <h3 style="color: #28a745;"><?php echo $avg_utilization; ?>%</h3>
-                    <p class="text-muted mb-0">Utilization</p>
-                </div>
-            </div>
-        </div>
-
-        <?php endif; ?>
+        <a href="my_classes.php" class="btn btn-outline-secondary btn-sm px-3 rounded-pill shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Part 2: Scrollable Content Area -->
+<div class="body-scroll-part">
+    
+    <?php if ($sections_result->num_rows == 0): ?>
+    <div class="alert bg-white border-0 shadow-sm p-4 text-center animate__animated animate__fadeIn">
+        <i class="bi bi-exclamation-circle text-warning fs-1"></i>
+        <h5 class="mt-3">No active sections found for this subject.</h5>
+    </div>
+    <?php else: ?>
+
+    <div class="row g-4">
+        <?php 
+        $counter = 1;
+        while ($section = $sections_result->fetch_assoc()): 
+            $max = (int)$section['max_capacity'];
+            $current = (int)$section['enrolled_count'];
+            $percentage = ($max > 0) ? ($current / $max) * 100 : 0;
+            
+            if ($percentage >= 100) {
+                $bar_color = '#dc3545'; $badge_bg = 'bg-danger'; $status_text = 'Full';
+            } elseif ($percentage >= 85) {
+                $bar_color = '#ffc107'; $badge_bg = 'bg-warning text-dark'; $status_text = 'Near Limit';
+            } else {
+                $bar_color = '#28a745'; $badge_bg = 'bg-success'; $status_text = 'Available';
+            }
+        ?>
+        <div class="col-md-6 col-lg-4 animate__animated animate__zoomIn">
+            <div class="section-card" style="border-top: 5px solid <?php echo $bar_color; ?>;">
+                <div class="p-4 flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark"><?php echo htmlspecialchars($section['section_name'] ?: 'Section'); ?></h5>
+                            <span class="small text-muted"><i class="bi bi-building me-1"></i><?php echo htmlspecialchars($section['branch_name'] ?: 'N/A'); ?></span>
+                        </div>
+                        <span class="badge <?php echo $badge_bg; ?> rounded-pill small px-3"><?php echo $status_text; ?></span>
+                    </div>
+
+                    <div class="mb-2 small text-muted"><i class="bi bi-door-closed me-2 text-maroon"></i><strong>Room:</strong> <?php echo htmlspecialchars($section['room'] ?: 'TBD'); ?></div>
+                    <div class="mb-4 small text-muted"><i class="bi bi-calendar3 me-2 text-maroon"></i><strong>Schedule:</strong> <?php echo htmlspecialchars($section['schedule'] ?: 'TBD'); ?></div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="fw-bold text-muted small text-uppercase" style="font-size: 0.65rem;">Enrollment Progress</small>
+                            <small class="fw-bold" style="color: var(--blue);"><?php echo $current; ?> / <?php echo $max; ?></small>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-fill" style="width: <?php echo min($percentage, 100); ?>%; background-color: <?php echo $bar_color; ?>;"></div>
+                        </div>
+                        <div class="text-end"><small class="text-muted" style="font-size: 0.7rem;"><?php echo round($percentage); ?>% Capacity Used</small></div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="classroom.php?id=<?php echo $section['id']; ?>" class="btn-enter-section shadow-sm">
+                            <i class="bi bi-door-open me-2"></i> Enter Classroom
+                        </a>
+                    </div>
+                </div>
+                <div class="bg-light p-2 text-center border-top"><small class="text-muted fw-bold">ID: <?php echo $section['id']; ?></small></div>
+            </div>
+        </div>
+        <?php endwhile; ?>
+    </div>
+
+    <!-- BROUGHT BACK: ANALYTICS OVERVIEW -->
+    <div class="bg-white rounded-4 shadow-sm p-4 mt-5 animate__animated animate__fadeInUp">
+        <h6 class="fw-bold text-uppercase small opacity-50 mb-4" style="letter-spacing: 1.5px;">Analytics Overview</h6>
+        <?php
+        $sections_result->data_seek(0);
+        $t_sec = 0; $t_stu = 0; $t_cap = 0;
+        while ($s = $sections_result->fetch_assoc()) { 
+            $t_sec++; 
+            $t_stu += (int)$s['enrolled_count']; 
+            $t_cap += (int)$s['max_capacity']; 
+        }
+        $util = ($t_cap > 0) ? round(($t_stu / $t_cap) * 100) : 0;
+        ?>
+        <div class="row text-center g-4">
+            <div class="col-md-3 border-end"><h3><?php echo $t_sec; ?></h3><small class="text-muted fw-bold">Sections</small></div>
+            <div class="col-md-3 border-end"><h3><?php echo $t_stu; ?></h3><small class="text-muted fw-bold">Students</small></div>
+            <div class="col-md-3 border-end"><h3><?php echo $t_cap; ?></h3><small class="text-muted fw-bold">Capacity</small></div>
+            <div class="col-md-3"><h3><?php echo $util; ?>%</h3><small class="text-muted fw-bold">Utilization</small></div>
+        </div>
+    </div>
+
+    <?php endif; ?>
+</div>
+
+<?php include '../../includes/footer.php'; ?>
 </body>
 </html>

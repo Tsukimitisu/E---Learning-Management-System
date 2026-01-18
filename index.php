@@ -57,7 +57,7 @@ if (isset($_SESSION['user_id'])) {
                 <form id="loginForm">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Email Address</label>
-                        <input type="email" class="form-control custom-input" id="email" name="email" placeholder="username@datamex.edu.ph" required>
+                        <input type="email" class="form-control custom-input" id="email" name="email" placeholder="email@elms.com" required>
                     </div>
                     
                     <div class="mb-3">
