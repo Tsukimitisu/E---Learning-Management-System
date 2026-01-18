@@ -33,42 +33,42 @@ try {
 }
 
 /**
- * Clean Input Helper Function
- * Sanitizes user input to prevent XSS attacks
- * 
- * @param string $data - Raw input data
- * @return string - Sanitized data
+ * Clean Input Helper Function (fallback if functions.php not loaded)
  */
-function clean_input($data) {
-    if ($data === null) return '';
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
-    return $data;
+if (!function_exists('clean_input')) {
+    function clean_input($data) {
+        if ($data === null) return '';
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        return $data;
+    }
 }
 
 /**
  * Get Client IP Address
- * 
- * @return string - IP Address
  */
-function get_client_ip() {
-    $ip = '';
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    } else {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+if (!function_exists('get_client_ip')) {
+    function get_client_ip() {
+        $ip = '';
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        }
+        return $ip;
     }
-    return $ip;
 }
 
-function safe_html($string, $default = '') {
-    if ($string === null || $string === '') {
-        return $default;
+if (!function_exists('safe_html')) {
+    function safe_html($string, $default = '') {
+        if ($string === null || $string === '') {
+            return $default;
+        }
+        return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
     }
-    return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
 }
 
 ?>

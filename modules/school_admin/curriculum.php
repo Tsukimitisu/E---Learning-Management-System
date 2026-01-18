@@ -14,6 +14,61 @@ $program_count = $conn->query("SELECT COUNT(*) as count FROM programs WHERE is_a
 $shs_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type IN ('shs_core', 'shs_applied', 'shs_specialized') AND is_active = 1")->fetch_assoc()['count'];
 $college_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type = 'college' AND is_active = 1")->fetch_assoc()['count'];
 
+// Fetch actual data arrays for display and JavaScript
+$tracks = [];
+$tracks_result = $conn->query("SELECT id, track_name AS name, track_code, description, is_active FROM shs_tracks ORDER BY track_name");
+if ($tracks_result) {
+    while ($row = $tracks_result->fetch_assoc()) {
+        $tracks[] = $row;
+    }
+}
+
+$strands = [];
+$strands_result = $conn->query("
+    SELECT st.id, st.strand_name AS name, st.strand_code, st.description, st.is_active, st.track_id,
+           t.track_name AS track_name
+    FROM shs_strands st
+    LEFT JOIN shs_tracks t ON st.track_id = t.id
+    ORDER BY st.strand_name
+");
+if ($strands_result) {
+    while ($row = $strands_result->fetch_assoc()) {
+        $strands[] = $row;
+    }
+}
+
+$grade_levels = [];
+$grade_levels_result = $conn->query("SELECT id, grade_name AS name, semesters_count AS semesters, is_active FROM shs_grade_levels ORDER BY grade_name");
+if ($grade_levels_result) {
+    while ($row = $grade_levels_result->fetch_assoc()) {
+        $grade_levels[] = $row;
+    }
+}
+
+$college_programs = [];
+$college_programs_result = $conn->query("
+    SELECT id, program_code AS code, program_name AS name, degree_level, school_id, is_active
+    FROM programs
+    ORDER BY program_code
+");
+if ($college_programs_result) {
+    while ($row = $college_programs_result->fetch_assoc()) {
+        $college_programs[] = $row;
+    }
+}
+
+$college_year_levels = [];
+$college_year_levels_result = $conn->query("
+    SELECT id, program_id, year_level as year_number, year_name as name, semesters_count as semesters, is_active
+    FROM program_year_levels
+    ORDER BY program_id, year_level
+");
+if ($college_year_levels_result) {
+    while ($row = $college_year_levels_result->fetch_assoc()) {
+        $college_year_levels[] = $row;
+    }
+}
+
 include '../../includes/header.php';
 ?>
 
@@ -22,11 +77,20 @@ include '../../includes/header.php';
 
     <div id="content">
         <div class="navbar-custom d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="color: #003366;">
-                <i class="bi bi-book"></i> Curriculum Management
-            </h4>
-            <small class="text-muted">Design and control SHS & College curriculum</small>
+            <div>
+                <a href="index.php" class="btn btn-sm btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <span style="display: inline-block;">
+                    <h4 class="mb-0 d-inline-block" style="color: #003366;">
+                        <i class="bi bi-book"></i> Curriculum Management
+                    </h4>
+                    <br><small class="text-muted">Select SHS or College to manage subjects</small>
+                </span>
+            </div>
         </div>
+
+        <div id="alertContainer" class="mt-3"></div>
 
         <div class="row mt-4">
             <!-- SHS Curriculum Card -->
@@ -38,9 +102,8 @@ include '../../includes/header.php';
                         </h5>
                     </div>
                     <div class="card-body">
-                        <p class="card-text">Manage SHS academic tracks, strands, grade levels, and subject assignments.</p>
+                        <p class="card-text">Manage SHS strands, grade levels, and subject assignments.</p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle text-success"></i> Academic Tracks (STEM, ABM, HUMSS, etc.)</li>
                             <li><i class="bi bi-check-circle text-success"></i> Specialized Strands</li>
                             <li><i class="bi bi-check-circle text-success"></i> Grade 11 & 12 Levels</li>
                             <li><i class="bi bi-check-circle text-success"></i> Subject Assignments</li>
@@ -144,9 +207,14 @@ include '../../includes/header.php';
             <div class="card-body">
                 <?php
                 $recent_activity = $conn->query("
-                    SELECT al.action, al.timestamp as created_at, u.first_name, u.last_name
+                    SELECT al.action,
+                           al.timestamp AS created_at,
+                           COALESCE(up.first_name, '') AS first_name,
+                           COALESCE(up.last_name, '') AS last_name,
+                           u.email
                     FROM audit_logs al
                     LEFT JOIN users u ON al.user_id = u.id
+                    LEFT JOIN user_profiles up ON up.user_id = u.id
                     WHERE al.action LIKE '%curriculum%' OR al.action LIKE '%subject%' OR al.action LIKE '%program%' OR al.action LIKE '%track%'
                     ORDER BY al.timestamp DESC
                     LIMIT 5
@@ -170,7 +238,7 @@ include '../../includes/header.php';
     </div>
 </div>
 
-            <div class="card-body">
+        <div class="card-body curriculum-management-tracks">
                 <div class="tab-content" id="curriculumTabContent">
 
                     <!-- Tracks Tab -->
@@ -406,18 +474,87 @@ include '../../includes/header.php';
                                                 <?php echo $program['is_active'] ? 'Active' : 'Inactive'; ?>
                                             </span>
                                         </p>
-                                        <div class="d-flex justify-content-between">
+                                        <div class="d-flex justify-content-between gap-2">
                                             <button class="btn btn-sm btn-outline-warning" onclick="editProgram(<?php echo $program['id']; ?>)">
-                                                <i class="bi bi-pencil"></i>
+                                                <i class="bi bi-pencil"></i> Edit
                                             </button>
                                             <button class="btn btn-sm btn-outline-info" onclick="viewProgramCurriculum(<?php echo $program['id']; ?>)">
                                                 <i class="bi bi-eye"></i> Curriculum
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCollegeProgram(<?php echo $program['id']; ?>, '<?php echo htmlspecialchars($program['code']); ?>')">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- College Subjects Tab -->
+                    <div class="tab-pane fade" id="college-subjects" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">College Subjects</h5>
+                            <button class="btn btn-sm text-white" style="background-color: #800000;" data-bs-toggle="modal" data-bs-target="#addCollegeSubjectModal">
+                                <i class="bi bi-plus-circle"></i> Add College Subject
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Title</th>
+                                        <th>Units</th>
+                                        <th>Lecture Hours</th>
+                                        <th>Lab Hours</th>
+                                        <th>Program</th>
+                                        <th>Year Level</th>
+                                        <th>Semester</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $college_subjects_result = $conn->query("
+                                        SELECT cs.id, cs.subject_code, cs.subject_title, cs.units, cs.lecture_hours, cs.lab_hours, 
+                                               cs.semester, cs.is_active, p.program_code, p.program_name, pyl.year_name
+                                        FROM curriculum_subjects cs
+                                        LEFT JOIN programs p ON cs.program_id = p.id
+                                        LEFT JOIN program_year_levels pyl ON cs.year_level_id = pyl.id
+                                        WHERE cs.subject_type = 'college'
+                                        ORDER BY cs.subject_code
+                                    ");
+                                    while ($subject = $college_subjects_result->fetch_assoc()): 
+                                    ?>
+                                    <tr>
+                                        <td><strong><?php echo htmlspecialchars($subject['subject_code']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($subject['subject_title']); ?></td>
+                                        <td><?php echo $subject['units']; ?></td>
+                                        <td><?php echo $subject['lecture_hours'] ?? 0; ?></td>
+                                        <td><?php echo $subject['lab_hours'] ?? 0; ?></td>
+                                        <td><?php echo htmlspecialchars($subject['program_code'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($subject['year_name'] ?? '-'); ?></td>
+                                        <td><?php echo $subject['semester']; ?></td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $subject['is_active'] ? 'success' : 'secondary'; ?>">
+                                                <?php echo $subject['is_active'] ? 'Active' : 'Inactive'; ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning me-1" onclick="editCollegeSubject(<?php echo $subject['id']; ?>)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCollegeSubject(<?php echo $subject['id']; ?>, '<?php echo htmlspecialchars($subject['subject_code']); ?>')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -488,66 +625,75 @@ include '../../includes/header.php';
                             </button>
                         </div>
                         <div class="row">
-                            <?php foreach ($college_year_levels as $year): ?>
-                            <div class="col-md-3 mb-3">
-                                <div class="card border-dark">
-                                    <div class="card-header bg-dark text-white text-center">
-                                        <h4 class="mb-0"><?php echo htmlspecialchars($year['name']); ?></h4>
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <p class="mb-2"><strong>Year:</strong> <?php echo $year['year_number']; ?></p>
-                                        <p class="mb-2"><strong>Semesters:</strong> <?php echo $year['semesters']; ?></p>
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <?php for ($i = 1; $i <= $year['semesters']; $i++): ?>
-                                            <span class="badge bg-secondary"><?php echo $i; ?></span>
-                                            <?php endfor; ?>
-                                        </div>
-                                        <div class="mt-3">
-                                            <button class="btn btn-sm btn-outline-warning" onclick="editCollegeYear(<?php echo $year['id']; ?>)">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <!-- Course Assignments Tab -->
-                    <div class="tab-pane fade" id="course-assignments" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">College Course Assignments</h5>
-                            <button class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#assignCollegeCourseModal">
-                                <i class="bi bi-link"></i> Assign Course
-                            </button>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Assign college courses to specific programs, year levels, and semesters.
-                        </div>
-                        <div class="row">
-                            <?php foreach ($college_programs as $program): ?>
-                            <div class="col-md-6 mb-4">
-                                <div class="card">
+                            <?php 
+                            // Group year levels by program and include all programs
+                            $grouped_year_levels = [];
+                            
+                            // First, initialize all programs
+                            foreach ($college_programs as $program) {
+                                $program_id = $program['id'];
+                                if (!isset($grouped_year_levels[$program_id])) {
+                                    $grouped_year_levels[$program_id] = [
+                                        'program_name' => $program['name'],
+                                        'levels' => []
+                                    ];
+                                }
+                            }
+                            
+                            // Then, add year levels to their programs
+                            foreach ($college_year_levels as $year) {
+                                $program_id = $year['program_id'] ?? 0;
+                                $program_name = $year['program_name'] ?? 'General';
+                                if (!isset($grouped_year_levels[$program_id])) {
+                                    $grouped_year_levels[$program_id] = [
+                                        'program_name' => $program_name,
+                                        'levels' => []
+                                    ];
+                                }
+                                $grouped_year_levels[$program_id]['levels'][] = $year;
+                            }
+                            ?>
+                            <?php foreach ($grouped_year_levels as $program_id => $group): ?>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-dark h-100">
                                     <div class="card-header bg-dark text-white">
-                                        <h6 class="mb-0"><?php echo htmlspecialchars($program['code'] . ' - ' . $program['name']); ?></h6>
+                                        <h5 class="mb-0"><?php echo htmlspecialchars($group['program_name']); ?></h5>
                                     </div>
                                     <div class="card-body">
-                                        <?php for ($year = 1; $year <= $program['duration_years']; $year++): ?>
-                                        <div class="mb-3">
-                                            <h6 class="text-primary">Year <?php echo $year; ?></h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <h6 class="small">1st Semester</h6>
-                                                    <small class="text-muted">Courses will be listed here</small>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6 class="small">2nd Semester</h6>
-                                                    <small class="text-muted">Courses will be listed here</small>
+                                        <?php if (empty($group['levels'])): ?>
+                                        <div class="alert alert-info mb-0">
+                                            <small>No year levels added yet. Click "Add Year Level" to create one.</small>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="row">
+                                            <?php foreach ($group['levels'] as $year): ?>
+                                            <div class="col-md-6 mb-2">
+                                                <div class="card border-secondary">
+                                                    <div class="card-header bg-secondary text-white text-center">
+                                                        <h6 class="mb-0"><?php echo htmlspecialchars($year['name']); ?></h6>
+                                                    </div>
+                                                    <div class="card-body text-center">
+                                                        <p class="mb-2"><strong>Year:</strong> <?php echo $year['year_number']; ?></p>
+                                                        <p class="mb-2"><strong>Semesters:</strong> <?php echo $year['semesters']; ?></p>
+                                                        <div class="d-flex justify-content-center gap-1 mb-2">
+                                                            <?php for ($i = 1; $i <= $year['semesters']; $i++): ?>
+                                                            <span class="badge bg-dark"><?php echo $i; ?></span>
+                                                            <?php endfor; ?>
+                                                        </div>
+                                                        <div>
+                                                            <button class="btn btn-sm btn-outline-warning" onclick="editCollegeYear(<?php echo $year['id']; ?>)" title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCollegeYear(<?php echo $year['id']; ?>, '<?php echo htmlspecialchars($year['name']); ?>')" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <?php endforeach; ?>
                                         </div>
-                                        <?php endfor; ?>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -621,535 +767,6 @@ include '../../includes/header.php';
     </div>
 </div>
 
-<!-- Add Track Modal -->
-<div class="modal fade" id="addTrackModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Academic Track</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addTrackForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Track Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="track_name" required placeholder="e.g. Academic, TVL, Arts & Design">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the track"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Add Track
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Track Modal -->
-<div class="modal fade" id="addTrackModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Academic Track</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addTrackForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Track Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="track_name" required placeholder="e.g. Academic, TVL, Arts & Design">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Track Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="track_code" required placeholder="e.g. ACAD, TVL, ARTS">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Written Work Weight (%)</label>
-                        <input type="number" class="form-control" name="written_work_weight" min="0" max="100" value="30">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Performance Task Weight (%)</label>
-                        <input type="number" class="form-control" name="performance_task_weight" min="0" max="100" value="50">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Quarterly Exam Weight (%)</label>
-                        <input type="number" class="form-control" name="quarterly_exam_weight" min="0" max="100" value="20">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the track"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Add Track
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Strand Modal -->
-<div class="modal fade" id="addStrandModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Academic Strand</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addStrandForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Track <span class="text-danger">*</span></label>
-                        <select class="form-select" name="track_id" required>
-                            <option value="">-- Select Track --</option>
-                            <?php foreach ($tracks as $track): ?>
-                            <option value="<?php echo $track['id']; ?>"><?php echo htmlspecialchars($track['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Strand Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="strand_name" required placeholder="e.g. STEM, ABM, HUMSS">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the strand"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Add Strand
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Grade Level Modal -->
-<div class="modal fade" id="addGradeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Grade Level</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addGradeForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Grade Level Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="grade_name" required placeholder="e.g. Grade 11, Grade 12">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Number of Semesters <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="semesters" required min="1" max="4" value="2">
-                        <small class="text-muted">How many semesters in this grade level?</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info">
-                        <i class="bi bi-save"></i> Add Grade Level
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Subject Modal -->
-<div class="modal fade" id="addSubjectModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: #800000; color: white;">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add SHS Subject</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addSubjectForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Subject Code <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="subject_code" required placeholder="e.g. ORAL-COM-11">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Subject Category <span class="text-danger">*</span></label>
-                            <select class="form-select" name="category" required>
-                                <option value="">-- Select Category --</option>
-                                <option value="core">Core</option>
-                                <option value="applied">Applied</option>
-                                <option value="specialized">Specialized</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Subject Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="subject_title" required placeholder="e.g. Oral Communication in Context">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Units <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="units" required min="0.5" max="5" step="0.5" value="3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Hours per Week</label>
-                            <input type="number" class="form-control" name="hours" min="1" max="10" value="3">
-                            <small class="text-muted">Contact hours per week</small>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Prerequisites (Optional)</label>
-                        <input type="text" class="form-control" name="prerequisites" placeholder="e.g. None, Grade 11 subjects">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white" style="background-color: #800000;">
-                        <i class="bi bi-save"></i> Add SHS Subject
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Assign Subject Modal -->
-<div class="modal fade" id="assignSubjectModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title"><i class="bi bi-link"></i> Assign Subject to Curriculum</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="assignSubjectForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Subject <span class="text-danger">*</span></label>
-                            <select class="form-select" name="subject_id" required>
-                                <option value="">-- Select Subject --</option>
-                                <?php
-                                $subjects_result->data_seek(0);
-                                while ($subject = $subjects_result->fetch_assoc()):
-                                ?>
-                                <option value="<?php echo $subject['id']; ?>">
-                                    <?php echo htmlspecialchars($subject['subject_code'] . ' - ' . $subject['subject_title']); ?>
-                                </option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Track <span class="text-danger">*</span></label>
-                            <select class="form-select" name="track_id" required onchange="loadStrands(this.value)">
-                                <option value="">-- Select Track --</option>
-                                <?php foreach ($tracks as $track): ?>
-                                <option value="<?php echo $track['id']; ?>"><?php echo htmlspecialchars($track['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Strand <span class="text-danger">*</span></label>
-                            <select class="form-select" name="strand_id" required id="strandSelect">
-                                <option value="">-- Select Strand --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Grade Level <span class="text-danger">*</span></label>
-                            <select class="form-select" name="grade_level_id" required>
-                                <option value="">-- Select Grade Level --</option>
-                                <?php foreach ($grade_levels as $grade): ?>
-                                <option value="<?php echo $grade['id']; ?>"><?php echo htmlspecialchars($grade['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Semester <span class="text-danger">*</span></label>
-                        <select class="form-select" name="semester" required>
-                            <option value="">-- Select Semester --</option>
-                            <option value="1">1st Semester</option>
-                            <option value="2">2nd Semester</option>
-                        </select>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> This assignment determines when and where this subject is offered in the curriculum.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-secondary">
-                        <i class="bi bi-link"></i> Assign Subject
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add College Program Modal -->
-<div class="modal fade" id="addProgramModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add College Program</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addProgramForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Program Code <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="program_code" required placeholder="e.g. BSCS, BSIT">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Degree Level <span class="text-danger">*</span></label>
-                            <select class="form-select" name="degree_level" required>
-                                <option value="">-- Select Degree Level --</option>
-                                <option value="Associate">Associate Degree</option>
-                                <option value="Bachelor">Bachelor's Degree</option>
-                                <option value="Master">Master's Degree</option>
-                                <option value="Doctorate">Doctorate</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Program Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="program_name" required placeholder="e.g. Bachelor of Science in Computer Science">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Duration (Years) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="duration_years" required min="1" max="6" value="4">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Total Units Required</label>
-                            <input type="number" class="form-control" name="total_units" min="1" placeholder="e.g. 145">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Program Description</label>
-                        <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the program"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-secondary">
-                        <i class="bi bi-save"></i> Add Program
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add College Course Modal -->
-<div class="modal fade" id="addCollegeCourseModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add College Course</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addCollegeCourseForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Course Code <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="course_code" required placeholder="e.g. CS101, MATH101">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Course Category <span class="text-danger">*</span></label>
-                            <select class="form-select" name="category" required>
-                                <option value="">-- Select Category --</option>
-                                <option value="major">Major Course</option>
-                                <option value="general">General Education</option>
-                                <option value="elective">Elective</option>
-                                <option value="prerequisite">Prerequisite</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Course Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="course_title" required placeholder="e.g. Introduction to Computing">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Credit Units <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="units" required min="0.5" max="6" step="0.5" value="3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Contact Hours per Week</label>
-                            <input type="number" class="form-control" name="hours" min="1" max="10" value="3">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Lecture Hours</label>
-                            <input type="number" class="form-control" name="lecture_hours" min="0" value="3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Laboratory Hours</label>
-                            <input type="number" class="form-control" name="lab_hours" min="0" value="0">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Prerequisites</label>
-                        <input type="text" class="form-control" name="prerequisites" placeholder="e.g. CS101, MATH101 or None">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Course Description</label>
-                        <textarea class="form-control" name="description" rows="2" placeholder="Brief course description"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark">
-                        <i class="bi bi-save"></i> Add Course
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add College Year Level Modal -->
-<div class="modal fade" id="addCollegeYearModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add College Year Level</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addCollegeYearForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Year Level Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="year_name" required placeholder="e.g. 1st Year, 2nd Year">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Year Number <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="year_number" required min="1" max="6" value="1">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Semesters in this Year <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="semesters" required min="1" max="4" value="2">
-                        <small class="text-muted">Usually 2 semesters per year</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark">
-                        <i class="bi bi-save"></i> Add Year Level
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Assign College Course Modal -->
-<div class="modal fade" id="assignCollegeCourseModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title"><i class="bi bi-link"></i> Assign College Course to Curriculum</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="assignCollegeCourseForm">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Course <span class="text-danger">*</span></label>
-                            <select class="form-select" name="course_id" required>
-                                <option value="">-- Select Course --</option>
-                                <option value="CS101">CS101 - Introduction to Computing</option>
-                                <option value="CS102">CS102 - Computer Programming 1</option>
-                                <option value="MATH101">MATH101 - College Algebra</option>
-                                <option value="ENG101">ENG101 - Communication Skills 1</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Program <span class="text-danger">*</span></label>
-                            <select class="form-select" name="program_id" required>
-                                <option value="">-- Select Program --</option>
-                                <?php foreach ($college_programs as $program): ?>
-                                <option value="<?php echo $program['id']; ?>"><?php echo htmlspecialchars($program['code'] . ' - ' . $program['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Year Level <span class="text-danger">*</span></label>
-                            <select class="form-select" name="year_level_id" required>
-                                <option value="">-- Select Year Level --</option>
-                                <?php foreach ($college_year_levels as $year): ?>
-                                <option value="<?php echo $year['id']; ?>"><?php echo htmlspecialchars($year['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Semester <span class="text-danger">*</span></label>
-                            <select class="form-select" name="semester" required>
-                                <option value="">-- Select Semester --</option>
-                                <option value="1">1st Semester</option>
-                                <option value="2">2nd Semester</option>
-                                <option value="3">Summer</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Is Required Course?</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="is_required" id="isRequiredCheck" checked>
-                            <label class="form-check-label" for="isRequiredCheck">
-                                Yes, this is a required course for the program
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> This assignment determines when and for which program this course is offered.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark">
-                        <i class="bi bi-link"></i> Assign Course
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- Edit Track Modal -->
 <div class="modal fade" id="editTrackModal" tabindex="-1">
@@ -1332,6 +949,7 @@ include '../../includes/header.php';
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #800000;">
+                        <!-- Edit Track Modal -->
                         <i class="bi bi-save"></i> Update Subject
                     </button>
                 </div>
@@ -1620,6 +1238,8 @@ include '../../includes/header.php';
     </div>
 </div>
 
+<?php include 'curriculum_modals.php'; ?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Track data for JavaScript
@@ -1720,7 +1340,7 @@ document.getElementById('assignSubjectForm').addEventListener('submit', async fu
     const formData = new FormData(e.target);
 
     try {
-        const response = await fetch('process/assign_subject.php', {
+        const response = await fetch('/elms_system/modules/school_admin/process/assign_shs_subject.php', {
             method: 'POST',
             body: formData
         });
@@ -1781,6 +1401,29 @@ document.getElementById('addCollegeCourseForm').addEventListener('submit', async
     }
 });
 
+document.getElementById('editCollegeSubjectForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+        const response = await fetch('/elms_system/modules/school_admin/process/update_subject.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            showAlert('Subject updated successfully!', 'success');
+            $('#editCollegeSubjectModal').modal('hide');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('An error occurred', 'danger');
+    }
+});
+
 document.getElementById('addCollegeYearForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -1808,7 +1451,7 @@ document.getElementById('assignCollegeCourseForm').addEventListener('submit', as
     const formData = new FormData(e.target);
 
     try {
-        const response = await fetch('process/assign_college_course.php', {
+        const response = await fetch('/elms_system/modules/school_admin/process/assign_college_course.php', {
             method: 'POST',
             body: formData
         });
@@ -2204,8 +1847,8 @@ function editCollegeYear(id) {
 }
 
 function assignSubject(id) {
-    
-    document.querySelector('select[name="subject_id"]').value = id;
+    const target = document.querySelector('select[name="subject_id"]') || document.querySelector('input[name="subject_id"]');
+    if (target) target.value = id;
     new bootstrap.Modal(document.getElementById('assignSubjectModal')).show();
 }
 
@@ -2220,5 +1863,6 @@ function showAlert(message, type) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
+
 </body>
 </html>

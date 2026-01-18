@@ -3,7 +3,8 @@ require_once '../../../config/init.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_SUPER_ADMIN) {
+$user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
+if (!isset($_SESSION['user_id']) || $user_role != ROLE_SUPER_ADMIN) {
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized access']);
     exit();
 }

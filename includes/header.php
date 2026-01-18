@@ -77,6 +77,377 @@ if (!isset($_SESSION['user_id'])) {
             .overlay.active { display: block; }
             .main-content-body { padding: 15px; }
         }
+
+        /* ===== MINIMALIST DESIGN - MAROON, NAVY BLUE & WHITE ===== */
+        
+        body { 
+            background-color: #f5f5f5; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #1a1a1a;
+        }
+        
+        /* Cards - Clean & Minimal */
+        .card { 
+            border: none; 
+            border-radius: 4px; 
+            background: #fff; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+        .card-header { 
+            border: none !important; 
+            background-color: #fff !important; 
+            padding: 20px 25px !important; 
+            font-weight: 600 !important;
+            border-bottom: 1px solid #e8e8e8 !important;
+            color: var(--blue);
+        }
+        .card-body { padding: 25px !important; }
+        
+        /* Tables - Minimalist */
+        .table { 
+            margin-bottom: 0; 
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table thead th {
+            background-color: var(--blue);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        .table tbody td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f0f0;
+            color: #1a1a1a;
+            font-size: 0.9rem;
+        }
+        .table tbody tr { 
+            transition: background-color 0.15s ease;
+        }
+        .table tbody tr:hover { 
+            background-color: #f8f9fb; 
+        }
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Buttons - Minimalist with Maroon & Navy */
+        .btn { 
+            font-weight: 500; 
+            border-radius: 4px;
+            padding: 0.5rem 1.25rem;
+            border: none;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .btn-sm { 
+            padding: 0.35rem 0.9rem; 
+            font-size: 0.75rem;
+        }
+        
+        /* Maroon Primary Buttons */
+        .btn-primary,
+        .btn[style*="background-color: #800000"],
+        .btn[style*="background-color:#800000"] { 
+            background-color: var(--maroon) !important; 
+            border-color: var(--maroon) !important;
+            color: white !important;
+        }
+        .btn-primary:hover { 
+            background-color: #660000 !important; 
+            border-color: #660000 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(128,0,0,0.3);
+        }
+        
+        /* Navy Blue Secondary */
+        .btn-secondary,
+        .btn-info { 
+            background-color: var(--blue); 
+            border-color: var(--blue);
+            color: white;
+        }
+        .btn-secondary:hover,
+        .btn-info:hover { 
+            background-color: #002145; 
+            border-color: #002145;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,51,102,0.3);
+        }
+        
+        /* Action Buttons */
+        .btn-success { 
+            background-color: #2ecc71; 
+            border-color: #2ecc71;
+        }
+        .btn-success:hover { 
+            background-color: #27ae60; 
+            transform: translateY(-1px);
+        }
+        .btn-warning { 
+            background-color: #f39c12; 
+            border-color: #f39c12; 
+            color: white;
+        }
+        .btn-warning:hover { 
+            background-color: #e67e22; 
+            transform: translateY(-1px);
+        }
+        .btn-danger { 
+            background-color: #e74c3c; 
+            border-color: #e74c3c;
+        }
+        .btn-danger:hover { 
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .curriculum-management-tracks {
+            display: none !important;
+        }
+
+        /* Outline Buttons */
+        .btn-outline-secondary { 
+            border: 1px solid #ddd;
+            color: #666; 
+            background: white;
+            font-weight: 500;
+        }
+        .btn-outline-secondary:hover { 
+            background-color: var(--blue);
+            border-color: var(--blue);
+            color: white;
+        }
+
+        /* Badges - Clean & Minimal */
+        .badge { 
+            padding: 0.4rem 0.8rem; 
+            font-weight: 500; 
+            border-radius: 3px; 
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge.bg-success { background-color: #2ecc71 !important; }
+        .badge.bg-danger { background-color: #e74c3c !important; }
+        .badge.bg-warning { background-color: #f39c12 !important; color: white !important; }
+        .badge.bg-info { background-color: var(--blue) !important; }
+        .badge.bg-secondary { background-color: #95a5a6 !important; }
+
+        /* Alerts - Minimal */
+        #alertContainer { 
+            position: relative; 
+            margin: 20px 0; 
+            z-index: 100; 
+        }
+        .alert {
+            border-radius: 4px;
+            border-left: 4px solid;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 15px 20px;
+        }
+        .alert-info {
+            border-left-color: var(--blue);
+            color: var(--blue);
+        }
+        .alert-success {
+            border-left-color: #2ecc71;
+            color: #27ae60;
+        }
+        .alert-warning {
+            border-left-color: #f39c12;
+            color: #e67e22;
+        }
+        .alert-danger {
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+
+        /* Modals - Minimal with Navy Header */
+        .modal-content {
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .modal-header { 
+            border-bottom: 1px solid #e8e8e8; 
+            background-color: var(--blue);
+            color: white;
+            padding: 20px 25px;
+        }
+        .modal-header.bg-primary { background-color: var(--maroon) !important; }
+        .modal-header.bg-success { background-color: #2ecc71 !important; }
+        .modal-header.bg-warning { background-color: #f39c12 !important; }
+        .modal-header.bg-info { background-color: var(--blue) !important; }
+        .modal-header.bg-secondary { background-color: #7f8c8d !important; }
+        .modal-header.bg-dark { background-color: #2c3e50 !important; }
+        .modal-title { font-weight: 600; font-size: 1.1rem; }
+        .modal-body { padding: 25px; }
+        .modal-footer { 
+            border-top: 1px solid #e8e8e8; 
+            padding: 15px 25px;
+            background-color: #fafafa;
+        }
+
+        /* Form Controls - Clean & Minimal */
+        .form-control, .form-select {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.6rem 1rem;
+            transition: all 0.2s ease;
+            background-color: white;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.08);
+            outline: none;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Navbar Custom - Minimal */
+        .navbar-custom { 
+            background: white;
+            padding: 20px 25px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .navbar-custom h4 {
+            margin-bottom: 5px;
+            color: var(--blue);
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        .navbar-custom small {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Stats Cards - Minimal with Accent Colors */
+        .stat-card {
+            background: white;
+            border-radius: 4px;
+            padding: 25px;
+            border-left: 4px solid var(--maroon);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: all 0.2s ease;
+        }
+        .stat-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 { 
+            font-weight: 600; 
+            color: var(--blue); 
+            margin: 0; 
+            font-size: 2.2rem; 
+        }
+        .stat-card p { 
+            color: #555; 
+            font-size: 0.9rem; 
+            margin-top: 8px; 
+            margin-bottom: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Tabs - Minimal Navy Style */
+        .nav-tabs {
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+        .nav-tabs .nav-link {
+            color: #555;
+            font-weight: 500;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .nav-tabs .nav-link:hover {
+            border-bottom-color: #ddd;
+            color: var(--blue);
+            background: transparent;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--blue);
+            background-color: transparent;
+            border-bottom-color: var(--maroon);
+            font-weight: 600;
+        }
+
+        /* Progress Bar */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e8e8e8;
+        }
+        .progress-bar {
+            background-color: var(--maroon);
+            border-radius: 10px;
+        }
+
+        /* Content Wrapper */
+        #content {
+            padding: 25px;
+        }
+        
+        /* Remove excessive shadows and borders */
+        .shadow-sm {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+        }
+        
+        /* Text Colors */
+        .text-primary { color: var(--blue) !important; }
+        .text-secondary { color: #7f8c8d !important; }
+        .text-muted { color: #95a5a6 !important; }
+        
+        /* Icon Styling */
+        i.bi {
+            margin-right: 5px;
+        }
+        
+        /* Border Colors */
+        .border-primary { border-color: var(--blue) !important; }
+        .border-secondary { border-color: #e8e8e8 !important; }
+
+        /* Responsive Improvements */
+        @media (max-width: 768px) {
+            .navbar-custom {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 15px;
+            }
+            .table {
+                font-size: 0.85rem;
+            }
+            .table thead th,
+            .table tbody td {
+                padding: 10px;
+            }
+        }
+        
     </style>
 </head>
 <body>

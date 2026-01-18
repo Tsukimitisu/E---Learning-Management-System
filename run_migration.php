@@ -97,6 +97,27 @@ $migration_queries = [
     "ALTER TABLE `shs_grade_levels` ADD COLUMN IF NOT EXISTS `is_active` tinyint(1) DEFAULT 1;",
     "ALTER TABLE `program_year_levels` ADD COLUMN IF NOT EXISTS `is_active` tinyint(1) DEFAULT 1;",
 
+    // Create program_courses mapping table (drop first to avoid duplicate key errors)
+    "DROP TABLE IF EXISTS `program_courses`;",
+    "CREATE TABLE `program_courses` (
+        `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `program_id` int(10) UNSIGNED NOT NULL,
+        `year_level_id` int(10) UNSIGNED NOT NULL,
+        `semester` tinyint(3) UNSIGNED NOT NULL,
+        `course_code` varchar(30) NOT NULL,
+        `is_active` tinyint(1) DEFAULT 1,
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uniq_program_course` (`program_id`,`year_level_id`,`semester`,`course_code`),
+        KEY `fk_pc_program` (`program_id`),
+        KEY `fk_pc_yearlevel` (`year_level_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+
+    // Add foreign keys for program_courses
+    "ALTER TABLE `program_courses`
+        ADD CONSTRAINT `fk_pc_program` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE, 
+        ADD CONSTRAINT `fk_pc_yearlevel` FOREIGN KEY (`year_level_id`) REFERENCES `program_year_levels` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;",
+
     // Step 3: Insert sample data
     "INSERT IGNORE INTO `shs_strands` (`id`, `track_id`, `strand_code`, `strand_name`, `description`, `is_active`, `created_at`) VALUES
     (1, 1, 'STEM', 'Science, Technology, Engineering and Mathematics', 'Focuses on scientific and technical skills', 1, NOW()),

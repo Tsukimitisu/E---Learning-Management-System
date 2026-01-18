@@ -42,6 +42,49 @@ try {
             echo json_encode(['status' => 'success', 'message' => 'Program added successfully']);
             break;
 
+        case 'update_program':
+            $program_id = (int)$_POST['program_id'];
+            $program_code = clean_input($_POST['program_code']);
+            $program_name = clean_input($_POST['program_name']);
+            $degree_level = clean_input($_POST['degree_level']);
+            $duration_years = (int)$_POST['duration_years'];
+            $total_units = (int)$_POST['total_units'] ?? 0;
+            $description = clean_input($_POST['description'] ?? '');
+            $is_active = (int)$_POST['is_active'];
+
+            $stmt = $conn->prepare("
+                UPDATE programs
+                SET program_code = ?, program_name = ?, degree_level = ?,
+                    duration_years = ?, total_units = ?, description = ?, is_active = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("sssiiisi", $program_code, $program_name, $degree_level, $duration_years, $total_units, $description, $is_active, $program_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Program updated successfully']);
+            break;
+
+        case 'delete_program':
+            $program_id = (int)$_POST['program_id'];
+
+            // Check if program has associated year levels
+            $check_years = $conn->prepare("SELECT COUNT(*) as count FROM program_year_levels WHERE program_id = ?");
+            $check_years->bind_param("i", $program_id);
+            $check_years->execute();
+            $year_count = $check_years->get_result()->fetch_assoc()['count'];
+
+            if ($year_count > 0) {
+                echo json_encode(['status' => 'error', 'message' => "Cannot delete program with $year_count associated year levels. Delete year levels first."]);
+                exit();
+            }
+
+            $stmt = $conn->prepare("DELETE FROM programs WHERE id = ?");
+            $stmt->bind_param("i", $program_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Program deleted successfully']);
+            break;
+
         // Year Level Management
         case 'get_year_levels':
             $program_id = (int)($_GET['program_id'] ?? 0);
@@ -72,6 +115,45 @@ try {
             $stmt->execute();
 
             echo json_encode(['status' => 'success', 'message' => 'Year level added successfully']);
+            break;
+
+        case 'update_year_level':
+            $year_id = (int)$_POST['year_id'];
+            $year_name = clean_input($_POST['year_name']);
+            $year_number = (int)$_POST['year_number'];
+            $semesters = (int)$_POST['semesters'];
+            $is_active = (int)$_POST['is_active'];
+
+            $stmt = $conn->prepare("
+                UPDATE program_year_levels
+                SET year_name = ?, year_level = ?, semesters_count = ?, is_active = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("siii", $year_name, $year_number, $semesters, $is_active, $year_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Year level updated successfully']);
+            break;
+
+        case 'delete_year_level':
+            $year_id = (int)$_POST['year_id'];
+
+            // Check if year level has associated subjects
+            $check_subjects = $conn->prepare("SELECT COUNT(*) as count FROM curriculum_subjects WHERE year_level_id = ?");
+            $check_subjects->bind_param("i", $year_id);
+            $check_subjects->execute();
+            $subject_count = $check_subjects->get_result()->fetch_assoc()['count'];
+
+            if ($subject_count > 0) {
+                echo json_encode(['status' => 'error', 'message' => "Cannot delete year level with $subject_count associated subjects. Delete subjects first."]);
+                exit();
+            }
+
+            $stmt = $conn->prepare("DELETE FROM program_year_levels WHERE id = ?");
+            $stmt->bind_param("i", $year_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Year level deleted successfully']);
             break;
 
         // SHS Track Management
@@ -106,6 +188,44 @@ try {
             echo json_encode(['status' => 'success', 'message' => 'Track added successfully']);
             break;
 
+        case 'update_track':
+            $track_id = (int)$_POST['track_id'];
+            $track_name = clean_input($_POST['track_name']);
+            $description = clean_input($_POST['description'] ?? '');
+            $is_active = (int)$_POST['is_active'];
+
+            $stmt = $conn->prepare("
+                UPDATE shs_tracks
+                SET track_name = ?, description = ?, is_active = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("ssii", $track_name, $description, $is_active, $track_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Track updated successfully']);
+            break;
+
+        case 'delete_track':
+            $track_id = (int)$_POST['track_id'];
+
+            // Check if track has associated strands
+            $check_strands = $conn->prepare("SELECT COUNT(*) as count FROM shs_strands WHERE track_id = ?");
+            $check_strands->bind_param("i", $track_id);
+            $check_strands->execute();
+            $strand_count = $check_strands->get_result()->fetch_assoc()['count'];
+
+            if ($strand_count > 0) {
+                echo json_encode(['status' => 'error', 'message' => "Cannot delete track with $strand_count associated strands. Delete strands first."]);
+                exit();
+            }
+
+            $stmt = $conn->prepare("DELETE FROM shs_tracks WHERE id = ?");
+            $stmt->bind_param("i", $track_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Track deleted successfully']);
+            break;
+
         // SHS Strand Management
         case 'get_strands':
             $track_id = (int)($_GET['track_id'] ?? 0);
@@ -138,6 +258,44 @@ try {
             echo json_encode(['status' => 'success', 'message' => 'Strand added successfully']);
             break;
 
+        case 'update_strand':
+            $strand_id = (int)$_POST['strand_id'];
+            $strand_name = clean_input($_POST['strand_name']);
+            $description = clean_input($_POST['description'] ?? '');
+            $is_active = (int)$_POST['is_active'];
+
+            $stmt = $conn->prepare("
+                UPDATE shs_strands
+                SET strand_name = ?, description = ?, is_active = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("ssii", $strand_name, $description, $is_active, $strand_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Strand updated successfully']);
+            break;
+
+        case 'delete_strand':
+            $strand_id = (int)$_POST['strand_id'];
+
+            // Check if strand has associated subjects
+            $check_subjects = $conn->prepare("SELECT COUNT(*) as count FROM curriculum_subjects WHERE shs_strand_id = ?");
+            $check_subjects->bind_param("i", $strand_id);
+            $check_subjects->execute();
+            $subject_count = $check_subjects->get_result()->fetch_assoc()['count'];
+
+            if ($subject_count > 0) {
+                echo json_encode(['status' => 'error', 'message' => "Cannot delete strand with $subject_count associated subjects. Delete subjects first."]);
+                exit();
+            }
+
+            $stmt = $conn->prepare("DELETE FROM shs_strands WHERE id = ?");
+            $stmt->bind_param("i", $strand_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Strand deleted successfully']);
+            break;
+
         // Add grade level
         case 'add_grade_level':
             $grade_name = clean_input($_POST['grade_name']);
@@ -151,6 +309,33 @@ try {
             $stmt->execute();
 
             echo json_encode(['status' => 'success', 'message' => 'Grade level added successfully']);
+            break;
+
+        case 'update_grade_level':
+            $grade_id = (int)$_POST['grade_id'];
+            $grade_name = clean_input($_POST['grade_name']);
+            $semesters = (int)$_POST['semesters'];
+            $is_active = (int)$_POST['is_active'];
+
+            $stmt = $conn->prepare("
+                UPDATE shs_grade_levels
+                SET grade_name = ?, semesters_count = ?, is_active = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("siii", $grade_name, $semesters, $is_active, $grade_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Grade level updated successfully']);
+            break;
+
+        case 'delete_grade_level':
+            $grade_id = (int)$_POST['grade_id'];
+
+            $stmt = $conn->prepare("DELETE FROM shs_grade_levels WHERE id = ?");
+            $stmt->bind_param("i", $grade_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Grade level deleted successfully']);
             break;
 
         // Add year level
@@ -238,6 +423,7 @@ try {
             $lecture_hours = (int)$_POST['lecture_hours'];
             $lab_hours = (int)$_POST['lab_hours'];
             $prerequisites = clean_input($_POST['prerequisites'] ?? '');
+            $is_active = (int)$_POST['is_active'];
 
             // Check if subject code conflicts with another subject
             $check_code = $conn->prepare("SELECT id FROM curriculum_subjects WHERE subject_code = ? AND id != ?");
@@ -252,13 +438,23 @@ try {
             $stmt = $conn->prepare("
                 UPDATE curriculum_subjects
                 SET subject_code = ?, subject_title = ?, units = ?,
-                    lecture_hours = ?, lab_hours = ?, prerequisites = ?
+                    lecture_hours = ?, lab_hours = ?, prerequisites = ?, is_active = ?
                 WHERE id = ?
             ");
-            $stmt->bind_param("ssdiisi", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $prerequisites, $subject_id);
+            $stmt->bind_param("ssdiiisi", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $prerequisites, $is_active, $subject_id);
             $stmt->execute();
 
             echo json_encode(['status' => 'success', 'message' => 'Subject updated successfully']);
+            break;
+
+        case 'delete_subject':
+            $subject_id = (int)$_POST['subject_id'];
+
+            $stmt = $conn->prepare("DELETE FROM curriculum_subjects WHERE id = ?");
+            $stmt->bind_param("i", $subject_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'Subject deleted successfully']);
             break;
 
         // Remove subject assignment
@@ -275,6 +471,79 @@ try {
             $stmt->execute();
 
             echo json_encode(['status' => 'success', 'message' => 'Subject assignment removed successfully']);
+            break;
+
+        // College Course Management
+        case 'get_college_courses':
+            $stmt = $conn->prepare("
+                SELECT id, subject_code as course_code, subject_title as course_title, units, 
+                       lecture_hours, lab_hours, prerequisites, program_id, year_level_id, 
+                       semester, is_active
+                FROM curriculum_subjects
+                WHERE subject_type = 'college' AND is_active = 1
+                ORDER BY subject_code
+            ");
+            $stmt->execute();
+            $courses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            echo json_encode(['status' => 'success', 'data' => $courses]);
+            break;
+
+        case 'add_college_course':
+            $subject_code = clean_input($_POST['course_code']);
+            $subject_title = clean_input($_POST['course_title']);
+            $units = (float)($_POST['units'] ?? 3);
+            $lecture_hours = (int)($_POST['lecture_hours'] ?? 0);
+            $lab_hours = (int)($_POST['lab_hours'] ?? 0);
+            $prerequisites = clean_input($_POST['prerequisites'] ?? '');
+            $program_id = (int)($_POST['program_id'] ?? 0) ?: null;
+            $year_level_id = (int)($_POST['year_level_id'] ?? 0) ?: null;
+            $semester = (int)($_POST['semester'] ?? 1);
+            $created_by = (int)$_SESSION['user_id'];
+
+            $stmt = $conn->prepare("
+                INSERT INTO curriculum_subjects (subject_code, subject_title, units, lecture_hours, lab_hours, 
+                    subject_type, program_id, year_level_id, semester, prerequisites, is_active, created_by)
+                VALUES (?, ?, ?, ?, ?, 'college', ?, ?, ?, ?, 1, ?)
+            ");
+            $stmt->bind_param("ssdiiiiisi", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $program_id, $year_level_id, $semester, $prerequisites, $created_by);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'College course added successfully']);
+            break;
+
+        case 'update_college_course':
+            $subject_id = (int)($_POST['id'] ?? 0);
+            $subject_code = clean_input($_POST['course_code']);
+            $subject_title = clean_input($_POST['course_title']);
+            $units = (float)($_POST['units'] ?? 3);
+            $lecture_hours = (int)($_POST['lecture_hours'] ?? 0);
+            $lab_hours = (int)($_POST['lab_hours'] ?? 0);
+            $prerequisites = clean_input($_POST['prerequisites'] ?? '');
+            $program_id = (int)($_POST['program_id'] ?? 0) ?: null;
+            $year_level_id = (int)($_POST['year_level_id'] ?? 0) ?: null;
+            $semester = (int)($_POST['semester'] ?? 1);
+            $is_active = (int)($_POST['is_active'] ?? 1);
+
+            $stmt = $conn->prepare("
+                UPDATE curriculum_subjects
+                SET subject_code = ?, subject_title = ?, units = ?, lecture_hours = ?,
+                    lab_hours = ?, prerequisites = ?, program_id = ?, year_level_id = ?, semester = ?, is_active = ?
+                WHERE id = ? AND subject_type = 'college'
+            ");
+            $stmt->bind_param("ssdiiiiiii", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $prerequisites, $program_id, $year_level_id, $semester, $is_active, $subject_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'College course updated successfully']);
+            break;
+
+        case 'delete_college_course':
+            $subject_id = (int)($_POST['id'] ?? 0);
+
+            $stmt = $conn->prepare("DELETE FROM curriculum_subjects WHERE id = ? AND subject_type = 'college'");
+            $stmt->bind_param("i", $subject_id);
+            $stmt->execute();
+
+            echo json_encode(['status' => 'success', 'message' => 'College course deleted successfully']);
             break;
 
         // Get all programs with year levels

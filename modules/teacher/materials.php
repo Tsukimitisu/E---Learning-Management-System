@@ -1,7 +1,8 @@
 <?php
 require_once '../../config/init.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
+$user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
+if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     header('Location: ../../index.php');
     exit();
 }

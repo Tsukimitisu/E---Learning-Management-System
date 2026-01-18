@@ -44,15 +44,23 @@ include '../../includes/header.php';
 
     <div id="content">
         <div class="navbar-custom d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="color: #003366;">
-                <i class="bi bi-megaphone"></i> Announcements
-            </h4>
+            <div>
+                <a href="index.php" class="btn btn-sm btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <span style="display: inline-block;">
+                    <h4 class="mb-0 d-inline-block" style="color: #003366;">
+                        <i class="bi bi-megaphone"></i> Announcements
+                    </h4>
+                    <br><small class="text-muted">Publish school-wide announcements and notices</small>
+                </span>
+            </div>
             <button class="btn btn-sm text-white" style="background-color: #800000;" data-bs-toggle="modal" data-bs-target="#addAnnouncementModal">
                 <i class="bi bi-plus-circle"></i> New Announcement
             </button>
         </div>
 
-        <div id="alertContainer"></div>
+        <div id="alertContainer" class="mt-3"></div>
 
         <div class="row">
             <?php while ($announcement = $announcements_result->fetch_assoc()): 
