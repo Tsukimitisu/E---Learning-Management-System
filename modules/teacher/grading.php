@@ -10,28 +10,83 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
 $page_title = "Grade Management";
 $teacher_id = $_SESSION['user_id'];
 
+// Get current academic year
+$current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
 /** 
- * BACKEND LOGIC - UNTOUCHED 
+ * BACKEND LOGIC - Show subjects first, then sections (like My Subjects)
  */
-$classes = $conn->query("
-    SELECT 
-        cl.id,
-        cl.section_name,
-        s.subject_code,
-        s.subject_title,
-        st.track_name,
-        st.written_work_weight,
-        st.performance_task_weight,
-        st.quarterly_exam_weight,
-        COUNT(DISTINCT e.student_id) as student_count
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    LEFT JOIN shs_tracks st ON cl.shs_track_id = st.id
-    LEFT JOIN enrollments e ON cl.id = e.class_id AND e.status = 'approved'
-    WHERE cl.teacher_id = $teacher_id
-    GROUP BY cl.id
-    ORDER BY s.subject_code
+// Get all subjects assigned to this teacher
+$subjects_query = $conn->prepare("
+    SELECT DISTINCT
+        cs.id as subject_id,
+        cs.subject_code,
+        cs.subject_title,
+        cs.units,
+        cs.semester,
+        cs.program_id,
+        cs.year_level_id,
+        cs.shs_strand_id,
+        cs.shs_grade_level_id,
+        tsa.branch_id,
+        COALESCE(p.program_name, ss.strand_name) as program_name,
+        b.name as branch_name
+    FROM teacher_subject_assignments tsa
+    INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
+    INNER JOIN branches b ON tsa.branch_id = b.id
+    LEFT JOIN programs p ON cs.program_id = p.id
+    LEFT JOIN shs_strands ss ON cs.shs_strand_id = ss.id
+    WHERE tsa.teacher_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1
+    ORDER BY cs.subject_code
 ");
+$subjects_query->bind_param("ii", $teacher_id, $current_ay_id);
+$subjects_query->execute();
+$subjects_result = $subjects_query->get_result();
+
+// Build array of subjects with section counts
+$teacher_subjects = [];
+while ($subject = $subjects_result->fetch_assoc()) {
+    // Convert semester number to string format
+    $semester_map = [1 => '1st', 2 => '2nd', 3 => 'summer'];
+    $semester_str = $semester_map[$subject['semester']] ?? '1st';
+    
+    // Count sections for this subject based on program type
+    if (!empty($subject['program_id'])) {
+        $count_sql = "SELECT COUNT(DISTINCT s.id) as section_count,
+            (SELECT COUNT(DISTINCT ss.student_id) FROM section_students ss 
+             INNER JOIN sections sec ON ss.section_id = sec.id 
+             WHERE sec.program_id = ? AND sec.year_level_id = ? AND sec.semester = ? 
+             AND sec.branch_id = ? AND sec.academic_year_id = ? AND ss.status = 'active') as total_students
+            FROM sections s 
+            WHERE s.program_id = ? AND s.year_level_id = ? AND s.semester = ? 
+            AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1";
+        $count_query = $conn->prepare($count_sql);
+        $count_query->bind_param("iisiiiisii", 
+            $subject['program_id'], $subject['year_level_id'], $semester_str, $subject['branch_id'], $current_ay_id,
+            $subject['program_id'], $subject['year_level_id'], $semester_str, $subject['branch_id'], $current_ay_id);
+    } else {
+        $count_sql = "SELECT COUNT(DISTINCT s.id) as section_count,
+            (SELECT COUNT(DISTINCT ss.student_id) FROM section_students ss 
+             INNER JOIN sections sec ON ss.section_id = sec.id 
+             WHERE sec.shs_strand_id = ? AND sec.shs_grade_level_id = ? AND sec.semester = ? 
+             AND sec.branch_id = ? AND sec.academic_year_id = ? AND ss.status = 'active') as total_students
+            FROM sections s 
+            WHERE s.shs_strand_id = ? AND s.shs_grade_level_id = ? AND s.semester = ? 
+            AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1";
+        $count_query = $conn->prepare($count_sql);
+        $count_query->bind_param("iisiiiisii", 
+            $subject['shs_strand_id'], $subject['shs_grade_level_id'], $semester_str, $subject['branch_id'], $current_ay_id,
+            $subject['shs_strand_id'], $subject['shs_grade_level_id'], $semester_str, $subject['branch_id'], $current_ay_id);
+    }
+    $count_query->execute();
+    $counts = $count_query->get_result()->fetch_assoc();
+    
+    $subject['section_count'] = $counts['section_count'] ?? 0;
+    $subject['total_students'] = $counts['total_students'] ?? 0;
+    $subject['semester_str'] = $semester_str;
+    $teacher_subjects[] = $subject;
+}
 
 include '../../includes/header.php';
 include '../../includes/sidebar.php'; // Opens wrapper and starts #content
@@ -56,62 +111,76 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
         background-color: #f8f9fa;
     }
 
-    /* --- FANTASTIC GRADING UI --- */
-    .grading-card {
+    /* --- SUBJECT CARD STYLES --- */
+    .subject-card {
         background: white;
         border-radius: 20px;
         border: none;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        cursor: pointer;
+        overflow: hidden;
         border-top: 6px solid var(--maroon);
         height: 100%;
+    }
+
+    .subject-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(128, 0, 0, 0.1);
+    }
+
+    .subject-card .card-body { padding: 30px; }
+
+    .subject-icon-box {
+        width: 50px;
+        height: 50px;
+        background: rgba(128, 0, 0, 0.05);
+        color: var(--maroon);
+        border-radius: 12px;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
     }
 
-    .grading-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 25px rgba(128, 0, 0, 0.1);
-    }
-
-    .weight-badge-container {
+    .stat-badge-light {
         background: #f8f9fa;
         border-radius: 12px;
-        padding: 12px;
-        display: flex;
-        justify-content: space-around;
+        padding: 15px;
         text-align: center;
-        margin: 15px 0;
-    }
-
-    .weight-item small { font-size: 0.65rem; text-transform: uppercase; color: #888; font-weight: 700; display: block; }
-    .weight-item span { font-weight: 800; color: var(--blue); font-size: 0.9rem; }
-
-    .btn-action-main {
-        background-color: var(--blue);
-        color: white;
-        border-radius: 10px;
-        font-weight: 700;
-        padding: 10px;
         transition: 0.3s;
-        border: none;
     }
-    .btn-action-main:hover { background-color: #002244; color: white; }
+    .subject-card:hover .stat-badge-light { background: #fff; border: 1px solid #eee; }
 
-    .btn-outline-custom {
-        border: 1px solid #dee2e6;
-        background: #fff;
-        color: #555;
+    .card-footer-custom {
+        background: #fcfcfc;
+        padding: 15px;
+        text-align: center;
+        border-top: 1px solid #f1f1f1;
         font-weight: 600;
-        padding: 8px;
-        border-radius: 10px;
-        transition: 0.3s;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        color: #888;
     }
-    .btn-outline-custom:hover { background: #f8f9fa; color: var(--maroon); border-color: var(--maroon); }
+
+    .program-badge {
+        background: linear-gradient(135deg, #003366 0%, #004080 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+
+    .semester-badge {
+        background: #f0f0f0;
+        color: #666;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
 
     /* Staggered Animations */
-    <?php for($i=1; $i<=10; $i++): ?>
+    <?php for($i=1; $i<=12; $i++): ?>
     .delay-<?php echo $i; ?> { animation-delay: <?php echo $i * 0.1; ?>s; }
     <?php endfor; ?>
 
@@ -137,148 +206,96 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
 <div class="body-scroll-part">
     <div id="alertContainer"></div>
 
-    <div class="row g-4">
+    <div class="row">
+        <?php if (count($teacher_subjects) == 0): ?>
+        <div class="col-12 animate__animated animate__fadeIn">
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                <i class="bi bi-calculator display-1 text-muted opacity-25"></i>
+                <h5 class="mt-3 text-muted">No subjects assigned for grading.</h5>
+                <p class="small text-muted">Contact your Branch Admin to get assigned to subjects.</p>
+            </div>
+        </div>
+        <?php else: ?>
+        
         <?php 
         $counter = 1;
-        while ($class = $classes->fetch_assoc()): 
+        foreach ($teacher_subjects as $subject): 
+            $subject_id = $subject['subject_id'];
+            $subject_code = $subject['subject_code'];
+            $subject_title = $subject['subject_title'];
+            $units = $subject['units'];
+            $semester = $subject['semester'];
+            $section_count = $subject['section_count'] ?? 0;
+            $total_students = $subject['total_students'] ?? 0;
+            $program = $subject['program_name'] ?? 'General';
+            $branch = $subject['branch_name'] ?? 'General';
         ?>
-        <div class="col-md-6 col-lg-4 animate__animated animate__fadeInUp delay-<?php echo $counter; ?>">
-            <div class="grading-card p-4">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <span class="badge bg-light text-maroon border border-maroon mb-2 px-3">
-                            <?php echo htmlspecialchars($class['subject_code'] ?: 'N/A'); ?>
-                        </span>
-                        <h5 class="fw-bold mb-0 text-dark"><?php echo htmlspecialchars($class['section_name'] ?: 'N/A'); ?></h5>
-                    </div>
-                    <div class="text-end">
-                        <span class="badge bg-blue rounded-pill px-3 py-2 fw-bold">
-                            <i class="bi bi-people me-1"></i> <?php echo $class['student_count']; ?>
-                        </span>
-                    </div>
-                </div>
-                
-                <p class="text-muted small mb-3"><?php echo htmlspecialchars($class['subject_title'] ?: 'N/A'); ?></p>
-
-                <?php if ($class['track_name']): ?>
-                <div class="weight-badge-container shadow-sm border border-light">
-                    <div class="weight-item">
-                        <small>Written</small>
-                        <span><?php echo $class['written_work_weight']; ?>%</span>
-                    </div>
-                    <div class="weight-item border-start border-end px-3">
-                        <small>Performance</small>
-                        <span><?php echo $class['performance_task_weight']; ?>%</span>
-                    </div>
-                    <div class="weight-item">
-                        <small>Exam</small>
-                        <span><?php echo $class['quarterly_exam_weight']; ?>%</span>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <div class="mt-auto pt-3">
-                    <a href="gradebook.php?class_id=<?php echo $class['id']; ?>" class="btn btn-action-main w-100 mb-2 shadow-sm">
-                        <i class="bi bi-journal-check me-2"></i> Open Digital Gradebook
-                    </a>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <button class="btn btn-outline-custom w-100" onclick="importExcel(<?php echo $class['id']; ?>)">
-                                <i class="bi bi-file-earmark-arrow-up me-1"></i> Import
-                            </button>
+        <div class="col-md-6 col-lg-4 mb-4 animate__animated animate__zoomIn delay-<?php echo $counter; ?>">
+            <div class="subject-card" onclick="viewGradingSections(<?php echo $subject_id; ?>)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="subject-icon-box">
+                            <i class="bi bi-calculator-fill"></i>
                         </div>
-                        <div class="col-6">
-                            <button class="btn btn-outline-custom w-100" onclick="exportExcel(<?php echo $class['id']; ?>)">
-                                <i class="bi bi-file-earmark-arrow-down me-1"></i> Export
-                            </button>
+                        <div class="text-end">
+                            <span class="badge bg-light text-muted border px-3 py-2 small fw-bold d-block mb-1">
+                                <i class="bi bi-building me-1"></i> <?php echo htmlspecialchars($branch); ?>
+                            </span>
+                            <span class="semester-badge">
+                                <?php echo htmlspecialchars($semester); ?> Sem
+                            </span>
                         </div>
                     </div>
+
+                    <h5 class="fw-bold mb-1" style="color: var(--blue);">
+                        <?php echo htmlspecialchars($subject_code); ?>
+                    </h5>
+                    <p class="text-muted mb-2" style="font-size: 0.9rem; min-height: 40px; line-height: 1.4;">
+                        <?php echo htmlspecialchars($subject_title); ?>
+                    </p>
+                    
+                    <div class="mb-3">
+                        <span class="program-badge">
+                            <i class="bi bi-mortarboard me-1"></i> <?php echo htmlspecialchars($program); ?>
+                        </span>
+                        <span class="badge bg-warning text-dark ms-1"><?php echo $units; ?> units</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stat-badge-light">
+                                <h4 class="mb-0 fw-bold" style="color: var(--maroon);"><?php echo $section_count; ?></h4>
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Sections</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-badge-light">
+                                <h4 class="mb-0 fw-bold" style="color: var(--blue);"><?php echo $total_students; ?></h4>
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Students</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer-custom">
+                    <i class="bi bi-arrow-right-circle me-2 text-maroon"></i> Open Gradebook Sections
                 </div>
             </div>
         </div>
         <?php 
-            $counter++; 
-            endwhile; 
+            $counter++;
+            endforeach; 
         ?>
-    </div>
-</div>
-
-<!-- Import Grades Modal (MODERNIZED UI) -->
-<div class="modal fade" id="importGradesModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header p-4 text-white" style="background-color: var(--maroon); border: none;">
-                <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel me-2"></i>Import Excel Gradebook</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="importGradesForm" enctype="multipart/form-data">
-                <input type="hidden" name="class_id" id="importClassId">
-                <div class="modal-body p-4">
-                    <div class="bg-light p-3 rounded-3 mb-4 border-start border-primary border-4">
-                        <p class="small mb-1 fw-bold text-dark">REQUIRED EXCEL FORMAT:</p>
-                        <p class="small mb-0 text-muted">
-                            Col 1: Student No | Col 2: Name | Col 3: Midterm | Col 4: Final
-                        </p>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label fw-bold small text-muted">SELECT WORKBOOK (.XLSX, .CSV)</label>
-                        <input type="file" class="form-control border-light shadow-sm py-2" name="excel_file" accept=".csv,.xls,.xlsx" required>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-4">
-                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-action-main px-4">Begin Import</button>
-                </div>
-            </form>
-        </div>
+        
+        <?php endif; ?>
     </div>
 </div>
 
 <?php include '../../includes/footer.php'; ?>
 
-<!-- --- JAVASCRIPT LOGIC - UNTOUCHED --- -->
 <script>
-function importExcel(classId) {
-    document.getElementById('importClassId').value = classId;
-    const modal = new bootstrap.Modal(document.getElementById('importGradesModal'));
-    modal.show();
+function viewGradingSections(subjectId) {
+    window.location.href = 'grading_sections.php?subject_id=' + subjectId;
 }
-
-function exportExcel(classId) {
-    window.location.href = 'process/export_grades.php?class_id=' + classId;
-}
-
-document.getElementById('importGradesForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Syncing...';
-    
-    try {
-        const response = await fetch('process/import_grades.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    } catch (error) {
-        alert('Internal server error during import');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
 </script>
 </body>
 </html>

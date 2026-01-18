@@ -7,19 +7,28 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 }
 
 $page_title = "Registrar Dashboard";
+$registrar_id = $_SESSION['user_id'];
 
-// Fetch Statistics
+// Get registrar's branch
+$registrar_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $registrar_id")->fetch_assoc();
+$branch_id = $registrar_profile['branch_id'] ?? 0;
+
+// Get branch info
+$branch = $conn->query("SELECT name FROM branches WHERE id = $branch_id")->fetch_assoc();
+
+// Fetch Statistics for this branch
 $stats = [
     'total_students' => 0,
     'pending_enrollments' => 0,
     'active_classes' => 0,
     'approved_today' => 0,
     'total_payments' => 0,
-    'pending_payments' => 0
+    'pending_payments' => 0,
+    'today_collections' => 0
 ];
 
-// Total Students
-$result = $conn->query("SELECT COUNT(*) as count FROM students");
+// Total Students in this branch
+$result = $conn->query("SELECT COUNT(*) as count FROM students s INNER JOIN user_profiles up ON s.user_id = up.user_id WHERE up.branch_id = $branch_id");
 if ($row = $result->fetch_assoc()) {
     $stats['total_students'] = $row['count'];
 }
@@ -30,8 +39,8 @@ if ($row = $result->fetch_assoc()) {
     $stats['pending_enrollments'] = $row['count'];
 }
 
-// Active Classes
-$result = $conn->query("SELECT COUNT(*) as count FROM classes");
+// Active Classes for this branch
+$result = $conn->query("SELECT COUNT(*) as count FROM classes WHERE branch_id = $branch_id");
 if ($row = $result->fetch_assoc()) {
     $stats['active_classes'] = $row['count'];
 }
@@ -43,8 +52,8 @@ if ($row = $result->fetch_assoc()) {
     $stats['approved_today'] = $row['count'];
 }
 
-// Total Payments Collected
-$result = $conn->query("SELECT SUM(amount) as total FROM payments WHERE status = 'verified'");
+// Total Payments Collected for this branch
+$result = $conn->query("SELECT SUM(amount) as total FROM payments WHERE status = 'verified' AND branch_id = $branch_id");
 if ($row = $result->fetch_assoc()) {
     $stats['total_payments'] = $row['total'] ?? 0;
 }
@@ -53,6 +62,12 @@ if ($row = $result->fetch_assoc()) {
 $result = $conn->query("SELECT COUNT(*) as count FROM payments WHERE status = 'pending'");
 if ($row = $result->fetch_assoc()) {
     $stats['pending_payments'] = $row['count'] ?? 0;
+}
+
+// Today's collections for this branch
+$result = $conn->query("SELECT SUM(amount) as total FROM payments WHERE status = 'verified' AND branch_id = $branch_id AND DATE(created_at) = CURDATE()");
+if ($row = $result->fetch_assoc()) {
+    $stats['today_collections'] = $row['total'] ?? 0;
 }
 
 // Recent activity
@@ -64,10 +79,11 @@ $recent_enrollments = $conn->query("SELECT s.student_no, CONCAT(up.first_name, '
     LIMIT 5
 ");
 
-$recent_payments = $conn->query("SELECT s.student_no, CONCAT(up.first_name, ' ', up.last_name) as student_name, p.amount, p.status, p.created_at
+$recent_payments = $conn->query("SELECT s.student_no, CONCAT(up.first_name, ' ', up.last_name) as student_name, p.amount, p.status, p.or_number, p.created_at
     FROM payments p
     INNER JOIN students s ON p.student_id = s.user_id
     INNER JOIN user_profiles up ON s.user_id = up.user_id
+    WHERE p.branch_id = $branch_id
     ORDER BY p.created_at DESC
     LIMIT 5
 ");
@@ -122,6 +138,12 @@ include '../../includes/header.php';
                     <h3><?php echo number_format($stats['pending_payments']); ?></h3>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <p><i class="bi bi-receipt"></i> Today's Collections</p>
+                    <h3>₱<?php echo number_format($stats['today_collections'], 2); ?></h3>
+                </div>
+            </div>
         </div>
 
         <div class="row mt-4">
@@ -132,46 +154,46 @@ include '../../includes/header.php';
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <a href="enroll.php" class="btn btn-lg btn-primary w-100">
+                            <div class="col-md-3 mb-3">
+                                <a href="program_enrollment.php" class="btn btn-lg btn-primary w-100">
+                                    <i class="bi bi-mortarboard-fill"></i><br>
+                                    Program Enrollment
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="enroll.php" class="btn btn-lg btn-info w-100">
                                     <i class="bi bi-pencil-square"></i><br>
-                                    Enroll Student
+                                    Class Enrollment
                                 </a>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="classes.php" class="btn btn-lg btn-success w-100">
-                                    <i class="bi bi-door-open"></i><br>
-                                    Manage Classes
+                            <div class="col-md-3 mb-3">
+                                <a href="record_payment.php" class="btn btn-lg btn-success w-100">
+                                    <i class="bi bi-receipt"></i><br>
+                                    Record Payment
                                 </a>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="students.php" class="btn btn-lg btn-info w-100">
+                            <div class="col-md-3 mb-3">
+                                <a href="payment_history.php" class="btn btn-lg btn-warning w-100">
+                                    <i class="bi bi-clock-history"></i><br>
+                                    Payment History
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="students.php" class="btn btn-lg btn-secondary w-100">
                                     <i class="bi bi-people"></i><br>
-                                    View Students
+                                    All Students
                                 </a>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="payments.php" class="btn btn-lg btn-warning w-100">
-                                    <i class="bi bi-cash-coin"></i><br>
-                                    Manage Payments
-                                </a>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="records.php" class="btn btn-lg btn-secondary w-100">
+                            <div class="col-md-3 mb-3">
+                                <a href="records.php" class="btn btn-lg btn-info w-100">
                                     <i class="bi bi-file-earmark-text"></i><br>
                                     Academic Records
                                 </a>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <a href="certificates.php" class="btn btn-lg btn-danger w-100">
                                     <i class="bi bi-award"></i><br>
                                     Generate Certificates
-                                </a>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="reports.php" class="btn btn-lg btn-dark w-100">
-                                    <i class="bi bi-file-earmark-bar-graph"></i><br>
-                                    View Reports
                                 </a>
                             </div>
                         </div>
@@ -207,13 +229,16 @@ include '../../includes/header.php';
                         <ul class="list-group list-group-flush">
                             <?php while ($row = $recent_payments->fetch_assoc()): ?>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><?php echo htmlspecialchars($row['student_name']); ?> (<?php echo htmlspecialchars($row['student_no']); ?>)</span>
-                                    <span>
+                                    <div>
+                                        <span><?php echo htmlspecialchars($row['student_name']); ?></span>
+                                        <br><small class="text-muted">OR: <?php echo htmlspecialchars($row['or_number'] ?? '-'); ?></small>
+                                    </div>
+                                    <div class="text-end">
                                         <span class="badge bg-<?php echo $row['status'] === 'verified' ? 'success' : ($row['status'] === 'rejected' ? 'danger' : 'warning'); ?>">
-                                            <?php echo ucfirst($row['status']); ?>
+                                            ₱<?php echo number_format($row['amount'], 2); ?>
                                         </span>
-                                        <small class="text-muted ms-2"><?php echo date('M d, Y', strtotime($row['created_at'])); ?></small>
-                                    </span>
+                                        <br><small class="text-muted"><?php echo date('M d, Y', strtotime($row['created_at'])); ?></small>
+                                    </div>
                                 </li>
                             <?php endwhile; ?>
                         </ul>

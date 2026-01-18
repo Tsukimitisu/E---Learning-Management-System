@@ -12,15 +12,76 @@ $page_title = "Reports & Analytics";
 $teacher_id = $_SESSION['user_id'];
 
 /** 
- * BACKEND LOGIC - UNTOUCHED 
+ * BACKEND LOGIC - Updated to use new section/subject structure
  */
-$classes = $conn->query("
-    SELECT cl.id, cl.section_name, s.subject_code, s.subject_title
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    WHERE cl.teacher_id = $teacher_id
-    ORDER BY s.subject_code
+// Get current academic year
+$current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+// Semester mapping
+$semester_map = [1 => '1st', 2 => '2nd', 3 => 'summer'];
+
+// Get teacher's assigned subjects
+$subjects_query = $conn->prepare("
+    SELECT 
+        tsa.id as assignment_id,
+        tsa.curriculum_subject_id as subject_id,
+        cs.subject_code,
+        cs.subject_title,
+        cs.semester,
+        cs.program_id,
+        cs.year_level_id,
+        cs.shs_strand_id,
+        cs.shs_grade_level_id,
+        tsa.branch_id
+    FROM teacher_subject_assignments tsa
+    INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
+    WHERE tsa.teacher_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1
+    ORDER BY cs.subject_code
 ");
+$subjects_query->bind_param("ii", $teacher_id, $current_ay_id);
+$subjects_query->execute();
+$teacher_subjects = $subjects_query->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Build sections list with subject info for dropdowns
+$section_options = [];
+foreach ($teacher_subjects as $subject) {
+    $semester_str = $semester_map[$subject['semester']] ?? '1st';
+    
+    if (!empty($subject['program_id'])) {
+        // College
+        $sections_query = $conn->prepare("
+            SELECT s.id, s.section_name, p.program_code
+            FROM sections s
+            LEFT JOIN programs p ON s.program_id = p.id
+            WHERE s.program_id = ? AND s.year_level_id = ? AND s.semester = ?
+            AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1
+        ");
+        $sections_query->bind_param("iisii", $subject['program_id'], $subject['year_level_id'], 
+            $semester_str, $subject['branch_id'], $current_ay_id);
+    } else {
+        // SHS
+        $sections_query = $conn->prepare("
+            SELECT s.id, s.section_name, ss.strand_code as program_code
+            FROM sections s
+            LEFT JOIN shs_strands ss ON s.shs_strand_id = ss.id
+            WHERE s.shs_strand_id = ? AND s.shs_grade_level_id = ? AND s.semester = ?
+            AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1
+        ");
+        $sections_query->bind_param("iisii", $subject['shs_strand_id'], $subject['shs_grade_level_id'], 
+            $semester_str, $subject['branch_id'], $current_ay_id);
+    }
+    $sections_query->execute();
+    $sections_result = $sections_query->get_result();
+    
+    while ($section = $sections_result->fetch_assoc()) {
+        $section_options[] = [
+            'section_id' => $section['id'],
+            'subject_id' => $subject['subject_id'],
+            'label' => $subject['subject_code'] . ' - ' . $section['section_name']
+        ];
+    }
+}
 
 include '../../includes/header.php';
 include '../../includes/sidebar.php'; // Opens wrapper and starts #content
@@ -138,15 +199,13 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
                 <form id="gradeSummaryForm" class="mt-auto">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">TARGET CLASS</label>
-                        <select class="form-select border-light shadow-sm" name="class_id" required>
+                        <select class="form-select border-light shadow-sm" name="section_subject" required>
                             <option value="">-- Select Class --</option>
-                            <?php 
-                            $classes->data_seek(0);
-                            while ($class = $classes->fetch_assoc()): ?>
-                                <option value="<?php echo $class['id']; ?>">
-                                    <?php echo htmlspecialchars($class['subject_code'] . ' - ' . $class['section_name']); ?>
+                            <?php foreach ($section_options as $opt): ?>
+                                <option value="<?php echo $opt['section_id'] . '_' . $opt['subject_id']; ?>">
+                                    <?php echo htmlspecialchars($opt['label']); ?>
                                 </option>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-generate w-100 shadow-sm">
@@ -165,15 +224,13 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
                 <form id="attendanceReportForm" class="mt-auto">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">TARGET CLASS</label>
-                        <select class="form-select border-light shadow-sm" name="class_id" required>
+                        <select class="form-select border-light shadow-sm" name="section_subject" required>
                             <option value="">-- Select Class --</option>
-                            <?php 
-                            $classes->data_seek(0);
-                            while ($class = $classes->fetch_assoc()): ?>
-                                <option value="<?php echo $class['id']; ?>">
-                                    <?php echo htmlspecialchars($class['subject_code'] . ' - ' . $class['section_name']); ?>
+                            <?php foreach ($section_options as $opt): ?>
+                                <option value="<?php echo $opt['section_id'] . '_' . $opt['subject_id']; ?>">
+                                    <?php echo htmlspecialchars($opt['label']); ?>
                                 </option>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="row g-2 mb-3">
@@ -202,15 +259,13 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
                 <form id="performanceReportForm" class="mt-auto">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">TARGET CLASS</label>
-                        <select class="form-select border-light shadow-sm" name="class_id" required>
+                        <select class="form-select border-light shadow-sm" name="section_subject" required>
                             <option value="">-- Select Class --</option>
-                            <?php 
-                            $classes->data_seek(0);
-                            while ($class = $classes->fetch_assoc()): ?>
-                                <option value="<?php echo $class['id']; ?>">
-                                    <?php echo htmlspecialchars($class['subject_code'] . ' - ' . $class['section_name']); ?>
+                            <?php foreach ($section_options as $opt): ?>
+                                <option value="<?php echo $opt['section_id'] . '_' . $opt['subject_id']; ?>">
+                                    <?php echo htmlspecialchars($opt['label']); ?>
                                 </option>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-generate w-100 shadow-sm" style="background-color: #28a745;">
@@ -225,16 +280,72 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
     <div class="stats-summary-card animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
         <h6 class="fw-bold mb-4 text-uppercase small opacity-75" style="letter-spacing: 1px;">Overall Teaching Summary</h6>
         <?php
-        /** BACKEND STATS - UNTOUCHED */
-        $total_classes = $conn->query("SELECT COUNT(*) as count FROM classes WHERE teacher_id = $teacher_id")->fetch_assoc()['count'];
-        $total_students = $conn->query("SELECT COUNT(DISTINCT e.student_id) as count FROM enrollments e INNER JOIN classes cl ON e.class_id = cl.id WHERE cl.teacher_id = $teacher_id AND e.status = 'approved'")->fetch_assoc()['count'];
-        $avg_grade = $conn->query("SELECT AVG(g.final_grade) as avg FROM grades g INNER JOIN classes cl ON g.class_id = cl.id WHERE cl.teacher_id = $teacher_id AND g.final_grade > 0")->fetch_assoc()['avg'];
-        $pass_rate = $conn->query("SELECT COUNT(CASE WHEN g.remarks = 'PASSED' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as rate FROM grades g INNER JOIN classes cl ON g.class_id = cl.id WHERE cl.teacher_id = $teacher_id AND g.final_grade > 0")->fetch_assoc()['rate'];
+        /** BACKEND STATS - Updated for new structure */
+        $total_subjects = count($teacher_subjects);
+        
+        // Count total sections and students
+        $total_sections = 0;
+        $total_students = 0;
+        $all_section_ids = [];
+        
+        foreach ($teacher_subjects as $subject) {
+            $semester_str = $semester_map[$subject['semester']] ?? '1st';
+            
+            if (!empty($subject['program_id'])) {
+                $count_query = $conn->prepare("
+                    SELECT s.id, COUNT(DISTINCT ss.student_id) as student_count
+                    FROM sections s
+                    LEFT JOIN section_students ss ON s.id = ss.section_id AND ss.status = 'active'
+                    WHERE s.program_id = ? AND s.year_level_id = ? AND s.semester = ?
+                    AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1
+                    GROUP BY s.id
+                ");
+                $count_query->bind_param("iisii", $subject['program_id'], $subject['year_level_id'], 
+                    $semester_str, $subject['branch_id'], $current_ay_id);
+            } else {
+                $count_query = $conn->prepare("
+                    SELECT s.id, COUNT(DISTINCT ss.student_id) as student_count
+                    FROM sections s
+                    LEFT JOIN section_students ss ON s.id = ss.section_id AND ss.status = 'active'
+                    WHERE s.shs_strand_id = ? AND s.shs_grade_level_id = ? AND s.semester = ?
+                    AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1
+                    GROUP BY s.id
+                ");
+                $count_query->bind_param("iisii", $subject['shs_strand_id'], $subject['shs_grade_level_id'], 
+                    $semester_str, $subject['branch_id'], $current_ay_id);
+            }
+            $count_query->execute();
+            $sections_result = $count_query->get_result();
+            
+            while ($sec = $sections_result->fetch_assoc()) {
+                if (!in_array($sec['id'], $all_section_ids)) {
+                    $all_section_ids[] = $sec['id'];
+                    $total_sections++;
+                    $total_students += $sec['student_count'] ?? 0;
+                }
+            }
+        }
+        
+        // Calculate average grade and pass rate from grades table
+        $avg_grade = 0;
+        $pass_rate = 0;
+        if (!empty($all_section_ids)) {
+            $section_ids_str = implode(',', $all_section_ids);
+            $grade_stats = $conn->query("
+                SELECT 
+                    AVG(final_grade) as avg_grade,
+                    COUNT(CASE WHEN remarks = 'PASSED' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as pass_rate
+                FROM grades 
+                WHERE section_id IN ($section_ids_str) AND final_grade > 0
+            ")->fetch_assoc();
+            $avg_grade = $grade_stats['avg_grade'] ?? 0;
+            $pass_rate = $grade_stats['pass_rate'] ?? 0;
+        }
         ?>
         <div class="row align-items-center text-center g-4">
             <div class="col-md-3">
-                <h3 class="fw-bold mb-0" style="color: var(--maroon);"><?php echo $total_classes; ?></h3>
-                <small class="text-muted fw-bold">Active Classes</small>
+                <h3 class="fw-bold mb-0" style="color: var(--maroon);"><?php echo $total_subjects; ?></h3>
+                <small class="text-muted fw-bold">My Subjects</small>
             </div>
             <div class="col-md-3 d-flex align-items-center justify-content-center">
                 <div class="stat-divider d-none d-md-block"></div>
@@ -264,25 +375,29 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
 
 <?php include '../../includes/footer.php'; ?>
 
-<!-- --- JAVASCRIPT LOGIC - UNTOUCHED --- -->
+<!-- --- JAVASCRIPT LOGIC - Updated for new structure --- -->
 <script>
 document.getElementById('gradeSummaryForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const classId = e.target.querySelector('[name="class_id"]').value;
-    window.open('process/generate_grade_report.php?class_id=' + classId, '_blank');
+    const value = e.target.querySelector('[name="section_subject"]').value;
+    const [sectionId, subjectId] = value.split('_');
+    window.open('process/generate_grade_report.php?section_id=' + sectionId + '&subject_id=' + subjectId, '_blank');
 });
 
 document.getElementById('attendanceReportForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const params = new URLSearchParams(formData).toString();
-    window.open('process/generate_attendance_report.php?' + params, '_blank');
+    const value = e.target.querySelector('[name="section_subject"]').value;
+    const [sectionId, subjectId] = value.split('_');
+    const dateFrom = e.target.querySelector('[name="date_from"]').value;
+    const dateTo = e.target.querySelector('[name="date_to"]').value;
+    window.open('process/generate_attendance_report.php?section_id=' + sectionId + '&subject_id=' + subjectId + '&date_from=' + dateFrom + '&date_to=' + dateTo, '_blank');
 });
 
 document.getElementById('performanceReportForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const classId = e.target.querySelector('[name="class_id"]').value;
-    window.location.href = 'performance_analytics.php?class_id=' + classId;
+    const value = e.target.querySelector('[name="section_subject"]').value;
+    const [sectionId, subjectId] = value.split('_');
+    window.location.href = 'performance_analytics.php?section_id=' + sectionId + '&subject_id=' + subjectId;
 });
 </script>
 </body>

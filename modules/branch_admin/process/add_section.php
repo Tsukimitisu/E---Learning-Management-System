@@ -22,7 +22,11 @@ try {
     $room = clean_input($_POST['room'] ?? '');
     $max_capacity = (int)($_POST['max_capacity'] ?? 35);
     $schedule = clean_input($_POST['schedule'] ?? '');
-    $branch_id = (int)($_POST['branch_id'] ?? 1);
+    $branch_id = get_user_branch_id();
+    if ($branch_id === null) {
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+        exit();
+    }
 
     // Validation
     if (empty($academic_year_id) || empty($curriculum_subject_id) || empty($section_name) ||

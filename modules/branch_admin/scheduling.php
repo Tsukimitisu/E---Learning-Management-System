@@ -7,7 +7,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
 }
 
 $page_title = "Class Scheduling";
-$branch_id = 1; // In production, fetch from user's assigned branch
+$branch_id = get_user_branch_id();
+if ($branch_id === null) {
+    echo "Error: Your account is not assigned to any branch. Please contact the School Administrator.";
+    exit();
+}
+require_branch_assignment();
 
 // Fetch all scheduled classes for this branch
 $classes_query = "

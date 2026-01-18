@@ -12,9 +12,19 @@ $title = clean_input($_POST['title'] ?? '');
 $content = clean_input($_POST['content'] ?? '');
 $target_audience = clean_input($_POST['target_audience'] ?? 'all');
 $priority = clean_input($_POST['priority'] ?? 'normal');
-$branch_id = (int)($_POST['branch_id'] ?? 0);
+$branch_id = get_user_branch_id();
 
-if (empty($title) || empty($content) || $branch_id == 0) {
+if ($branch_id === null) {
+    echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+    exit();
+}
+
+if (isset($_POST['branch_id']) && (int)$_POST['branch_id'] !== (int)$branch_id) {
+    echo json_encode(['status' => 'error', 'message' => 'Access denied: Invalid branch selection']);
+    exit();
+}
+
+if (empty($title) || empty($content)) {
     echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
     exit();
 }

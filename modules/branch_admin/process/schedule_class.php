@@ -15,10 +15,20 @@ $teacher_id = (int)($_POST['teacher_id'] ?? 0);
 $room = clean_input($_POST['room'] ?? '');
 $max_capacity = (int)($_POST['max_capacity'] ?? 0);
 $schedule = clean_input($_POST['schedule'] ?? '');
-$branch_id = (int)($_POST['branch_id'] ?? 0);
+$branch_id = get_user_branch_id();
+
+if ($branch_id === null) {
+    echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+    exit();
+}
+
+if (isset($_POST['branch_id']) && (int)$_POST['branch_id'] !== (int)$branch_id) {
+    echo json_encode(['status' => 'error', 'message' => 'Access denied: Invalid branch selection']);
+    exit();
+}
 
 if ($academic_year_id == 0 || $curriculum_subject_id == 0 || empty($section_name) ||
-    $teacher_id == 0 || empty($room) || $max_capacity < 1 || empty($schedule) || $branch_id == 0) {
+    $teacher_id == 0 || empty($room) || $max_capacity < 1 || empty($schedule)) {
     echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
     exit();
 }

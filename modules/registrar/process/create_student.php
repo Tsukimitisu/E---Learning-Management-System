@@ -22,6 +22,7 @@ try {
     $address = clean_input($_POST['address'] ?? '');
     $program_type = clean_input($_POST['program_type'] ?? 'college');
     $course_id = (int)($_POST['course_id'] ?? 0);
+    $shs_strand_id = (int)($_POST['shs_strand_id'] ?? 0);
     $password = $_POST['password'] ?? '';
 
     if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
@@ -29,8 +30,23 @@ try {
         exit();
     }
 
+    // Get the registrar's branch_id
+    $registrar_result = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = " . $_SESSION['user_id']);
+    $registrar_profile = $registrar_result->fetch_assoc();
+    $registrar_branch_id = $registrar_profile['branch_id'] ?? null;
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid email format']);
+        exit();
+    }
+
+    // Validate program selection
+    if ($program_type === 'college' && $course_id === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Please select a program for college students']);
+        exit();
+    }
+    if ($program_type === 'shs' && $shs_strand_id === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Please select a strand for SHS students']);
         exit();
     }
 
@@ -57,16 +73,21 @@ try {
 
     $user_id = $conn->insert_id;
 
-    $insert_profile = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, contact_no, address) VALUES (?, ?, ?, ?, ?)");
-    $insert_profile->bind_param("issss", $user_id, $first_name, $last_name, $contact_no, $address);
+    // Insert user profile with the registrar's branch_id
+    $insert_profile = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, contact_no, address, branch_id) VALUES (?, ?, ?, ?, ?, ?)");
+    $insert_profile->bind_param("issssi", $user_id, $first_name, $last_name, $contact_no, $address, $registrar_branch_id);
 
     if (!$insert_profile->execute()) {
         throw new Exception('Failed to create user profile');
     }
 
-    $student_course_id = $program_type === 'college' ? $course_id : null;
+    // Determine the course_id to store in students table
+    // For college: use the program id from programs table
+    // For SHS: use the strand id from shs_strands table
+    $final_course_id = $program_type === 'college' ? $course_id : $shs_strand_id;
+    
     $insert_student = $conn->prepare("INSERT INTO students (user_id, student_no, course_id) VALUES (?, ?, ?)");
-    $insert_student->bind_param("isi", $user_id, $student_no, $student_course_id);
+    $insert_student->bind_param("isi", $user_id, $student_no, $final_course_id);
 
     if (!$insert_student->execute()) {
         throw new Exception('Failed to create student record');
@@ -80,14 +101,17 @@ try {
         throw new Exception('Failed to assign student role');
     }
 
-    log_audit($conn, $_SESSION['user_id'], "Created student account for {$first_name} {$last_name} ({$student_no})");
+    // Log the action
+    $program_name = $program_type === 'college' ? 'Program ID: ' . $course_id : 'Strand ID: ' . $shs_strand_id;
+    log_audit($conn, $_SESSION['user_id'], "Created student account for {$first_name} {$last_name} ({$student_no}) - $program_name");
 
     $conn->commit();
 
     echo json_encode([
         'status' => 'success',
-        'message' => 'Student account created successfully',
-        'student_id' => $user_id
+        'message' => 'Student account created successfully. The Branch Admin will now assign this student to sections.',
+        'student_id' => $user_id,
+        'student_no' => $student_no
     ]);
 
 } catch (Exception $e) {

@@ -860,6 +860,66 @@
     </div>
 </div>
 
+<!-- Edit Program Modal -->
+<div class="modal fade" id="editProgramModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit College Program</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editProgramForm">
+                <input type="hidden" name="program_id" id="editProgramId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Program Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="program_code" id="editProgramCode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Program Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="program_name" id="editProgramName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Degree Level <span class="text-danger">*</span></label>
+                        <select class="form-select" name="degree_level" id="editProgramDegree" required>
+                            <option value="Certificate">Certificate</option>
+                            <option value="Associate">Associate</option>
+                            <option value="Bachelor">Bachelor</option>
+                            <option value="Master">Master</option>
+                            <option value="Doctorate">Doctorate</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">School <span class="text-danger">*</span></label>
+                        <select class="form-select" name="school_id" id="editProgramSchool" required>
+                            <option value="">-- Select School --</option>
+                            <?php
+                            $schools_edit = $conn->query("SELECT id, name FROM schools ORDER BY name");
+                            while ($school = $schools_edit->fetch_assoc()) {
+                                echo "<option value='{$school['id']}'>{$school['name']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="is_active" id="editProgramStatus">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save"></i> Update Program
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Add College Year Modal -->
 <div class="modal fade" id="addCollegeYearModal" tabindex="-1">
     <div class="modal-dialog">

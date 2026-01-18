@@ -120,6 +120,32 @@ if (!function_exists('get_client_ip')) {
 }
 
 /**
+ * Get current user's branch id from session
+ */
+if (!function_exists('get_user_branch_id')) {
+    function get_user_branch_id() {
+        return $_SESSION['branch_id'] ?? null;
+    }
+}
+
+/**
+ * Enforce branch assignment for branch admins
+ */
+if (!function_exists('require_branch_assignment')) {
+    function require_branch_assignment() {
+        $user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
+        $branch_id = $_SESSION['branch_id'] ?? null;
+
+        if ($user_role == ROLE_BRANCH_ADMIN && empty($branch_id)) {
+            echo "Error: Your account is not assigned to any branch. Please contact the School Administrator.";
+            exit();
+        }
+
+        return true;
+    }
+}
+
+/**
  * Log audit trail
  */
 if (!function_exists('log_audit')) {

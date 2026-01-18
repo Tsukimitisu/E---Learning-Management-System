@@ -22,7 +22,11 @@ if ($class_id <= 0 || !in_array($grading_period, $allowed_periods, true) || !in_
     exit();
 }
 
-$branch_id = 1; // In production, fetch from user's assigned branch
+$branch_id = get_user_branch_id();
+if ($branch_id === null) {
+    echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+    exit();
+}
 
 try {
     // Ensure class belongs to this branch
@@ -30,7 +34,7 @@ try {
     $check->bind_param("ii", $class_id, $branch_id);
     $check->execute();
     if ($check->get_result()->num_rows === 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Class not found for this branch']);
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: This resource belongs to a different branch']);
         exit();
     }
 

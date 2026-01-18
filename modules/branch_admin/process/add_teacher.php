@@ -20,7 +20,11 @@ try {
     $email = clean_input($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $address = clean_input($_POST['address'] ?? '');
-    $branch_id = (int)($_POST['branch_id'] ?? 1);
+    $branch_id = get_user_branch_id();
+    if ($branch_id === null) {
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+        exit();
+    }
 
     // Validation
     if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
@@ -50,10 +54,10 @@ try {
 
     // Insert user
     $insert_user = $conn->prepare("
-        INSERT INTO users (first_name, last_name, email, password, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, 'active', NOW(), NOW())
+        INSERT INTO users (email, password, status, created_at)
+        VALUES (?, ?, 'active', NOW())
     ");
-    $insert_user->bind_param("ssss", $first_name, $last_name, $email, $hashed_password);
+    $insert_user->bind_param("ss", $email, $hashed_password);
 
     if (!$insert_user->execute()) {
         throw new Exception('Failed to create user account');
@@ -63,21 +67,22 @@ try {
 
     // Insert user profile
     $insert_profile = $conn->prepare("
-        INSERT INTO user_profiles (user_id, first_name, last_name, address, created_at, updated_at)
-        VALUES (?, ?, ?, ?, NOW(), NOW())
+        INSERT INTO user_profiles (user_id, first_name, last_name, address, branch_id)
+        VALUES (?, ?, ?, ?, ?)
     ");
-    $insert_profile->bind_param("isss", $user_id, $first_name, $last_name, $address);
+    $insert_profile->bind_param("isssi", $user_id, $first_name, $last_name, $address, $branch_id);
 
     if (!$insert_profile->execute()) {
         throw new Exception('Failed to create user profile');
     }
 
     // Assign teacher role
+    $role_id = ROLE_TEACHER;
     $insert_role = $conn->prepare("
-        INSERT INTO user_roles (user_id, role_id, created_at)
-        VALUES (?, ?, NOW())
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (?, ?)
     ");
-    $insert_role->bind_param("ii", $user_id, ROLE_TEACHER);
+    $insert_role->bind_param("ii", $user_id, $role_id);
 
     if (!$insert_role->execute()) {
         throw new Exception('Failed to assign teacher role');

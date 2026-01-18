@@ -39,6 +39,18 @@ if (isset($conn) && $conn && !$conn->connect_error) {
     if ($check && $check->num_rows == 0) {
         $conn->query("ALTER TABLE user_profiles ADD COLUMN branch_id INT(10) UNSIGNED DEFAULT NULL AFTER address");
     }
+
+    // Backfill session branch_id for branch admins if missing
+    if (!empty($_SESSION['user_id']) && ($_SESSION['role_id'] ?? null) == ROLE_BRANCH_ADMIN && empty($_SESSION['branch_id'])) {
+        $stmt = $conn->prepare("SELECT branch_id FROM user_profiles WHERE user_id = ? LIMIT 1");
+        $stmt->bind_param("i", $_SESSION['user_id']);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            $_SESSION['branch_id'] = $row['branch_id'] ?? null;
+        }
+        $stmt->close();
+    }
 }
 
 // Include Helper Functions

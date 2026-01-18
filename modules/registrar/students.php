@@ -37,29 +37,31 @@ if ($row = $result->fetch_assoc()) {
     $stats['new_today'] = $row['count'] ?? 0;
 }
 
-// Student List
+// Student List with balance calculation
 $students_query = "
     SELECT 
         s.user_id, s.student_no, s.course_id,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
         u.email, u.status,
         c.course_code, c.title as course_title,
-        COALESCE(SUM(p.amount), 0) as total_paid,
-        COALESCE(MAX(p.status), 'pending') as payment_status
+        COALESCE((SELECT SUM(amount) FROM payments WHERE student_id = s.user_id AND status = 'verified'), 0) as total_paid,
+        COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) as total_fees,
+        COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) - 
+        COALESCE((SELECT SUM(amount) FROM payments WHERE student_id = s.user_id AND status = 'verified'), 0) as balance
     FROM students s
     INNER JOIN users u ON s.user_id = u.id
     INNER JOIN user_profiles up ON s.user_id = up.user_id
     LEFT JOIN courses c ON s.course_id = c.id
-    LEFT JOIN payments p ON s.user_id = p.student_id
-    GROUP BY s.user_id
     ORDER BY s.student_no DESC
 ";
 $students_result = $conn->query($students_query);
 
 $student_no_preview = generate_student_number($conn);
 
-// Programs & Strands for filters and modals
-$courses_result = $conn->query("SELECT id, course_code, title FROM courses ORDER BY course_code");
+// Fetch College programs (created by school admin)
+$programs_result = $conn->query("SELECT id, program_code, program_name FROM programs WHERE is_active = 1 ORDER BY program_code");
+
+// Fetch SHS strands (created by school admin)
 $strands_result = $conn->query("SELECT id, strand_code, strand_name FROM shs_strands WHERE is_active = 1 ORDER BY strand_name");
 
 $program_year_levels_result = $conn->query("SELECT id, program_id, year_name FROM program_year_levels WHERE is_active = 1 ORDER BY program_id, year_level");
@@ -171,7 +173,9 @@ include '../../includes/header.php';
                                 <th>Email</th>
                                 <th>Program/Course</th>
                                 <th>Status</th>
-                                <th>Payment Status</th>
+                                <th class="text-end">Total Fees</th>
+                                <th class="text-end">Paid</th>
+                                <th class="text-end">Balance</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -180,8 +184,8 @@ include '../../includes/header.php';
                                 $program_label = $student['course_code'] ? ($student['course_code'] . ' - ' . $student['course_title']) : 'SHS';
                                 $program_key = $student['course_id'] ? 'course-' . $student['course_id'] : 'shs';
                                 $status_class = $student['status'] === 'active' ? 'success' : 'secondary';
-                                $payment_status = $student['payment_status'] ?? 'pending';
-                                $payment_class = $payment_status === 'verified' ? 'success' : ($payment_status === 'rejected' ? 'danger' : 'warning');
+                                $balance = (float)$student['balance'];
+                                $balance_class = $balance > 0 ? 'danger' : ($balance < 0 ? 'warning' : 'success');
                             ?>
                             <tr data-name="<?php echo htmlspecialchars(strtolower($student['full_name'])); ?>"
                                 data-student-no="<?php echo htmlspecialchars(strtolower($student['student_no'])); ?>"
@@ -196,12 +200,21 @@ include '../../includes/header.php';
                                         <?php echo ucfirst($student['status']); ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="badge bg-<?php echo $payment_class; ?>">
-                                        <?php echo ucfirst($payment_status); ?>
+                                <td class="text-end">₱<?php echo number_format($student['total_fees'], 2); ?></td>
+                                <td class="text-end text-success">₱<?php echo number_format($student['total_paid'], 2); ?></td>
+                                <td class="text-end">
+                                    <span class="badge bg-<?php echo $balance_class; ?>">
+                                        ₱<?php echo number_format(abs($balance), 2); ?>
+                                        <?php echo $balance < 0 ? ' (Overpaid)' : ''; ?>
                                     </span>
                                 </td>
                                 <td>
+                                    <button class="btn btn-sm btn-primary me-1" onclick="viewPaymentHistory(<?php echo $student['user_id']; ?>, '<?php echo htmlspecialchars($student['student_no']); ?>', '<?php echo htmlspecialchars(addslashes($student['full_name'])); ?>')" title="Payment History">
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success me-1" onclick="openPaymentModal(<?php echo $student['user_id']; ?>, '<?php echo htmlspecialchars($student['student_no']); ?>', '<?php echo htmlspecialchars(addslashes($student['full_name'])); ?>', <?php echo $student['total_fees']; ?>, <?php echo $student['total_paid']; ?>)" title="Add Payment">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </button>
                                     <button class="btn btn-sm btn-warning me-1" onclick="openEditStudent(this)"
                                             data-student-id="<?php echo $student['user_id']; ?>"
                                             data-student-no="<?php echo htmlspecialchars($student['student_no']); ?>"
@@ -210,8 +223,8 @@ include '../../includes/header.php';
                                             data-status="<?php echo htmlspecialchars($student['status']); ?>">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-info me-1" onclick="viewStudentDetails(<?php echo $student['user_id']; ?>)">
-                                        <i class="bi bi-eye"></i>
+                                    <button class="btn btn-sm btn-info me-1" onclick="openAssessFeeModal(<?php echo $student['user_id']; ?>, '<?php echo htmlspecialchars($student['student_no']); ?>', '<?php echo htmlspecialchars(addslashes($student['full_name'])); ?>')" title="Assess Fees">
+                                        <i class="bi bi-calculator"></i>
                                     </button>
                                     <button class="btn btn-sm btn-<?php echo $student['status'] === 'active' ? 'secondary' : 'success'; ?>"
                                             onclick="toggleStudentStatus(<?php echo $student['user_id']; ?>, '<?php echo $student['status']; ?>')">
@@ -275,15 +288,15 @@ include '../../includes/header.php';
                             </select>
                         </div>
                         <div class="col-md-4 mb-3" id="collegeProgramCol">
-                            <label class="form-label">Program/Course <span class="text-danger">*</span></label>
+                            <label class="form-label">Program <span class="text-danger">*</span></label>
                             <select class="form-select" name="course_id" id="course_id">
-                                <option value="">-- Select Course --</option>
+                                <option value="">-- Select Program --</option>
                                 <?php
-                                $courses_result->data_seek(0);
-                                while ($course = $courses_result->fetch_assoc()):
+                                $programs_result->data_seek(0);
+                                while ($program = $programs_result->fetch_assoc()):
                                 ?>
-                                    <option value="<?php echo $course['id']; ?>">
-                                        <?php echo htmlspecialchars($course['course_code'] . ' - ' . $course['title']); ?>
+                                    <option value="<?php echo $program['id']; ?>">
+                                        <?php echo htmlspecialchars($program['program_code'] . ' - ' . $program['program_name']); ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
@@ -335,6 +348,10 @@ include '../../includes/header.php';
                             <label class="form-label">Temporary Password <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="password" value="student123" required>
                         </div>
+                    </div>
+
+                    <div class="alert alert-info mb-0" style="font-size: 0.9rem;">
+                        <i class="bi bi-info-circle"></i> <strong>Workflow:</strong> After creating this student, the <strong>Branch Admin</strong> will assign them to specific <strong>sections</strong> based on the program and year level you selected here.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -389,6 +406,224 @@ include '../../includes/header.php';
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Record Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addPaymentForm">
+                <input type="hidden" name="student_id" id="payment_student_id">
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        <strong>Student:</strong> <span id="payment_student_info"></span>
+                    </div>
+                    
+                    <!-- Balance Info -->
+                    <div class="row mb-3">
+                        <div class="col-4 text-center">
+                            <small class="text-muted d-block">Total Fees</small>
+                            <strong class="text-primary" id="payment_total_fees">₱0.00</strong>
+                        </div>
+                        <div class="col-4 text-center">
+                            <small class="text-muted d-block">Total Paid</small>
+                            <strong class="text-success" id="payment_total_paid">₱0.00</strong>
+                        </div>
+                        <div class="col-4 text-center">
+                            <small class="text-muted d-block">Balance</small>
+                            <strong class="text-danger" id="payment_balance">₱0.00</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">OR Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="or_number" id="payment_or_number" required placeholder="e.g., 2024-00001">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Amount (₱) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="amount" id="payment_amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Payment Type <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="payment_type" id="payment_type_input" required placeholder="e.g., Tuition Fee, Enrollment Fee, Misc Fee">
+                        <small class="text-muted">Common: Tuition Fee, Enrollment Fee, Miscellaneous, Laboratory Fee</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Payment Method <span class="text-danger">*</span></label>
+                            <select class="form-select" name="payment_method" required>
+                                <option value="cash">Cash</option>
+                                <option value="check">Check</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="online">Online Payment</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Semester <span class="text-danger">*</span></label>
+                            <select class="form-select" name="semester" required>
+                                <option value="1st">1st Semester</option>
+                                <option value="2nd">2nd Semester</option>
+                                <option value="summer">Summer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description/Notes</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Additional details (optional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i> Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History Modal -->
+<div class="modal fade" id="paymentHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Payment History</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info py-2 mb-3">
+                    <strong>Student:</strong> <span id="history_student_info"></span>
+                </div>
+                
+                <!-- Summary -->
+                <div class="row mb-3">
+                    <div class="col-4 text-center">
+                        <small class="text-muted d-block">Total Fees</small>
+                        <strong class="text-primary" id="history_total_fees">₱0.00</strong>
+                    </div>
+                    <div class="col-4 text-center">
+                        <small class="text-muted d-block">Total Paid</small>
+                        <strong class="text-success" id="history_total_paid">₱0.00</strong>
+                    </div>
+                    <div class="col-4 text-center">
+                        <small class="text-muted d-block">Balance</small>
+                        <strong class="text-danger" id="history_balance">₱0.00</strong>
+                    </div>
+                </div>
+                
+                <ul class="nav nav-tabs" id="historyTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#paymentsTab">Payments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#feesTab">Assessed Fees</a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="paymentsTab">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>OR #</th>
+                                        <th>Type</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payments_list">
+                                    <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="feesTab">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date Added</th>
+                                        <th>Fee Type</th>
+                                        <th>Semester</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fees_list">
+                                    <tr><td colspan="4" class="text-center">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assess Fee Modal -->
+<div class="modal fade" id="assessFeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-calculator me-2"></i>Assess Fee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="assessFeeForm">
+                <input type="hidden" name="student_id" id="assess_student_id">
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        <strong>Student:</strong> <span id="assess_student_info"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fee Type <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="fee_type" required placeholder="e.g., Tuition Fee, Enrollment Fee, Misc Fee">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Amount (₱) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Semester <span class="text-danger">*</span></label>
+                            <select class="form-select" name="semester" required>
+                                <option value="1st">1st Semester</option>
+                                <option value="2nd">2nd Semester</option>
+                                <option value="summer">Summer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Optional details"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-plus-circle me-1"></i> Add Fee
+                    </button>
                 </div>
             </form>
         </div>
@@ -481,6 +716,135 @@ function showAlert(message, type) {
     document.getElementById('alertContainer').innerHTML = alertHtml;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// Payment Modal Functions
+function openPaymentModal(studentId, studentNo, fullName, totalFees = 0, totalPaid = 0) {
+    document.getElementById('payment_student_id').value = studentId;
+    document.getElementById('payment_student_info').textContent = studentNo + ' - ' + fullName;
+    document.getElementById('payment_or_number').value = '';
+    document.getElementById('addPaymentForm').reset();
+    document.getElementById('payment_student_id').value = studentId;
+    
+    // Update balance info
+    const balance = totalFees - totalPaid;
+    document.getElementById('payment_total_fees').textContent = '₱' + totalFees.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('payment_total_paid').textContent = '₱' + totalPaid.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('payment_balance').textContent = '₱' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('payment_balance').className = balance > 0 ? 'text-danger' : 'text-success';
+    
+    new bootstrap.Modal(document.getElementById('addPaymentModal')).show();
+}
+
+document.getElementById('addPaymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('process/record_payment.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        bootstrap.Modal.getInstance(document.getElementById('addPaymentModal')).hide();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message || 'Failed to record payment', 'danger');
+        }
+    } catch (error) {
+        showAlert('An error occurred while recording payment', 'danger');
+    }
+});
+
+// Payment History Modal
+async function viewPaymentHistory(studentId, studentNo, fullName) {
+    document.getElementById('history_student_info').textContent = studentNo + ' - ' + fullName;
+    document.getElementById('payments_list').innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+    document.getElementById('fees_list').innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+    
+    new bootstrap.Modal(document.getElementById('paymentHistoryModal')).show();
+    
+    try {
+        const response = await fetch(`process/get_payment_history.php?student_id=${studentId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update summary
+            document.getElementById('history_total_fees').textContent = '₱' + parseFloat(data.total_fees).toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('history_total_paid').textContent = '₱' + parseFloat(data.total_paid).toLocaleString('en-US', {minimumFractionDigits: 2});
+            const balance = data.total_fees - data.total_paid;
+            document.getElementById('history_balance').textContent = '₱' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2}) + (balance < 0 ? ' (Overpaid)' : '');
+            document.getElementById('history_balance').className = balance > 0 ? 'text-danger' : 'text-success';
+            
+            // Populate payments
+            if (data.payments.length > 0) {
+                document.getElementById('payments_list').innerHTML = data.payments.map(p => `
+                    <tr>
+                        <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                        <td><strong>${p.or_number || '-'}</strong></td>
+                        <td>${p.payment_type}</td>
+                        <td class="text-end">₱${parseFloat(p.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td><span class="badge bg-${p.status === 'verified' ? 'success' : (p.status === 'rejected' ? 'danger' : 'warning')}">${p.status}</span></td>
+                    </tr>
+                `).join('');
+            } else {
+                document.getElementById('payments_list').innerHTML = '<tr><td colspan="5" class="text-center text-muted">No payments recorded</td></tr>';
+            }
+            
+            // Populate fees
+            if (data.fees.length > 0) {
+                document.getElementById('fees_list').innerHTML = data.fees.map(f => `
+                    <tr>
+                        <td>${new Date(f.created_at).toLocaleDateString()}</td>
+                        <td>${f.fee_type}</td>
+                        <td>${f.semester}</td>
+                        <td class="text-end">₱${parseFloat(f.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `).join('');
+            } else {
+                document.getElementById('fees_list').innerHTML = '<tr><td colspan="4" class="text-center text-muted">No fees assessed</td></tr>';
+            }
+        }
+    } catch (error) {
+        document.getElementById('payments_list').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load data</td></tr>';
+    }
+}
+
+// Assess Fee Modal
+function openAssessFeeModal(studentId, studentNo, fullName) {
+    document.getElementById('assess_student_id').value = studentId;
+    document.getElementById('assess_student_info').textContent = studentNo + ' - ' + fullName;
+    document.getElementById('assessFeeForm').reset();
+    document.getElementById('assess_student_id').value = studentId;
+    new bootstrap.Modal(document.getElementById('assessFeeModal')).show();
+}
+
+document.getElementById('assessFeeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('process/assess_fee.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        bootstrap.Modal.getInstance(document.getElementById('assessFeeModal')).hide();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message || 'Failed to assess fee', 'danger');
+        }
+    } catch (error) {
+        showAlert('An error occurred while assessing fee', 'danger');
+    }
+});
 </script>
 </body>
 </html>

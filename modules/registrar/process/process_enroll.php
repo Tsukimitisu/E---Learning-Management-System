@@ -146,10 +146,16 @@ try {
         WHERE user_id = $student_id
     ")->fetch_assoc();
 
+    // Get class info - support both curriculum_subjects and courses
     $classInfo = $conn->query("
-        SELECT c.course_code, cl.room 
+        SELECT 
+            COALESCE(cs.subject_code, c.course_code, 'N/A') as subject_code,
+            COALESCE(cs.subject_title, c.course_title, 'N/A') as subject_title,
+            cl.section_name,
+            cl.room 
         FROM classes cl 
-        INNER JOIN courses c ON cl.course_id = c.id 
+        LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
+        LEFT JOIN courses c ON cl.course_id = c.id 
         WHERE cl.id = $class_id
     ")->fetch_assoc();
 
@@ -158,8 +164,8 @@ try {
         'message' => sprintf(
             'Successfully enrolled %s in %s - %s',
             $studentInfo['name'] ?? 'Student',
-            $classInfo['course_code'] ?? 'Course',
-            $classInfo['room'] ?? 'Room'
+            $classInfo['subject_code'] ?? 'Subject',
+            $classInfo['section_name'] ?? 'Section'
         ),
         'payment_verified_total' => $paid_amount,
         'enrollment_id' => $enrollment_id,

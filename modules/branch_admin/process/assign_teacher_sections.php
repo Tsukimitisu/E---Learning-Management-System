@@ -24,7 +24,11 @@ if (count($class_ids) === 0) {
     exit();
 }
 
-$branch_id = 1; // In production, fetch from user's assigned branch
+$branch_id = get_user_branch_id();
+if ($branch_id === null) {
+    echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+    exit();
+}
 
 try {
     // Validate teacher
@@ -52,7 +56,12 @@ try {
     }
 
     if (count($valid_ids) === 0) {
-        echo json_encode(['status' => 'error', 'message' => 'No valid sections found for this branch']);
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: This resource belongs to a different branch']);
+        exit();
+    }
+
+    if (count($valid_ids) !== count($class_ids)) {
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: This resource belongs to a different branch']);
         exit();
     }
 

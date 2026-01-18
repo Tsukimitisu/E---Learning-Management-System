@@ -9,9 +9,22 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
 $page_title = "Branch Admin Dashboard";
 $admin_id = $_SESSION['user_id'];
 
-// Get branch admin's branch (assume stored in user profile or separate table)
-// For now, we'll use branch_id = 1 as default
-$branch_id = 1; // In production, fetch from user's assigned branch
+$branch_id = get_user_branch_id();
+if ($branch_id === null) {
+    echo "Error: Your account is not assigned to any branch. Please contact the School Administrator.";
+    exit();
+}
+require_branch_assignment();
+
+$branch_name = 'Unknown Branch';
+$branch_stmt = $conn->prepare("SELECT name FROM branches WHERE id = ?");
+$branch_stmt->bind_param("i", $branch_id);
+$branch_stmt->execute();
+$branch_result = $branch_stmt->get_result();
+if ($branch_row = $branch_result->fetch_assoc()) {
+    $branch_name = $branch_row['name'] ?? $branch_name;
+}
+$branch_stmt->close();
 
 // Fetch Statistics
 $stats = [
@@ -76,6 +89,9 @@ include '../../includes/header.php';
             <div>
                 <span class="badge bg-success me-2">
                     <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($_SESSION['name']); ?>
+                </span>
+                <span class="badge bg-info me-2">
+                    <i class="bi bi-building"></i> Branch: <?php echo htmlspecialchars($branch_name); ?>
                 </span>
                 <span class="text-muted"><?php echo date('F d, Y'); ?></span>
             </div>
@@ -185,19 +201,25 @@ include '../../includes/header.php';
                             <a href="sectioning.php" class="btn btn-outline-dark">
                                 <i class="bi bi-diagram-3"></i> Manage Sections
                             </a>
-                            <a href="teachers.php" class="btn btn-outline-info">
+                            <a href="student_assignment.php" class="btn btn-outline-info">
+                                <i class="bi bi-person-check"></i> Assign Students to Sections
+                            </a>
+                            <a href="bulk_assign_sections.php" class="btn btn-outline-success">
+                                <i class="bi bi-people-fill"></i> Bulk Assign to Sections
+                            </a>
+                            <a href="teachers.php" class="btn btn-outline-secondary">
                                 <i class="bi bi-person-badge"></i> Manage Teachers
                             </a>
-                            <a href="students.php" class="btn btn-outline-secondary">
+                            <a href="students.php" class="btn btn-outline-dark">
                                 <i class="bi bi-people"></i> Manage Students
                             </a>
-                            <a href="announcements.php" class="btn btn-outline-success">
+                            <a href="announcements.php" class="btn btn-outline-warning">
                                 <i class="bi bi-megaphone"></i> Branch Announcements
                             </a>
                             <a href="monitoring.php" class="btn btn-outline-danger">
                                 <i class="bi bi-eye"></i> Monitor & Comply
                             </a>
-                            <a href="reports.php" class="btn btn-outline-warning">
+                            <a href="reports.php" class="btn btn-outline-info">
                                 <i class="bi bi-file-earmark-text"></i> Generate Reports
                             </a>
                         </div>

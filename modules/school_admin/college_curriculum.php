@@ -58,7 +58,7 @@ include '../../includes/header.php';
     <div id="content">
         <div class="navbar-custom d-flex justify-content-between align-items-center">
             <div>
-                <a href="curriculum.php" class="btn btn-sm btn-outline-secondary me-3">
+                <a href="javascript:void(0)" onclick="goBack()" class="btn btn-sm btn-outline-secondary me-3">
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
                 <span style="display: inline-block;">
@@ -294,6 +294,14 @@ const collegePrograms = <?php echo json_encode($programs); ?>;
 const programsData = <?php echo json_encode($programs); ?>;
 const collegeYearLevels = <?php echo json_encode($year_levels); ?>;
 const yearLevelsData = <?php echo json_encode($year_levels); ?>;
+
+function goBack() {
+    if (document.referrer && document.referrer.includes('/elms_system/')) {
+        window.history.back();
+    } else {
+        window.location.href = 'curriculum.php';
+    }
+}
 </script>
 
 <?php include '../../includes/footer.php'; ?>

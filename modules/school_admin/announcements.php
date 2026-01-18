@@ -45,7 +45,7 @@ include '../../includes/header.php';
     <div id="content">
         <div class="navbar-custom d-flex justify-content-between align-items-center">
             <div>
-                <a href="index.php" class="btn btn-sm btn-outline-secondary me-3">
+                <a href="javascript:void(0)" onclick="goBack()" class="btn btn-sm btn-outline-secondary me-3">
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
                 <span style="display: inline-block;">
@@ -230,6 +230,14 @@ document.getElementById('addAnnouncementForm').addEventListener('submit', async 
         showAlert('An error occurred', 'danger');
     }
 });
+
+function goBack() {
+    if (document.referrer && document.referrer.includes('/elms_system/')) {
+        window.history.back();
+    } else {
+        window.location.href = 'index.php';
+    }
+}
 
 function showAlert(message, type) {
     const alertHtml = `

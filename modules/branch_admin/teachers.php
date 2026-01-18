@@ -7,14 +7,22 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
 }
 
 $page_title = "Teacher Management";
-$branch_id = 1; // In production, fetch from user's assigned branch
+$branch_id = get_user_branch_id();
+if ($branch_id === null) {
+    echo "Error: Your account is not assigned to any branch. Please contact the School Administrator.";
+    exit();
+}
+require_branch_assignment();
 
 // Check if viewing specific teacher's sections
 $view_teacher_sections = isset($_GET['view_sections']) ? (int)$_GET['view_sections'] : null;
 
-// Fetch all teachers (users with teacher role)
+// Fetch teachers assigned to this branch (via user_profiles.branch_id)
+$current_ay = $conn->query("SELECT id FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
 $teachers_query = "
-    SELECT
+    SELECT DISTINCT
         u.id,
         u.email,
         u.status,
@@ -22,14 +30,19 @@ $teachers_query = "
         up.first_name,
         up.last_name,
         up.address,
-        COUNT(DISTINCT cl.id) as assigned_classes,
-        GROUP_CONCAT(DISTINCT cs.subject_code SEPARATOR ', ') as subjects
+        (SELECT COUNT(DISTINCT tsa2.curriculum_subject_id) 
+         FROM teacher_subject_assignments tsa2 
+         WHERE tsa2.teacher_id = u.id AND tsa2.branch_id = $branch_id 
+         AND tsa2.academic_year_id = $current_ay_id AND tsa2.is_active = 1) as assigned_subjects,
+        (SELECT GROUP_CONCAT(DISTINCT cs2.subject_code SEPARATOR ', ')
+         FROM teacher_subject_assignments tsa3
+         INNER JOIN curriculum_subjects cs2 ON tsa3.curriculum_subject_id = cs2.id
+         WHERE tsa3.teacher_id = u.id AND tsa3.branch_id = $branch_id 
+         AND tsa3.academic_year_id = $current_ay_id AND tsa3.is_active = 1) as subjects
     FROM users u
     INNER JOIN user_profiles up ON u.id = up.user_id
     INNER JOIN user_roles ur ON u.id = ur.user_id
-    LEFT JOIN classes cl ON cl.teacher_id = u.id AND cl.branch_id = $branch_id
-    LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
-    WHERE ur.role_id = " . ROLE_TEACHER . "
+    WHERE ur.role_id = " . ROLE_TEACHER . " AND up.branch_id = $branch_id
     GROUP BY u.id, u.email, u.status, u.created_at, up.first_name, up.last_name, up.address
     ORDER BY up.first_name, up.last_name
 ";
@@ -181,7 +194,7 @@ include '../../includes/header.php';
                                         <?php echo ucfirst($teacher['status']); ?>
                                     </span>
                                 </td>
-                                <td><?php echo $teacher['assigned_classes'] ?? 0; ?> classes</td>
+                                <td><?php echo $teacher['assigned_subjects'] ?? 0; ?> subjects</td>
                                 <td>
                                     <small><?php echo htmlspecialchars($teacher['subjects'] ?? 'None assigned'); ?></small>
                                 </td>

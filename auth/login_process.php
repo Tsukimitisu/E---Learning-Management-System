@@ -25,9 +25,9 @@ try {
     
     // Prepare statement to fetch user
     $stmt = $conn->prepare("
-        SELECT u.id, u.email, u.password, u.status, 
-               up.first_name, up.last_name,
-               r.id as role_id, r.name as role_name
+         SELECT u.id, u.email, u.password, u.status, 
+             up.first_name, up.last_name, up.branch_id,
+             r.id as role_id, r.name as role_name
         FROM users u
         INNER JOIN user_profiles up ON u.id = up.user_id
         INNER JOIN user_roles ur ON u.id = ur.user_id
@@ -83,6 +83,7 @@ try {
     $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
     $_SESSION['role_id'] = $user['role_id'];
     $_SESSION['role'] = $user['role_name'];
+    $_SESSION['branch_id'] = $user['branch_id'] ?? null;
     $_SESSION['logged_in'] = true;
     
     // Determine redirect based on role

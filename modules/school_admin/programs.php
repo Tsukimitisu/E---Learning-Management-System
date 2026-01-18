@@ -41,7 +41,7 @@ include '../../includes/header.php';
     <div id="content">
         <div class="navbar-custom d-flex justify-content-between align-items-center">
             <div>
-                <a href="index.php" class="btn btn-sm btn-outline-secondary me-3">
+                <a href="javascript:void(0)" onclick="goBack()" class="btn btn-sm btn-outline-secondary me-3">
                     <i class="bi bi-arrow-left"></i> Back
                 </a>
                 <span style="display: inline-block;">
@@ -127,6 +127,14 @@ while ($prog = $programs_result->fetch_assoc()) {
 echo json_encode($programs_data); 
 ?>;
 
+function goBack() {
+    if (document.referrer && document.referrer.includes('/elms_system/')) {
+        window.history.back();
+    } else {
+        window.location.href = 'index.php';
+    }
+}
+
 document.getElementById('addProgramForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -180,6 +188,54 @@ function toggleStatus(id, currentStatus) {
         .catch(error => showAlert('An error occurred', 'danger'));
     }
 }
+
+// Edit Program function
+function editProgram(id) {
+    const program = collegePrograms.find(p => p.id == id);
+    if (program) {
+        document.getElementById('editProgramId').value = program.id;
+        document.getElementById('editProgramCode').value = program.program_code;
+        document.getElementById('editProgramName').value = program.program_name;
+        document.getElementById('editProgramDegree').value = program.degree_level;
+        document.getElementById('editProgramStatus').value = program.is_active;
+        
+        // Get school ID (need to fetch it from server)
+        fetch('process/get_program.php?id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('editProgramSchool').value = data.program.school_id;
+                }
+            });
+        
+        const modal = new bootstrap.Modal(document.getElementById('editProgramModal'));
+        modal.show();
+    }
+}
+
+// Edit Program form submit
+document.getElementById('editProgramForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('process/update_program.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showAlert(data.message, 'success');
+            $('#editProgramModal').modal('hide');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('An error occurred', 'danger');
+    }
+});
 </script>
 
 <?php include '../../includes/footer.php'; ?>

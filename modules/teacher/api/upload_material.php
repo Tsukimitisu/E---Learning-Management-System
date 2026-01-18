@@ -8,17 +8,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
     exit();
 }
 
-$class_id = (int)($_POST['class_id'] ?? 0);
+$subject_id = (int)($_POST['subject_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];
 
-if ($class_id == 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid class ID']);
+// Get current academic year
+$current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+if ($subject_id == 0) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid subject ID']);
     exit();
 }
 
-// Verify class belongs to teacher
-$verify = $conn->prepare("SELECT id FROM classes WHERE id = ? AND teacher_id = ?");
-$verify->bind_param("ii", $class_id, $teacher_id);
+// Verify teacher is assigned to this subject
+$verify = $conn->prepare("SELECT id FROM teacher_subject_assignments WHERE teacher_id = ? AND curriculum_subject_id = ? AND academic_year_id = ? AND is_active = 1");
+$verify->bind_param("iii", $teacher_id, $subject_id, $current_ay_id);
 $verify->execute();
 if ($verify->get_result()->num_rows == 0) {
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized access']);
@@ -56,7 +60,7 @@ if (!file_exists($upload_dir)) {
 
 // Generate unique filename
 $original_name = pathinfo($file['name'], PATHINFO_FILENAME);
-$new_filename = 'material_' . $class_id . '_' . time() . '_' . uniqid() . '.' . $file_extension;
+$new_filename = 'material_subj' . $subject_id . '_' . time() . '_' . uniqid() . '.' . $file_extension;
 $upload_path = $upload_dir . $new_filename;
 
 // Check for duplicate content using file hash
@@ -64,10 +68,9 @@ $file_hash = md5_file($file['tmp_name']);
 $duplicate_check = $conn->prepare("
     SELECT lm.id, lm.file_path 
     FROM learning_materials lm
-    WHERE lm.class_id = ? AND lm.file_path LIKE ?
+    WHERE lm.subject_id = ?
 ");
-$file_pattern = '%' . $file_extension;
-$duplicate_check->bind_param("is", $class_id, $file_pattern);
+$duplicate_check->bind_param("i", $subject_id);
 $duplicate_check->execute();
 $existing_files = $duplicate_check->get_result();
 
@@ -76,7 +79,7 @@ while ($existing = $existing_files->fetch_assoc()) {
     if (file_exists($existing_path)) {
         $existing_hash = md5_file($existing_path);
         if ($existing_hash === $file_hash) {
-            echo json_encode(['status' => 'error', 'message' => 'This file already exists in this class']);
+            echo json_encode(['status' => 'error', 'message' => 'This file already exists for this subject']);
             exit();
         }
     }
@@ -89,15 +92,15 @@ if (!move_uploaded_file($file['tmp_name'], $upload_path)) {
 }
 
 try {
-    // Insert to database
-    $stmt = $conn->prepare("INSERT INTO learning_materials (class_id, file_path) VALUES (?, ?)");
+    // Insert to database - materials are per subject, section_id and class_id are NULL
+    $stmt = $conn->prepare("INSERT INTO learning_materials (class_id, section_id, subject_id, file_path, uploaded_by) VALUES (NULL, NULL, ?, ?, ?)");
     $file_path = 'materials/' . $new_filename;
-    $stmt->bind_param("is", $class_id, $file_path);
+    $stmt->bind_param("isi", $subject_id, $file_path, $teacher_id);
     $stmt->execute();
     
     // Log audit
     $ip = get_client_ip();
-    $action = "Uploaded material: $new_filename for class ID $class_id";
+    $action = "Uploaded material: $new_filename for subject ID $subject_id";
     $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
     $audit->bind_param("iss", $teacher_id, $action, $ip);
     $audit->execute();

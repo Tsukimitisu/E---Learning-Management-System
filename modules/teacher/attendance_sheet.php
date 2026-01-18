@@ -7,48 +7,83 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     exit();
 }
 
-$class_id = (int)($_GET['class_id'] ?? 0);
+$section_id = (int)($_GET['section_id'] ?? 0);
+$subject_id = (int)($_GET['subject_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];
 $attendance_date = $_GET['date'] ?? date('Y-m-d');
 
-if ($class_id == 0) {
+// Get current academic year
+$current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+if ($section_id == 0 || $subject_id == 0) {
     header('Location: attendance.php');
     exit();
 }
 
 /** 
- * BACKEND LOGIC - UNTOUCHED 
+ * BACKEND LOGIC - Using new section/subject structure
  */
-$verify = $conn->prepare("SELECT teacher_id FROM classes WHERE id = ?");
-$verify->bind_param("i", $class_id);
+// Verify teacher is assigned to this subject
+$verify = $conn->prepare("SELECT id FROM teacher_subject_assignments WHERE teacher_id = ? AND curriculum_subject_id = ? AND academic_year_id = ? AND is_active = 1");
+$verify->bind_param("iii", $teacher_id, $subject_id, $current_ay_id);
 $verify->execute();
 $result = $verify->get_result();
 
-if ($result->num_rows == 0 || $result->fetch_assoc()['teacher_id'] != $teacher_id) {
+if ($result->num_rows == 0) {
     header('Location: attendance.php');
     exit();
 }
 
-$class_info = $conn->query("
-    SELECT cl.*, s.subject_code, s.subject_title
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    WHERE cl.id = $class_id
-")->fetch_assoc();
+// Get section info
+$section_query = $conn->prepare("
+    SELECT s.*, 
+           COALESCE(p.program_name, ss.strand_name) as program_name,
+           COALESCE(pyl.year_name, CONCAT('Grade ', sgl.grade_level)) as year_level_name
+    FROM sections s
+    LEFT JOIN programs p ON s.program_id = p.id
+    LEFT JOIN program_year_levels pyl ON s.year_level_id = pyl.id
+    LEFT JOIN shs_strands ss ON s.shs_strand_id = ss.id
+    LEFT JOIN shs_grade_levels sgl ON s.shs_grade_level_id = sgl.id
+    WHERE s.id = ?
+");
+$section_query->bind_param("i", $section_id);
+$section_query->execute();
+$section_info = $section_query->get_result()->fetch_assoc();
 
-$students = $conn->query("
+// Get subject info
+$subject_query = $conn->prepare("SELECT * FROM curriculum_subjects WHERE id = ?");
+$subject_query->bind_param("i", $subject_id);
+$subject_query->execute();
+$subject_info = $subject_query->get_result()->fetch_assoc();
+
+// Combine for compatibility with old template
+$class_info = [
+    'section_name' => $section_info['section_name'],
+    'subject_code' => $subject_info['subject_code'],
+    'subject_title' => $subject_info['subject_title']
+];
+
+// Get students from section_students table with attendance
+$students_query = $conn->prepare("
     SELECT 
-        s.user_id, s.student_no, CONCAT(up.first_name, ' ', up.last_name) as student_name,
+        u.id as user_id, 
+        COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no, 
+        CONCAT(up.first_name, ' ', up.last_name) as student_name,
         a.status, a.time_in, a.time_out, a.remarks
-    FROM enrollments e
-    INNER JOIN students s ON e.student_id = s.user_id
-    INNER JOIN user_profiles up ON s.user_id = up.user_id
-    LEFT JOIN attendance a ON s.user_id = a.student_id 
-        AND a.class_id = $class_id 
-        AND a.attendance_date = '$attendance_date'
-    WHERE e.class_id = $class_id AND e.status = 'approved'
+    FROM section_students ss
+    INNER JOIN users u ON ss.student_id = u.id
+    INNER JOIN user_profiles up ON u.id = up.user_id
+    LEFT JOIN students st ON u.id = st.user_id
+    LEFT JOIN attendance a ON u.id = a.student_id 
+        AND a.section_id = ? AND a.subject_id = ?
+        AND a.attendance_date = ?
+    WHERE ss.section_id = ? AND ss.status = 'active'
     ORDER BY up.last_name, up.first_name
 ");
+$students_query->bind_param("iisi", $section_id, $subject_id, $attendance_date, $section_id);
+$students_query->execute();
+$students = $students_query->get_result();
 
 $page_title = "Attendance Sheet";
 include '../../includes/header.php';
@@ -241,13 +276,14 @@ include '../../includes/sidebar.php';
 
 <?php include '../../includes/footer.php'; ?>
 
-<!-- --- JAVASCRIPT LOGIC - UNTOUCHED & WIRED --- -->
+<!-- --- JAVASCRIPT LOGIC - Updated for new structure --- -->
 <script>
-const CLASS_ID = <?php echo $class_id; ?>;
+const SECTION_ID = <?php echo $section_id; ?>;
+const SUBJECT_ID = <?php echo $subject_id; ?>;
 const ATTENDANCE_DATE = '<?php echo $attendance_date; ?>';
 
 function changeDate(date) {
-    window.location.href = `attendance_sheet.php?class_id=${CLASS_ID}&date=${date}`;
+    window.location.href = `attendance_sheet.php?section_id=${SECTION_ID}&subject_id=${SUBJECT_ID}&date=${date}`;
 }
 
 function markAll(status) {
@@ -280,7 +316,8 @@ async function saveAttendance() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                class_id: CLASS_ID,
+                section_id: SECTION_ID,
+                subject_id: SUBJECT_ID,
                 attendance_date: ATTENDANCE_DATE,
                 attendance: attendanceData
             })

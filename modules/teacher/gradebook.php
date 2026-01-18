@@ -7,58 +7,90 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     exit();
 }
 
-$class_id = (int)($_GET['class_id'] ?? 0);
+$section_id = (int)($_GET['section_id'] ?? 0);
+$subject_id = (int)($_GET['subject_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];
 
-if ($class_id == 0) {
+// Get current academic year
+$current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+if ($section_id == 0 || $subject_id == 0) {
     header('Location: grading.php');
     exit();
 }
 
 /** 
- * BACKEND LOGIC - UNTOUCHED 
+ * BACKEND LOGIC - Using new section/subject structure
  */
-$verify = $conn->prepare("SELECT teacher_id FROM classes WHERE id = ?");
-$verify->bind_param("i", $class_id);
+// Verify teacher is assigned to this subject
+$verify = $conn->prepare("SELECT id FROM teacher_subject_assignments WHERE teacher_id = ? AND curriculum_subject_id = ? AND academic_year_id = ? AND is_active = 1");
+$verify->bind_param("iii", $teacher_id, $subject_id, $current_ay_id);
 $verify->execute();
 $result = $verify->get_result();
 
-if ($result->num_rows == 0 || $result->fetch_assoc()['teacher_id'] != $teacher_id) {
+if ($result->num_rows == 0) {
     header('Location: grading.php');
     exit();
 }
 
-$class_info = $conn->query("
-    SELECT 
-        cl.*,
-        s.subject_code,
-        s.subject_title,
-        st.track_name,
-        st.written_work_weight,
-        st.performance_task_weight,
-        st.quarterly_exam_weight
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    LEFT JOIN shs_tracks st ON cl.shs_track_id = st.id
-    WHERE cl.id = $class_id
-")->fetch_assoc();
+// Get section info
+$section_query = $conn->prepare("
+    SELECT s.*, 
+           COALESCE(p.program_name, ss.strand_name) as program_name,
+           COALESCE(pyl.year_name, CONCAT('Grade ', sgl.grade_level)) as year_level_name
+    FROM sections s
+    LEFT JOIN programs p ON s.program_id = p.id
+    LEFT JOIN program_year_levels pyl ON s.year_level_id = pyl.id
+    LEFT JOIN shs_strands ss ON s.shs_strand_id = ss.id
+    LEFT JOIN shs_grade_levels sgl ON s.shs_grade_level_id = sgl.id
+    WHERE s.id = ?
+");
+$section_query->bind_param("i", $section_id);
+$section_query->execute();
+$section_info = $section_query->get_result()->fetch_assoc();
 
-$students = $conn->query("
+// Get subject info
+$subject_query = $conn->prepare("SELECT * FROM curriculum_subjects WHERE id = ?");
+$subject_query->bind_param("i", $subject_id);
+$subject_query->execute();
+$subject_info = $subject_query->get_result()->fetch_assoc();
+
+// Combine for compatibility with old template
+$class_info = [
+    'section_name' => $section_info['section_name'],
+    'subject_code' => $subject_info['subject_code'],
+    'subject_title' => $subject_info['subject_title'],
+    'units' => $subject_info['units'],
+    'program_name' => $section_info['program_name'],
+    'year_level_name' => $section_info['year_level_name'],
+    'track_name' => null,
+    'written_work_weight' => 30,
+    'performance_task_weight' => 50,
+    'quarterly_exam_weight' => 20
+];
+
+// Get students from section_students table
+$students = $conn->prepare("
     SELECT 
-        s.user_id,
-        s.student_no,
+        u.id as user_id,
+        COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
         CONCAT(up.first_name, ' ', up.last_name) as student_name,
         g.midterm,
         g.final,
         g.final_grade,
         g.remarks
-    FROM enrollments e
-    INNER JOIN students s ON e.student_id = s.user_id
-    INNER JOIN user_profiles up ON s.user_id = up.user_id
-    LEFT JOIN grades g ON s.user_id = g.student_id AND g.class_id = $class_id
-    WHERE e.class_id = $class_id AND e.status = 'approved'
+    FROM section_students ss
+    INNER JOIN users u ON ss.student_id = u.id
+    INNER JOIN user_profiles up ON u.id = up.user_id
+    LEFT JOIN students st ON u.id = st.user_id
+    LEFT JOIN grades g ON u.id = g.student_id AND g.section_id = ? AND g.subject_id = ?
+    WHERE ss.section_id = ? AND ss.status = 'active'
     ORDER BY up.last_name, up.first_name
 ");
+$students->bind_param("iii", $section_id, $subject_id, $section_id);
+$students->execute();
+$students = $students->get_result();
 
 $page_title = "Gradebook - " . $class_info['subject_code'];
 include '../../includes/header.php';
@@ -168,6 +200,13 @@ include '../../includes/sidebar.php';
             </h4>
         </div>
         <div class="d-flex gap-2">
+            <button class="btn btn-outline-success btn-sm px-3 rounded-pill" onclick="exportGrades()" title="Export to Excel">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export
+            </button>
+            <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="document.getElementById('importFile').click()" title="Import from Excel">
+                <i class="bi bi-file-earmark-excel me-1"></i> Import
+            </button>
+            <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="importGrades(this)">
             <button class="btn btn-save-all shadow-sm" onclick="saveAllGrades()">
                 <i class="bi bi-cloud-check me-2"></i> Save All
             </button>
@@ -251,9 +290,14 @@ include '../../includes/sidebar.php';
 
 <?php include '../../includes/footer.php'; ?>
 
-<!-- --- JAVASCRIPT LOGIC - UNTOUCHED & WIRED --- -->
+<!-- SheetJS Library for Excel Import/Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+<!-- --- JAVASCRIPT LOGIC - Updated for new structure --- -->
 <script>
-const CLASS_ID = <?php echo $class_id; ?>;
+<script>
+const SECTION_ID = <?php echo $section_id; ?>;
+const SUBJECT_ID = <?php echo $subject_id; ?>;
 
 // Auto-calculate on input change
 document.querySelectorAll('.midterm-input, .final-input').forEach(input => {
@@ -296,7 +340,8 @@ async function saveGrade(row) {
     
     const formData = new FormData();
     formData.append('student_id', studentId);
-    formData.append('class_id', CLASS_ID);
+    formData.append('section_id', SECTION_ID);
+    formData.append('subject_id', SUBJECT_ID);
     formData.append('midterm', midterm);
     formData.append('final', final);
     formData.append('final_grade', finalGrade.toFixed(2));
@@ -341,6 +386,123 @@ function showAlert(message, type) {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm animate__animated animate__shakeX" role="alert"><i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'} me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     document.getElementById('alertContainer').innerHTML = alertHtml;
     document.querySelector('.body-scroll-part').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Export grades to Excel
+function exportGrades() {
+    const rows = document.querySelectorAll('tbody tr');
+    const data = [['Student No', 'Student Name', 'Midterm', 'Final', 'Average', 'Remarks']];
+    
+    rows.forEach(row => {
+        const studentNo = row.querySelector('small.text-muted')?.textContent?.trim() || '';
+        const studentName = row.querySelector('.fw-bold.text-dark')?.textContent?.trim() || '';
+        const midterm = parseFloat(row.querySelector('.midterm-input')?.value) || '';
+        const final = parseFloat(row.querySelector('.final-input')?.value) || '';
+        const average = row.querySelector('.computed-grade')?.textContent?.trim() || '';
+        const remarks = row.querySelector('.badge')?.textContent?.trim() || '';
+        
+        data.push([studentNo, studentName, midterm, final, average, remarks]);
+    });
+    
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // Set column widths
+    ws['!cols'] = [
+        { wch: 15 },  // Student No
+        { wch: 30 },  // Student Name
+        { wch: 10 },  // Midterm
+        { wch: 10 },  // Final
+        { wch: 10 },  // Average
+        { wch: 12 }   // Remarks
+    ];
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'Grades');
+    
+    // Download
+    const subjectCode = '<?php echo addslashes($class_info['subject_code']); ?>';
+    const sectionName = '<?php echo addslashes($class_info['section_name']); ?>';
+    const filename = `Grades_${subjectCode}_${sectionName}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    
+    XLSX.writeFile(wb, filename);
+    showAlert('Grades exported to Excel successfully!', 'success');
+}
+
+// Import grades from Excel
+function importGrades(input) {
+    if (!input.files || !input.files[0]) return;
+    
+    const file = input.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Get first sheet
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            
+            // Convert to array of arrays
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            let updated = 0;
+            let notFound = [];
+            
+            // Skip header row (index 0)
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || row.length < 4) continue;
+                
+                const studentNo = String(row[0] || '').trim();
+                const midterm = parseFloat(row[2]) || 0;
+                const final = parseFloat(row[3]) || 0;
+                
+                if (!studentNo) continue;
+                
+                // Find matching row by student number
+                const tableRows = document.querySelectorAll('tbody tr');
+                let found = false;
+                
+                tableRows.forEach(tableRow => {
+                    const rowStudentNo = tableRow.querySelector('small.text-muted')?.textContent?.trim();
+                    if (rowStudentNo === studentNo) {
+                        tableRow.querySelector('.midterm-input').value = midterm;
+                        tableRow.querySelector('.final-input').value = final;
+                        calculateFinalGrade(tableRow);
+                        updated++;
+                        found = true;
+                    }
+                });
+                
+                if (!found) {
+                    notFound.push(studentNo);
+                }
+            }
+            
+            // Reset file input
+            input.value = '';
+            
+            let message = `Imported ${updated} grades from Excel.`;
+            if (notFound.length > 0) {
+                message += ` ${notFound.length} students not found.`;
+            }
+            
+            if (updated > 0) {
+                showAlert(message + ' Click "Save All" to persist changes.', 'success');
+            } else {
+                showAlert(message, 'warning');
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            showAlert('Failed to read Excel file. Please check the file format.', 'danger');
+            input.value = '';
+        }
+    };
+    
+    reader.readAsArrayBuffer(file);
 }
 </script>
 </body>

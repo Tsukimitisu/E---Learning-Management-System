@@ -17,9 +17,39 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     $student_id = (int)($_POST['student_id'] ?? 0);
     $class_id = (int)($_POST['class_id'] ?? 0);
+    $branch_id = get_user_branch_id();
+
+    if ($branch_id === null) {
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
+        exit();
+    }
 
     if (empty($student_id) || empty($class_id)) {
         echo json_encode(['status' => 'error', 'message' => 'Student ID and Class ID are required']);
+        exit();
+    }
+
+    // Validate class belongs to branch
+    $class_check = $conn->prepare("SELECT id FROM classes WHERE id = ? AND branch_id = ?");
+    $class_check->bind_param("ii", $class_id, $branch_id);
+    $class_check->execute();
+    if ($class_check->get_result()->num_rows === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: This class belongs to a different branch']);
+        exit();
+    }
+
+    // Validate student belongs to branch
+    $student_check = $conn->prepare("\
+        SELECT st.user_id
+        FROM students st
+        LEFT JOIN courses c ON st.course_id = c.id
+        LEFT JOIN user_profiles up ON st.user_id = up.user_id
+        WHERE st.user_id = ? AND (c.branch_id = ? OR up.branch_id = ?)
+    ");
+    $student_check->bind_param("iii", $student_id, $branch_id, $branch_id);
+    $student_check->execute();
+    if ($student_check->get_result()->num_rows === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Access denied: This student belongs to a different branch']);
         exit();
     }
 

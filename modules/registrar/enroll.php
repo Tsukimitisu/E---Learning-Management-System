@@ -7,52 +7,86 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 }
 
 $page_title = "Student Enrollment";
+$registrar_id = $_SESSION['user_id'];
 
-// Fetch all students
+// Get registrar's branch
+$registrar_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $registrar_id")->fetch_assoc();
+$branch_id = $registrar_profile['branch_id'] ?? 0;
+
+// Get branch info
+$branch = $conn->query("SELECT * FROM branches WHERE id = $branch_id")->fetch_assoc();
+
+// Get current academic year
+$current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+// Fetch students from this branch with balance info
 $students_query = "
     SELECT 
         s.user_id,
         s.student_no,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
-        c.course_code,
-        c.title as course_title,
-        COALESCE(p.verified_amount, 0) as verified_amount,
-        COALESCE(p.pending_count, 0) as pending_count
+        COALESCE(p.program_code, ss.strand_code) as program_code,
+        COALESCE(p.program_name, ss.strand_name) as program_name,
+        COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) as total_fees,
+        COALESCE((SELECT SUM(amount) FROM payments WHERE student_id = s.user_id AND status = 'verified'), 0) as total_paid
     FROM students s
     INNER JOIN user_profiles up ON s.user_id = up.user_id
-    LEFT JOIN courses c ON s.course_id = c.id
-    LEFT JOIN (
-        SELECT student_id,
-               SUM(CASE WHEN status = 'verified' THEN amount ELSE 0 END) as verified_amount,
-               COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count
-        FROM payments
-        GROUP BY student_id
-    ) p ON s.user_id = p.student_id
-    ORDER BY up.first_name, up.last_name
+    LEFT JOIN programs p ON s.course_id = p.id
+    LEFT JOIN shs_strands ss ON s.course_id = ss.id
+    WHERE up.branch_id = $branch_id
+    ORDER BY up.last_name, up.first_name
 ";
 $students_result = $conn->query($students_query);
 
-// Fetch available classes with detailed info
-$classes_query = "
+// Fetch sections (classes) for this branch
+$sections_query = "
     SELECT 
         cl.id,
-        cl.room,
+        cl.section_name,
+        cs.subject_code,
+        cs.subject_title,
+        cs.units,
         cl.max_capacity,
         cl.current_enrolled,
-        c.course_code,
-        c.title as course_title,
+        cl.schedule,
+        cl.room,
         CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
-        b.name as branch_name,
+        COALESCE(p.program_code, ss.strand_code) as program_code,
+        COALESCE(p.program_name, ss.strand_name) as program_name,
+        COALESCE(pyl.year_name, sgl.grade_name) as year_level,
         (cl.max_capacity - cl.current_enrolled) as available_slots
     FROM classes cl
-    INNER JOIN courses c ON cl.course_id = c.id
-    INNER JOIN branches b ON c.branch_id = b.id
+    LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
+    LEFT JOIN programs p ON cs.program_id = p.id
+    LEFT JOIN shs_strands ss ON cs.shs_strand_id = ss.id
+    LEFT JOIN program_year_levels pyl ON cs.year_level_id = pyl.id
+    LEFT JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
     LEFT JOIN users u ON cl.teacher_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
-    WHERE cl.current_enrolled < cl.max_capacity
-    ORDER BY c.course_code, cl.room
+    WHERE cl.branch_id = $branch_id
+    AND cl.academic_year_id = $current_ay_id
+    AND cl.current_enrolled < cl.max_capacity
+    ORDER BY COALESCE(p.program_name, ss.strand_name), cs.subject_code, cl.section_name
 ";
-$classes_result = $conn->query($classes_query);
+$sections_result = $conn->query($sections_query);
+
+// Get student's current enrollments for display
+function getStudentEnrollments($conn, $student_id, $branch_id) {
+    $result = $conn->query("
+        SELECT cl.section_name, cs.subject_code, cs.subject_title, e.status
+        FROM enrollments e
+        INNER JOIN classes cl ON e.class_id = cl.id
+        LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
+        WHERE e.student_id = $student_id AND cl.branch_id = $branch_id
+        ORDER BY cs.subject_code
+    ");
+    $enrollments = [];
+    while ($row = $result->fetch_assoc()) {
+        $enrollments[] = $row;
+    }
+    return $enrollments;
+}
 
 include '../../includes/header.php';
 ?>
@@ -65,6 +99,10 @@ include '../../includes/header.php';
             <h4 class="mb-0" style="color: #003366;">
                 <i class="bi bi-pencil-square"></i> Student Enrollment
             </h4>
+            <div>
+                <span class="badge bg-info me-2"><?php echo htmlspecialchars($branch['name'] ?? 'Unknown Branch'); ?></span>
+                <span class="badge bg-secondary">A.Y. <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?></span>
+            </div>
         </div>
 
         <div id="alertContainer"></div>
@@ -83,28 +121,32 @@ include '../../includes/header.php';
                         </div>
                         <div style="max-height: 400px; overflow-y: auto;">
                             <div class="list-group" id="studentList">
-                                <?php while ($student = $students_result->fetch_assoc()): ?>
+                                <?php while ($student = $students_result->fetch_assoc()): 
+                                    $balance = $student['total_fees'] - $student['total_paid'];
+                                    $has_payment = $student['total_paid'] > 0;
+                                ?>
                                 <a href="#" class="list-group-item list-group-item-action student-item" 
                                    data-student-id="<?php echo $student['user_id']; ?>"
                                    data-student-name="<?php echo htmlspecialchars($student['full_name']); ?>"
                                    data-student-no="<?php echo htmlspecialchars($student['student_no']); ?>"
-                                   data-verified="<?php echo $student['verified_amount']; ?>"
-                                   data-pending="<?php echo $student['pending_count']; ?>">
+                                   data-total-fees="<?php echo $student['total_fees']; ?>"
+                                   data-total-paid="<?php echo $student['total_paid']; ?>"
+                                   data-has-payment="<?php echo $has_payment ? '1' : '0'; ?>">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1"><?php echo htmlspecialchars($student['full_name']); ?></h6>
                                         <small class="text-muted"><?php echo htmlspecialchars($student['student_no']); ?></small>
                                     </div>
                                     <small class="text-muted">
-                                        <?php echo htmlspecialchars($student['course_code'] ?? 'No Course'); ?> - 
-                                        <?php echo htmlspecialchars($student['course_title'] ?? 'N/A'); ?>
+                                        <?php echo htmlspecialchars($student['program_code'] ?? 'No Program'); ?>
                                     </small>
-                                    <div class="mt-1">
-                                        <?php if (($student['verified_amount'] ?? 0) > 0): ?>
-                                            <span class="badge bg-success">Payment Cleared</span>
-                                        <?php elseif (($student['pending_count'] ?? 0) > 0): ?>
-                                            <span class="badge bg-warning text-dark">Payment Pending</span>
+                                    <div class="mt-1 d-flex justify-content-between">
+                                        <?php if ($has_payment): ?>
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
                                         <?php else: ?>
-                                            <span class="badge bg-danger">No Payment</span>
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No Payment</span>
+                                        <?php endif; ?>
+                                        <?php if ($balance > 0): ?>
+                                            <small class="text-danger">Bal: ₱<?php echo number_format($balance, 2); ?></small>
                                         <?php endif; ?>
                                     </div>
                                 </a>
@@ -113,64 +155,104 @@ include '../../includes/header.php';
                         </div>
                     </div>
                 </div>
+                
+                <!-- Selected Student Enrollments -->
+                <div class="card shadow-sm mt-3" id="currentEnrollmentsCard" style="display:none;">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-list-check"></i> Current Enrollments
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush" id="currentEnrollmentsList">
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-            <!-- Available Classes Card -->
+            <!-- Available Sections Card -->
             <div class="col-md-8">
                 <div class="card shadow-sm">
                     <div class="card-header" style="background-color: #003366; color: white;">
-                        <i class="bi bi-door-open"></i> Available Classes
+                        <i class="bi bi-grid-3x3-gap"></i> Available Sections
                         <span id="selectedStudentBadge" class="badge bg-light text-dark ms-2" style="display:none;"></span>
                     </div>
                     <div class="card-body">
                         <div id="paymentWarning" class="alert alert-warning" style="display:none;">
-                            <i class="bi bi-exclamation-triangle"></i> Student has no verified payment. Enrollment is disabled.
+                            <i class="bi bi-exclamation-triangle"></i> Student has no payment. Please record a payment first before enrolling.
                         </div>
+                        
+                        <!-- Filter by Program -->
+                        <div class="mb-3">
+                            <select class="form-select" id="programFilter">
+                                <option value="">All Programs/Strands</option>
+                                <?php 
+                                $programs_list = [];
+                                $sections_result->data_seek(0);
+                                while ($sec = $sections_result->fetch_assoc()) {
+                                    $key = $sec['program_code'] ?? 'Other';
+                                    if (!isset($programs_list[$key])) {
+                                        $programs_list[$key] = $sec['program_name'] ?? 'Other';
+                                    }
+                                }
+                                foreach ($programs_list as $code => $name): 
+                                ?>
+                                <option value="<?php echo htmlspecialchars($code); ?>"><?php echo htmlspecialchars($code . ' - ' . $name); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover table-sm" id="sectionsTable">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>Course</th>
-                                        <th>Teacher</th>
-                                        <th>Room</th>
-                                        <th>Branch</th>
-                                        <th>Capacity</th>
-                                        <th>Available</th>
+                                        <th>Section</th>
+                                        <th>Subject</th>
+                                        <th>Program</th>
+                                        <th>Year Level</th>
+                                        <th>Schedule</th>
+                                        <th>Slots</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php while ($class = $classes_result->fetch_assoc()): 
-                                        $percentage = ($class['current_enrolled'] / $class['max_capacity']) * 100;
-                                        
-                                        if ($percentage >= 90) {
-                                            $badge_class = 'bg-warning';
-                                        } else {
-                                            $badge_class = 'bg-success';
-                                        }
+                                    <?php 
+                                    $sections_result->data_seek(0);
+                                    while ($section = $sections_result->fetch_assoc()): 
+                                        $percentage = $section['max_capacity'] > 0 ? ($section['current_enrolled'] / $section['max_capacity']) * 100 : 0;
+                                        $badge_class = $percentage >= 90 ? 'bg-warning' : 'bg-success';
                                     ?>
-                                    <tr>
+                                    <tr data-program="<?php echo htmlspecialchars($section['program_code'] ?? 'Other'); ?>">
                                         <td>
-                                            <strong><?php echo htmlspecialchars($class['course_code']); ?></strong><br>
-                                            <small class="text-muted"><?php echo htmlspecialchars($class['course_title']); ?></small>
+                                            <strong><?php echo htmlspecialchars($section['section_name'] ?? 'TBA'); ?></strong>
+                                            <?php if ($section['room']): ?>
+                                            <br><small class="text-muted">Room: <?php echo htmlspecialchars($section['room']); ?></small>
+                                            <?php endif; ?>
                                         </td>
-                                        <td><?php echo htmlspecialchars($class['teacher_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($class['room']); ?></td>
-                                        <td><?php echo htmlspecialchars($class['branch_name']); ?></td>
                                         <td>
-                                            <?php echo $class['current_enrolled']; ?> / <?php echo $class['max_capacity']; ?>
+                                            <strong><?php echo htmlspecialchars($section['subject_code'] ?? '-'); ?></strong>
+                                            <br><small class="text-muted"><?php echo htmlspecialchars($section['subject_title'] ?? '-'); ?></small>
+                                            <?php if ($section['units']): ?>
+                                            <br><small class="badge bg-secondary"><?php echo $section['units']; ?> units</small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><small><?php echo htmlspecialchars($section['program_code'] ?? '-'); ?></small></td>
+                                        <td><small><?php echo htmlspecialchars($section['year_level'] ?? '-'); ?></small></td>
+                                        <td>
+                                            <small><?php echo htmlspecialchars($section['schedule'] ?? 'TBA'); ?></small>
+                                            <?php if ($section['teacher_name']): ?>
+                                            <br><small class="text-muted"><?php echo htmlspecialchars($section['teacher_name']); ?></small>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <span class="badge <?php echo $badge_class; ?>">
-                                                <?php echo $class['available_slots']; ?> slots
+                                                <?php echo $section['current_enrolled']; ?>/<?php echo $section['max_capacity']; ?>
                                             </span>
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-primary enroll-btn" 
-                                                    data-class-id="<?php echo $class['id']; ?>"
-                                                    data-class-name="<?php echo htmlspecialchars($class['course_code'] . ' - ' . $class['room']); ?>"
+                                                    data-class-id="<?php echo $section['id']; ?>"
+                                                    data-class-name="<?php echo htmlspecialchars(($section['section_name'] ?? '') . ' - ' . ($section['subject_code'] ?? '')); ?>"
                                                     disabled>
-                                                <i class="bi bi-plus-circle"></i> Enroll
+                                                <i class="bi bi-plus-circle"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -178,6 +260,13 @@ include '../../includes/header.php';
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <?php if ($sections_result->num_rows == 0): ?>
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-grid-3x3-gap display-4"></i>
+                            <p class="mt-2">No sections available. Please contact the Branch Admin to create sections.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -189,7 +278,7 @@ include '../../includes/header.php';
 <script>
 let selectedStudentId = null;
 let selectedStudentName = '';
-let selectedPaymentCleared = false;
+let selectedHasPayment = false;
 
 // Student search functionality
 document.getElementById('studentSearch').addEventListener('input', function(e) {
@@ -208,6 +297,20 @@ document.getElementById('studentSearch').addEventListener('input', function(e) {
     });
 });
 
+// Program filter functionality
+document.getElementById('programFilter').addEventListener('change', function(e) {
+    const selectedProgram = e.target.value;
+    const rows = document.querySelectorAll('#sectionsTable tbody tr');
+    
+    rows.forEach(row => {
+        if (!selectedProgram || row.getAttribute('data-program') === selectedProgram) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
 // Student selection
 document.querySelectorAll('.student-item').forEach(item => {
     item.addEventListener('click', function(e) {
@@ -222,9 +325,7 @@ document.querySelectorAll('.student-item').forEach(item => {
         // Store selected student
         selectedStudentId = this.getAttribute('data-student-id');
         selectedStudentName = this.getAttribute('data-student-name');
-        const verifiedAmount = parseFloat(this.getAttribute('data-verified') || '0');
-        const pendingCount = parseInt(this.getAttribute('data-pending') || '0', 10);
-        selectedPaymentCleared = verifiedAmount > 0;
+        selectedHasPayment = this.getAttribute('data-has-payment') === '1';
         
         // Update badge
         const badge = document.getElementById('selectedStudentBadge');
@@ -232,16 +333,88 @@ document.querySelectorAll('.student-item').forEach(item => {
         badge.style.display = 'inline-block';
 
         const warning = document.getElementById('paymentWarning');
-        if (!selectedPaymentCleared) {
+        if (!selectedHasPayment) {
             warning.style.display = 'block';
         } else {
             warning.style.display = 'none';
         }
         
-        // Enable enroll buttons
-        document.querySelectorAll('.enroll-btn').forEach(btn => btn.disabled = !selectedPaymentCleared);
+        // Enable enroll buttons if has payment
+        document.querySelectorAll('.enroll-btn').forEach(btn => btn.disabled = !selectedHasPayment);
+        
+        // Load current enrollments
+        loadCurrentEnrollments(selectedStudentId);
     });
 });
+
+// Load current enrollments for selected student
+async function loadCurrentEnrollments(studentId) {
+    const card = document.getElementById('currentEnrollmentsCard');
+    const list = document.getElementById('currentEnrollmentsList');
+    
+    try {
+        const response = await fetch(`process/get_student_enrollments.php?student_id=${studentId}`);
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.enrollments.length > 0) {
+            list.innerHTML = data.enrollments.map(e => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${e.subject_code || 'N/A'}</strong><br>
+                        <small class="text-muted">${e.section_name || 'TBA'}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger unenroll-btn" 
+                            data-enrollment-id="${e.enrollment_id}"
+                            data-class-name="${e.subject_code}">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </li>
+            `).join('');
+            card.style.display = 'block';
+            
+            // Attach unenroll handlers
+            document.querySelectorAll('.unenroll-btn').forEach(btn => {
+                btn.addEventListener('click', handleUnenroll);
+            });
+        } else {
+            list.innerHTML = '<li class="list-group-item text-muted">No current enrollments</li>';
+            card.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading enrollments:', error);
+    }
+}
+
+// Handle unenroll
+async function handleUnenroll() {
+    const enrollmentId = this.getAttribute('data-enrollment-id');
+    const className = this.getAttribute('data-class-name');
+    
+    if (!confirm(`Remove ${selectedStudentName} from ${className}?`)) {
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('enrollment_id', enrollmentId);
+        
+        const response = await fetch('process/unenroll_student.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showAlert(data.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    } catch (error) {
+        showAlert('An error occurred during unenrollment', 'danger');
+    }
+}
 
 // Enrollment process
 document.querySelectorAll('.enroll-btn').forEach(btn => {
@@ -251,8 +424,8 @@ document.querySelectorAll('.enroll-btn').forEach(btn => {
             return;
         }
 
-        if (!selectedPaymentCleared) {
-            showAlert('Student has no verified payment. Enrollment is disabled.', 'danger');
+        if (!selectedHasPayment) {
+            showAlert('Student has no payment recorded. Please record a payment first.', 'danger');
             return;
         }
         
@@ -265,7 +438,7 @@ document.querySelectorAll('.enroll-btn').forEach(btn => {
         
         // Disable button and show loading
         this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
         
         try {
             const formData = new FormData();
@@ -281,16 +454,16 @@ document.querySelectorAll('.enroll-btn').forEach(btn => {
             
             if (data.status === 'success') {
                 showAlert(data.message, 'success');
-                setTimeout(() => location.reload(), 2000);
+                setTimeout(() => location.reload(), 1500);
             } else {
                 showAlert(data.message, 'danger');
                 this.disabled = false;
-                this.innerHTML = '<i class="bi bi-plus-circle"></i> Enroll';
+                this.innerHTML = '<i class="bi bi-plus-circle"></i>';
             }
         } catch (error) {
             showAlert('An error occurred during enrollment', 'danger');
             this.disabled = false;
-            this.innerHTML = '<i class="bi bi-plus-circle"></i> Enroll';
+            this.innerHTML = '<i class="bi bi-plus-circle"></i>';
         }
     });
 });

@@ -7,44 +7,65 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     exit();
 }
 
-$class_id = (int)($_GET['class_id'] ?? 0);
+$subject_id = (int)($_GET['subject_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];
 
-if ($class_id == 0) {
+// Get current academic year
+$current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+if ($subject_id == 0) {
     header('Location: materials.php');
     exit();
 }
 
 /** 
- * BACKEND LOGIC - UNTOUCHED 
+ * BACKEND LOGIC - Materials are now per subject (not per section)
  */
-$verify = $conn->prepare("SELECT teacher_id FROM classes WHERE id = ?");
-$verify->bind_param("i", $class_id);
+// Verify teacher is assigned to this subject
+$verify = $conn->prepare("SELECT tsa.id, tsa.branch_id, b.name as branch_name 
+    FROM teacher_subject_assignments tsa
+    INNER JOIN branches b ON tsa.branch_id = b.id
+    WHERE tsa.teacher_id = ? AND tsa.curriculum_subject_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1");
+$verify->bind_param("iii", $teacher_id, $subject_id, $current_ay_id);
 $verify->execute();
-$result = $verify->get_result();
+$assignment = $verify->get_result()->fetch_assoc();
 
-if ($result->num_rows == 0 || $result->fetch_assoc()['teacher_id'] != $teacher_id) {
+if (!$assignment) {
     header('Location: materials.php');
     exit();
 }
 
-$class_info = $conn->query("
-    SELECT cl.*, s.subject_code, s.subject_title
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    WHERE cl.id = $class_id
-")->fetch_assoc();
+// Get subject info
+$subject_query = $conn->prepare("
+    SELECT cs.*, 
+           COALESCE(p.program_name, ss.strand_name) as program_name,
+           COALESCE(pyl.year_name, sgl.grade_name) as year_level
+    FROM curriculum_subjects cs
+    LEFT JOIN programs p ON cs.program_id = p.id
+    LEFT JOIN shs_strands ss ON cs.shs_strand_id = ss.id
+    LEFT JOIN program_year_levels pyl ON cs.year_level_id = pyl.id
+    LEFT JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
+    WHERE cs.id = ?
+");
+$subject_query->bind_param("i", $subject_id);
+$subject_query->execute();
+$subject_info = $subject_query->get_result()->fetch_assoc();
 
-$materials = $conn->query("
+// Get materials for this subject (not per section anymore)
+$materials_query = $conn->prepare("
     SELECT id, file_path, uploaded_at
     FROM learning_materials
-    WHERE class_id = $class_id
+    WHERE subject_id = ?
     ORDER BY uploaded_at DESC
 ");
+$materials_query->bind_param("i", $subject_id);
+$materials_query->execute();
+$materials = $materials_query->get_result();
 
-$page_title = "Materials - " . ($class_info['subject_code'] ?? 'Class');
+$page_title = "Materials - " . ($subject_info['subject_code'] ?? 'Subject');
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // Opens wrapper and starts #content
+include '../../includes/sidebar.php';
 ?>
 
 <style>
@@ -99,12 +120,13 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-modern">
                     <li class="breadcrumb-item"><a href="materials.php">Subjects</a></li>
-                    <li class="breadcrumb-item active"><?php echo htmlspecialchars($class_info['subject_code'] ?? 'N/A'); ?></li>
+                    <li class="breadcrumb-item active"><?php echo htmlspecialchars($subject_info['subject_code'] ?? 'N/A'); ?></li>
                 </ol>
             </nav>
             <h4 class="fw-bold mb-0" style="color: var(--blue);">
-                <?php echo htmlspecialchars($class_info['section_name'] ?? 'Class'); ?> <span class="text-muted fw-light mx-2">|</span> <span style="font-size: 0.9rem; color: #666;">Library Management</span>
+                <?php echo htmlspecialchars($subject_info['subject_code'] ?? 'Subject'); ?> <span class="text-muted fw-light mx-2">|</span> <span style="font-size: 0.9rem; color: #666;">Learning Materials</span>
             </h4>
+            <p class="text-muted small mb-0"><?php echo htmlspecialchars($subject_info['subject_title']); ?> • <?php echo htmlspecialchars($subject_info['program_name']); ?> • <?php echo htmlspecialchars($assignment['branch_name']); ?></p>
         </div>
         <a href="materials.php" class="btn btn-outline-secondary btn-sm px-3 rounded-pill shadow-sm">
             <i class="bi bi-arrow-left"></i> Back
@@ -122,13 +144,13 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
         <div class="p-4">
             <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-cloud-arrow-up-fill me-2 text-maroon"></i>Upload New Resources</h6>
             <form id="uploadMaterialForm" enctype="multipart/form-data">
-                <input type="hidden" name="class_id" value="<?php echo $class_id; ?>">
+                <input type="hidden" name="subject_id" value="<?php echo $subject_id; ?>">
                 <div class="upload-zone">
                     <div class="row align-items-center g-3">
                         <div class="col-md-9">
                             <input type="file" class="form-control border-light shadow-sm" name="material_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.xls" required>
                             <div class="mt-2 small text-muted">
-                                <i class="bi bi-info-circle me-1"></i> Max 10MB. Supported: PDF, Word, Excel, PowerPoint.
+                                <i class="bi bi-info-circle me-1"></i> Max 10MB. Supported: PDF, Word, Excel, PowerPoint. Materials will be available to all sections of this subject.
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -199,7 +221,7 @@ include '../../includes/sidebar.php'; // Opens wrapper and starts #content
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-inbox display-4 d-block mb-2 opacity-25"></i>No materials uploaded for this section yet.</td></tr>
+                        <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-inbox display-4 d-block mb-2 opacity-25"></i>No materials uploaded for this subject yet.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
