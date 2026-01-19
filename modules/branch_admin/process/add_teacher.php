@@ -1,5 +1,6 @@
 <?php
 require_once '../../../config/init.php';
+require_once '../../../includes/email_helper.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
     http_response_code(403);
@@ -20,6 +21,7 @@ try {
     $email = clean_input($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $address = clean_input($_POST['address'] ?? '');
+    $send_email = isset($_POST['send_email']) && $_POST['send_email'] === 'true';
     $branch_id = get_user_branch_id();
     if ($branch_id === null) {
         echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);
@@ -34,6 +36,22 @@ try {
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid email format']);
+        exit();
+    }
+
+    // Validate email exists (MX record check) if sending email
+    if ($send_email) {
+        $email_validation = validate_email_exists($email);
+        if (!$email_validation['valid']) {
+            echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
+            exit();
+        }
+    }
+
+    // Validate password using security settings
+    $password_validation = validate_password($password);
+    if (!$password_validation['valid']) {
+        echo json_encode(['status' => 'error', 'message' => implode(', ', $password_validation['errors'])]);
         exit();
     }
 
@@ -97,10 +115,33 @@ try {
 
     $conn->commit();
 
-    echo json_encode([
+    // Send email notification if requested
+    $email_sent = false;
+    $email_error = '';
+    if ($send_email) {
+        $email_result = send_account_credentials($email, $first_name, $last_name, $password, 'Teacher', $_SESSION['user_id']);
+        $email_sent = $email_result['success'];
+        if (!$email_sent) {
+            $email_error = $email_result['error'] ?? 'Unknown error';
+        }
+    }
+
+    $response = [
         'status' => 'success',
-        'message' => 'Teacher account created successfully. Default password: teacher123'
-    ]);
+        'message' => 'Teacher account created successfully.'
+    ];
+    
+    if ($send_email) {
+        if ($email_sent) {
+            $response['message'] .= ' Email notification sent.';
+            $response['email_sent'] = true;
+        } else {
+            $response['message'] .= ' However, email notification failed: ' . $email_error;
+            $response['email_sent'] = false;
+        }
+    }
+
+    echo json_encode($response);
 
 } catch (Exception $e) {
     $conn->rollback();

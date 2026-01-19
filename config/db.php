@@ -32,6 +32,24 @@ try {
     die("Database Connection Failed: " . $e->getMessage());
 }
 
+// Create PDO connection for modules that require it
+$pdo = null;
+try {
+    $pdo = new PDO(
+        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+        DB_USER,
+        DB_PASS,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false
+        ]
+    );
+} catch (PDOException $e) {
+    // PDO connection failed - some features may not work
+    error_log("PDO Connection Failed: " . $e->getMessage());
+}
+
 /**
  * Clean Input Helper Function (fallback if functions.php not loaded)
  */

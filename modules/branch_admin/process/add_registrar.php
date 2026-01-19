@@ -1,5 +1,6 @@
 <?php
 require_once '../../../config/init.php';
+require_once '../../../includes/email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -19,6 +20,7 @@ $last_name = trim($_POST['last_name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 $contact_no = trim($_POST['contact_no'] ?? '');
+$send_email = isset($_POST['send_email']) && $_POST['send_email'] === 'true';
 
 // Validate required fields
 if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
@@ -29,6 +31,22 @@ if (empty($first_name) || empty($last_name) || empty($email) || empty($password)
 // Validate email format
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['success' => false, 'message' => 'Invalid email format']);
+    exit;
+}
+
+// Validate email exists (MX record check) if sending email
+if ($send_email) {
+    $email_validation = validate_email_exists($email);
+    if (!$email_validation['valid']) {
+        echo json_encode(['success' => false, 'message' => $email_validation['message']]);
+        exit;
+    }
+}
+
+// Validate password using security settings
+$password_validation = validate_password($password);
+if (!$password_validation['valid']) {
+    echo json_encode(['success' => false, 'message' => implode(', ', $password_validation['errors'])]);
     exit;
 }
 
@@ -86,11 +104,34 @@ try {
     
     $conn->commit();
     
-    echo json_encode([
+    // Send email notification if requested
+    $email_sent = false;
+    $email_error = '';
+    if ($send_email) {
+        $email_result = send_account_credentials($email, $first_name, $last_name, $password, 'Registrar', $_SESSION['user_id']);
+        $email_sent = $email_result['success'];
+        if (!$email_sent) {
+            $email_error = $email_result['error'] ?? 'Unknown error';
+        }
+    }
+    
+    $response = [
         'success' => true, 
         'message' => 'Registrar account created successfully',
         'user_id' => $user_id
-    ]);
+    ];
+    
+    if ($send_email) {
+        if ($email_sent) {
+            $response['message'] .= '. Email notification sent.';
+            $response['email_sent'] = true;
+        } else {
+            $response['message'] .= '. However, email notification failed: ' . $email_error;
+            $response['email_sent'] = false;
+        }
+    }
+    
+    echo json_encode($response);
     
 } catch (Exception $e) {
     $conn->rollback();

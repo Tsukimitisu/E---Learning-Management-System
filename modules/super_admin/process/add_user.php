@@ -1,5 +1,6 @@
 <?php
 require_once '../../../config/init.php';
+require_once '../../../includes/email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -22,6 +23,7 @@ $contact_no = clean_input($_POST['contact_no'] ?? '');
 $address = clean_input($_POST['address'] ?? '');
 $role_id = (int)($_POST['role_id'] ?? 0);
 $password = $_POST['password'] ?? '';
+$send_email = isset($_POST['send_email']) && $_POST['send_email'] === 'true';
 
 // Validate required fields
 if (empty($first_name) || empty($last_name) || empty($email) || empty($password) || $role_id == 0) {
@@ -35,9 +37,19 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
-// Validate password length
-if (strlen($password) < 6) {
-    echo json_encode(['status' => 'error', 'message' => 'Password must be at least 6 characters']);
+// Validate email exists (MX record check) if we're going to send email
+if ($send_email) {
+    $email_validation = validate_email_exists($email);
+    if (!$email_validation['valid']) {
+        echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
+        exit();
+    }
+}
+
+// Validate password using security settings
+$password_validation = validate_password($password);
+if (!$password_validation['valid']) {
+    echo json_encode(['status' => 'error', 'message' => implode(', ', $password_validation['errors'])]);
     exit();
 }
 
@@ -96,11 +108,45 @@ try {
     // Commit transaction
     $conn->commit();
     
-    echo json_encode([
+    // Send email notification if requested
+    $email_sent = false;
+    $email_error = '';
+    if ($send_email) {
+        $role_names = [
+            ROLE_SUPER_ADMIN => 'Super Admin',
+            ROLE_SCHOOL_ADMIN => 'School Admin', 
+            ROLE_BRANCH_ADMIN => 'Branch Admin',
+            ROLE_REGISTRAR => 'Registrar',
+            ROLE_TEACHER => 'Teacher',
+            ROLE_STUDENT => 'Student'
+        ];
+        $role_name = $role_names[$role_id] ?? 'User';
+        
+        $email_result = send_account_credentials($email, $first_name, $last_name, $password, $role_name, $_SESSION['user_id']);
+        $email_sent = $email_result['success'];
+        if (!$email_sent) {
+            $email_error = $email_result['error'] ?? 'Unknown error';
+        }
+    }
+    
+    $response = [
         'status' => 'success',
         'message' => 'User created successfully!',
         'user_id' => $user_id
-    ]);
+    ];
+    
+    if ($send_email) {
+        if ($email_sent) {
+            $response['message'] .= ' Email notification sent.';
+            $response['email_sent'] = true;
+        } else {
+            $response['message'] .= ' However, email notification failed: ' . $email_error;
+            $response['email_sent'] = false;
+            $response['email_error'] = $email_error;
+        }
+    }
+    
+    echo json_encode($response);
     
 } catch (Exception $e) {
     $conn->rollback();

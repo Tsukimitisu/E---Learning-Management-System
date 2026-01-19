@@ -3,7 +3,8 @@ require_once '../config/init.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] != ROLE_SCHOOL_ADMIN && $_SESSION['role'] != ROLE_SUPER_ADMIN)) {
+$user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
+if (!isset($_SESSION['user_id']) || ($user_role != ROLE_SCHOOL_ADMIN && $user_role != ROLE_SUPER_ADMIN)) {
     echo json_encode(['status' => 'error', 'message' => 'Access denied. Curriculum management requires School Administrator privileges.']);
     exit();
 }
@@ -835,7 +836,8 @@ try {
 
         // Branch Admin: Get approved subjects for class scheduling
         case 'get_approved_subjects':
-            if ($_SESSION['role'] != ROLE_BRANCH_ADMIN && $_SESSION['role'] != ROLE_SCHOOL_ADMIN && $_SESSION['role'] != ROLE_SUPER_ADMIN) {
+            $action_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
+            if ($action_role != ROLE_BRANCH_ADMIN && $action_role != ROLE_SCHOOL_ADMIN && $action_role != ROLE_SUPER_ADMIN) {
                 echo json_encode(['status' => 'error', 'message' => 'Access denied']);
                 exit();
             }

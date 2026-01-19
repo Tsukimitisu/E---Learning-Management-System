@@ -11,10 +11,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
 $student_id = (int)($_POST['student_id'] ?? 0);
 $section_id = (int)($_POST['section_id'] ?? 0);
 $subject_id = (int)($_POST['subject_id'] ?? 0);
+$prelim = floatval($_POST['prelim'] ?? 0);
 $midterm = floatval($_POST['midterm'] ?? 0);
+$prefinal = floatval($_POST['prefinal'] ?? 0);
 $final = floatval($_POST['final'] ?? 0);
 $final_grade = floatval($_POST['final_grade'] ?? 0);
 $remarks = clean_input($_POST['remarks'] ?? '');
+$notes = clean_input($_POST['notes'] ?? '');
 $grade_id = (int)($_POST['grade_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];
 $current_version = (int)($_POST['version'] ?? 1);
@@ -39,7 +42,9 @@ if ($verify->get_result()->num_rows == 0) {
 
 // Check if grading periods are locked
 $grading_periods = [];
+if ($prelim > 0) $grading_periods[] = 'prelim';
 if ($midterm > 0) $grading_periods[] = 'midterm';
+if ($prefinal > 0) $grading_periods[] = 'prefinal';
 if ($final > 0) $grading_periods[] = 'final';
 
 if (!empty($grading_periods)) {
@@ -102,13 +107,13 @@ try {
             exit();
         }
 
-        // Update existing grade with version increment
+        // Update existing grade with version increment (including all 4 terms)
         $stmt = $conn->prepare("
             UPDATE grades
-            SET midterm = ?, final = ?, final_grade = ?, remarks = ?, version = version + 1
+            SET prelim = ?, midterm = ?, prefinal = ?, final = ?, final_grade = ?, remarks = ?, notes = ?, academic_year_id = ?, version = version + 1
             WHERE id = ? AND student_id = ? AND section_id = ? AND subject_id = ?
         ");
-        $stmt->bind_param("dddsiiii", $midterm, $final, $final_grade, $remarks, $grade_id, $student_id, $section_id, $subject_id);
+        $stmt->bind_param("dddddssiiiii", $prelim, $midterm, $prefinal, $final, $final_grade, $remarks, $notes, $current_ay_id, $grade_id, $student_id, $section_id, $subject_id);
         $stmt->execute();
 
         $return_grade_id = $grade_id;
@@ -120,29 +125,29 @@ try {
         $existing = $check_existing->get_result()->fetch_assoc();
         
         if ($existing) {
-            // Update existing
+            // Update existing (including all 4 terms)
             $stmt = $conn->prepare("
-                UPDATE grades 
-                SET midterm = ?, final = ?, final_grade = ?, remarks = ?, version = version + 1
+                UPDATE grades
+                SET prelim = ?, midterm = ?, prefinal = ?, final = ?, final_grade = ?, remarks = ?, notes = ?, academic_year_id = ?, version = version + 1
                 WHERE id = ?
             ");
-            $stmt->bind_param("dddsi", $midterm, $final, $final_grade, $remarks, $existing['id']);
+            $stmt->bind_param("dddddssii", $prelim, $midterm, $prefinal, $final, $final_grade, $remarks, $notes, $current_ay_id, $existing['id']);
             $stmt->execute();
             $return_grade_id = $existing['id'];
         } else {
-            // Insert new grade
+            // Insert new grade (including all 4 terms)
             $stmt = $conn->prepare("
-                INSERT INTO grades (student_id, section_id, subject_id, midterm, final, final_grade, remarks, version)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                INSERT INTO grades (student_id, section_id, subject_id, academic_year_id, prelim, midterm, prefinal, final, final_grade, remarks, notes, version)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
             ");
-            $stmt->bind_param("iiiddds", $student_id, $section_id, $subject_id, $midterm, $final, $final_grade, $remarks);
+            $stmt->bind_param("iiiidddddss", $student_id, $section_id, $subject_id, $current_ay_id, $prelim, $midterm, $prefinal, $final, $final_grade, $remarks, $notes);
             $stmt->execute();
             $return_grade_id = $conn->insert_id;
         }
     }
 
     $conn->commit();
-    
+
     // Log audit
     $ip = get_client_ip();
     $action = "Updated grade for student ID $student_id in section ID $section_id, subject ID $subject_id";

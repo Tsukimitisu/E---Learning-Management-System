@@ -1,5 +1,6 @@
 <?php
 require_once '../../../config/init.php';
+require_once '../../../includes/email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -15,14 +16,26 @@ $full_name = clean_input($_POST['full_name'] ?? '');
 $email = clean_input($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 $branch_id = (int)($_POST['branch_id'] ?? 0);
+$send_email = isset($_POST['send_email']) && $_POST['send_email'] === 'true';
 
 if (empty($full_name) || empty($email) || empty($password) || $branch_id == 0) {
     echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
     exit();
 }
 
-if (strlen($password) < 6) {
-    echo json_encode(['status' => 'error', 'message' => 'Password must be at least 6 characters']);
+// Validate email exists (MX record check) if sending email
+if ($send_email) {
+    $email_validation = validate_email_exists($email);
+    if (!$email_validation['valid']) {
+        echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
+        exit();
+    }
+}
+
+// Validate password using security settings
+$password_validation = validate_password($password);
+if (!$password_validation['valid']) {
+    echo json_encode(['status' => 'error', 'message' => implode(', ', $password_validation['errors'])]);
     exit();
 }
 
@@ -113,7 +126,28 @@ try {
         $audit->bind_param("iss", $_SESSION['user_id'], $action, $ip);
         $audit->execute();
 
-        echo json_encode(['status' => 'success', 'message' => 'Branch administrator created successfully']);
+        // Send email notification if requested
+        $email_sent = false;
+        $email_error = '';
+        if ($send_email) {
+            $email_result = send_account_credentials($email, $first_name, $last_name, $password, 'Branch Admin', $_SESSION['user_id']);
+            $email_sent = $email_result['success'];
+            if (!$email_sent) {
+                $email_error = $email_result['error'] ?? 'Unknown error';
+            }
+        }
+
+        $response = ['status' => 'success', 'message' => 'Branch administrator created successfully'];
+        if ($send_email) {
+            if ($email_sent) {
+                $response['message'] .= '. Email notification sent.';
+                $response['email_sent'] = true;
+            } else {
+                $response['message'] .= '. However, email notification failed: ' . $email_error;
+                $response['email_sent'] = false;
+            }
+        }
+        echo json_encode($response);
     } catch (Exception $e) {
         $conn->rollback();
         throw $e;

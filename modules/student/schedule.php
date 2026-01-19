@@ -52,27 +52,38 @@ if ($section) {
 $subjects = [];
 if ($section) {
     $branch_id = $section['branch_id'];
-    $program_id = $section['program_id'];
-    $strand_id = $section['shs_strand_id'];
+    $program_id = $section['program_id'] ?? 0;
+    $strand_id = $section['shs_strand_id'] ?? 0;
     
-    $subjects_query = $conn->query("
-        SELECT tsa.*, cs.subject_code, cs.subject_title, cs.units,
-               cs.lecture_hours, cs.lab_hours,
-               CONCAT(up.first_name, ' ', up.last_name) as teacher_name
-        FROM teacher_subject_assignments tsa
-        INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
-        LEFT JOIN user_profiles up ON tsa.teacher_id = up.user_id
-        WHERE tsa.branch_id = $branch_id 
-          AND tsa.academic_year_id = $current_ay_id
-          AND tsa.is_active = 1
-          AND (
-              (cs.program_id = $program_id AND $program_id > 0)
-              OR (cs.shs_strand_id = $strand_id AND $strand_id > 0)
-          )
-        ORDER BY cs.subject_code
-    ");
-    while ($row = $subjects_query->fetch_assoc()) {
-        $subjects[] = $row;
+    // Build WHERE conditions based on available data
+    $where_conditions = [];
+    if ($program_id > 0) {
+        $where_conditions[] = "cs.program_id = $program_id";
+    }
+    if ($strand_id > 0) {
+        $where_conditions[] = "cs.shs_strand_id = $strand_id";
+    }
+    
+    // Only query if we have valid conditions
+    if (!empty($where_conditions)) {
+        $program_filter = "(" . implode(" OR ", $where_conditions) . ")";
+        
+        $subjects_query = $conn->query("
+            SELECT tsa.*, cs.subject_code, cs.subject_title, cs.units,
+                   cs.lecture_hours, cs.lab_hours,
+                   CONCAT(up.first_name, ' ', up.last_name) as teacher_name
+            FROM teacher_subject_assignments tsa
+            INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
+            LEFT JOIN user_profiles up ON tsa.teacher_id = up.user_id
+            WHERE tsa.branch_id = $branch_id 
+              AND tsa.academic_year_id = $current_ay_id
+              AND tsa.is_active = 1
+              AND $program_filter
+            ORDER BY cs.subject_code
+        ");
+        while ($row = $subjects_query->fetch_assoc()) {
+            $subjects[] = $row;
+        }
     }
 }
 

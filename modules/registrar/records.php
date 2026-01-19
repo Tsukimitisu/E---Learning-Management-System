@@ -8,6 +8,24 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 
 $page_title = "Academic Records";
 
+// Term filter
+$selected_term = $_GET['term'] ?? 'all';
+$valid_terms = ['all', 'prelim', 'midterm', 'prefinal', 'final'];
+if (!in_array($selected_term, $valid_terms)) {
+    $selected_term = 'all';
+}
+$term_names = [
+    'all' => 'All Terms (Final Average)',
+    'prelim' => 'Prelim',
+    'midterm' => 'Midterm',
+    'prefinal' => 'Pre-Finals',
+    'final' => 'Finals'
+];
+
+// Get current academic year
+$current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
 $stats = [
     'total_with_records' => 0,
     'complete_grades' => 0,
@@ -110,10 +128,10 @@ include '../../includes/header.php';
         <div class="card shadow-sm mb-3">
             <div class="card-body">
                 <div class="row g-2">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <input type="text" id="searchInput" class="form-control" placeholder="Search student number or name">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select id="programFilter" class="form-select">
                             <option value="">All Programs</option>
                             <?php while ($course = $courses->fetch_assoc()): ?>
@@ -123,7 +141,7 @@ include '../../includes/header.php';
                             <?php endwhile; ?>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select id="yearFilter" class="form-select">
                             <option value="">All Academic Years</option>
                             <?php while ($ay = $academic_years->fetch_assoc()): ?>
@@ -133,13 +151,27 @@ include '../../includes/header.php';
                             <?php endwhile; ?>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <select id="termFilter" class="form-select" onchange="window.location.href='?term='+this.value">
+                            <?php foreach ($term_names as $key => $name): ?>
+                            <option value="<?php echo $key; ?>" <?php echo $selected_term == $key ? 'selected' : ''; ?>>
+                                <?php echo $name; ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <select id="standingFilter" class="form-select">
                             <option value="">All Standing</option>
                             <option value="Dean's List">Dean's List</option>
                             <option value="Good Standing">Good Standing</option>
                             <option value="Probation">Probation</option>
                         </select>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge bg-primary rounded-pill px-3 py-2 w-100 d-flex align-items-center justify-content-center">
+                            <i class="bi bi-calendar-check me-1"></i> <?php echo $selected_term == 'all' ? 'Final Average' : $term_names[$selected_term] . ' Term'; ?>
+                        </span>
                     </div>
                 </div>
             </div>

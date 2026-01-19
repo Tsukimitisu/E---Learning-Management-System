@@ -646,6 +646,10 @@ include '../../includes/header.php';
 document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
 
     try {
         const response = await fetch('process/create_student.php', {
@@ -655,15 +659,79 @@ document.getElementById('addStudentForm').addEventListener('submit', async funct
         const data = await response.json();
 
         if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+            if (modal) modal.hide();
+            
+            // Build credentials display
+            let credentialsHtml = `
+                <div class="card mt-3 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-key-fill me-2"></i>Student Login Credentials
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Student No:</strong> <code id="cred_student_no">${data.student_no}</code></p>
+                        <p class="mb-2"><strong>Email:</strong> <code id="cred_email">${data.credentials.email}</code></p>
+                        <p class="mb-2"><strong>Password:</strong> <code id="cred_password">${data.credentials.password}</code></p>
+                        <p class="mb-3"><strong>Login URL:</strong> <code id="cred_url">${window.location.origin}/elms_system/</code></p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyCredentials()">
+                            <i class="bi bi-clipboard me-1"></i>Copy All Credentials
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm ms-2" onclick="location.reload()">
+                            <i class="bi bi-check-circle me-1"></i>Done - Refresh Page
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Show success/warning message with credentials
+            if (data.email_sent) {
+                showAlert('✅ ' + data.message + credentialsHtml, 'success');
+            } else {
+                showAlert('⚠️ Account created but email could not be sent. Please provide these credentials to the student:' + credentialsHtml, 'warning');
+            }
         } else {
-            showAlert(data.message, 'danger');
+            showAlert('<i class="bi bi-x-circle me-2"></i>' + data.message, 'danger');
         }
     } catch (error) {
-        showAlert('An error occurred', 'danger');
+        console.error('Error:', error);
+        showAlert('<i class="bi bi-x-circle me-2"></i>An error occurred while creating the account. Please try again.', 'danger');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 });
+
+function copyCredentials() {
+    const studentNo = document.getElementById('cred_student_no')?.textContent || '';
+    const email = document.getElementById('cred_email')?.textContent || '';
+    const password = document.getElementById('cred_password')?.textContent || '';
+    const url = document.getElementById('cred_url')?.textContent || '';
+    
+    const text = `ELMS Student Login Credentials
+================================
+Student No: ${studentNo}
+Email: ${email}
+Password: ${password}
+Login URL: ${url}
+
+Please change your password after first login.`;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('button');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy. Please select and copy manually.');
+    });
+}
 
 function openEditStudent(button) {
     document.getElementById('edit_student_id').value = button.dataset.studentId;

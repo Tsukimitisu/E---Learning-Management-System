@@ -144,7 +144,7 @@ include '../../includes/header.php';
             <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <a href="subjects.php" class="btn btn-outline-secondary btn-sm mb-2">
-                    <i class="bi bi-arrow-left"></i> Back to Subjects
+                    <i class="bi bi-arrow-left"></i> Back to My Classes
                 </a>
                 <h4 class="mb-0" style="color: #003366;">
                     <i class="bi bi-people"></i> Section Students

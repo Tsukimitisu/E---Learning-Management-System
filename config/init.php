@@ -4,8 +4,14 @@
  * ELMS - Electronic Learning Management System
  */
 
-// Start Session
+// Start Session with secure settings
 if (session_status() === PHP_SESSION_NONE) {
+    // Secure session configuration
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.cookie_samesite', 'Strict');
+    ini_set('session.gc_maxlifetime', 3600); // 1 hour
+    
     session_start();
 }
 
@@ -55,4 +61,29 @@ if (isset($conn) && $conn && !$conn->connect_error) {
 
 // Include Helper Functions
 require_once __DIR__ . '/../includes/functions.php';
+
+// Include RBAC System
+require_once __DIR__ . '/../includes/rbac.php';
+
+// Track active session for concurrent user support
+if (!empty($_SESSION['user_id']) && isset($conn) && $conn && !$conn->connect_error) {
+    $session_id = session_id();
+    $user_id = $_SESSION['user_id'];
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $user_agent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+    $now = date('Y-m-d H:i:s');
+    
+    // Update or insert active session
+    $stmt = $conn->prepare("
+        INSERT INTO active_sessions (session_id, user_id, ip_address, user_agent, last_activity)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE last_activity = VALUES(last_activity), ip_address = VALUES(ip_address)
+    ");
+    $stmt->bind_param("sisss", $session_id, $user_id, $ip, $user_agent, $now);
+    $stmt->execute();
+    $stmt->close();
+    
+    // Clean old sessions (inactive for more than 2 hours)
+    $conn->query("DELETE FROM active_sessions WHERE last_activity < DATE_SUB(NOW(), INTERVAL 2 HOUR)");
+}
 ?>

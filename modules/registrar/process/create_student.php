@@ -1,5 +1,6 @@
 <?php
 require_once '../../../config/init.php';
+require_once '../../../includes/email_helper.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
     http_response_code(403);
@@ -37,6 +38,20 @@ try {
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid email format']);
+        exit();
+    }
+
+    // Always validate email exists (MX record check) before creating account
+    $email_validation = validate_email_exists($email);
+    if (!$email_validation['valid']) {
+        echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
+        exit();
+    }
+
+    // Validate password using security settings
+    $password_validation = validate_password($password);
+    if (!$password_validation['valid']) {
+        echo json_encode(['status' => 'error', 'message' => implode(', ', $password_validation['errors'])]);
         exit();
     }
 
@@ -107,12 +122,36 @@ try {
 
     $conn->commit();
 
-    echo json_encode([
+    // Try to send email with credentials to the student (optional - won't fail if SMTP not configured)
+    $email_sent = false;
+    $email_error = '';
+    try {
+        $email_result = send_account_credentials($email, $first_name, $last_name, $password, 'Student', $_SESSION['user_id']);
+        $email_sent = $email_result['success'] ?? false;
+        if (!$email_sent) {
+            $email_error = $email_result['message'] ?? 'Email service not configured';
+        }
+    } catch (Exception $e) {
+        $email_error = 'Email service error: ' . $e->getMessage();
+    }
+
+    $response = [
         'status' => 'success',
-        'message' => 'Student account created successfully. The Branch Admin will now assign this student to sections.',
+        'message' => 'Student account created successfully!',
         'student_id' => $user_id,
-        'student_no' => $student_no
-    ]);
+        'student_no' => $student_no,
+        'credentials' => [
+            'email' => $email,
+            'password' => $password
+        ],
+        'email_sent' => $email_sent
+    ];
+    
+    if ($email_sent) {
+        $response['message'] = 'Student account created! Login credentials have been emailed to ' . $email;
+    }
+
+    echo json_encode($response);
 
 } catch (Exception $e) {
     $conn->rollback();

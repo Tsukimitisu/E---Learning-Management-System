@@ -41,7 +41,8 @@
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>"><i class="bi bi-people-fill"></i> <span>Users</span></a></li>
             <li><a href="system_settings.php" class="<?php echo ($current_page == 'system_settings.php') ? 'active' : ''; ?>"><i class="bi bi-gear-wide-connected"></i> <span>Settings</span></a></li>
-            <li><a href="security.php" class="<?php echo ($current_page == 'security.php') ? 'active' : ''; ?>"><i class="bi bi-shield-lock-fill"></i> <span>Security & Audit</span></a></li>
+            <li><a href="security_settings.php" class="<?php echo ($current_page == 'security_settings.php') ? 'active' : ''; ?>"><i class="bi bi-shield-lock-fill"></i> <span>Security & Email</span></a></li>
+            <li><a href="security.php" class="<?php echo ($current_page == 'security.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-data"></i> <span>Audit Logs</span></a></li>
             <li><a href="maintenance.php" class="<?php echo ($current_page == 'maintenance.php') ? 'active' : ''; ?>"><i class="bi bi-tools"></i> <span>Maintenance</span></a></li>
             <li><a href="api_management.php" class="<?php echo ($current_page == 'api_management.php') ? 'active' : ''; ?>"><i class="bi bi-cpu-fill"></i> <span>API Management</span></a></li>
             <li><a href="branches.php" class="<?php echo ($current_page == 'branches.php') ? 'active' : ''; ?>"><i class="bi bi-building-fill"></i> <span>Branches</span></a></li>
@@ -51,6 +52,7 @@
         if ($_SESSION['role_id'] == ROLE_SCHOOL_ADMIN) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="administrative_control.php" class="<?php echo ($current_page == 'administrative_control.php') ? 'active' : ''; ?>"><i class="bi bi-shield-check"></i> <span>Admin Control</span></a></li>
+            <li><a href="academic_years.php" class="<?php echo ($current_page == 'academic_years.php') ? 'active' : ''; ?>"><i class="bi bi-calendar-range"></i> <span>Academic Years</span></a></li>
             <li><a href="programs.php" class="<?php echo ($current_page == 'programs.php') ? 'active' : ''; ?>"><i class="bi bi-mortarboard-fill"></i> <span>Programs</span></a></li>
             <li><a href="curriculum.php" class="<?php echo ($current_page == 'curriculum.php') ? 'active' : ''; ?>"><i class="bi bi-book-half"></i> <span>Subject Catalog</span></a></li>
             <li><a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>"><i class="bi bi-megaphone-fill"></i> <span>Announcements</span></a></li>
@@ -59,6 +61,7 @@
         // --- 3. BRANCH ADMIN MENU ---
         if ($_SESSION['role_id'] == ROLE_BRANCH_ADMIN) { ?>
              <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
+             <li><a href="academic_year_management.php" class="<?php echo ($current_page == 'academic_year_management.php') ? 'active' : ''; ?>"><i class="bi bi-calendar3"></i> <span>Academic Year</span></a></li>
              <li><a href="programs_sections.php" class="<?php echo ($current_page == 'programs_sections.php') ? 'active' : ''; ?>"><i class="bi bi-grid-3x3-gap"></i> <span>Programs & Sections</span></a></li>
              <li><a href="teacher_assignment.php" class="<?php echo ($current_page == 'teacher_assignment.php') ? 'active' : ''; ?>"><i class="bi bi-person-badge"></i> <span>Teacher Assignment</span></a></li>
              <li><a href="student_assignment.php" class="<?php echo ($current_page == 'student_assignment.php') ? 'active' : ''; ?>"><i class="bi bi-person-plus"></i> <span>Student Assignment</span></a></li>
@@ -87,7 +90,7 @@
         // --- 5. TEACHER MENU ---
         if ($_SESSION['role_id'] == ROLE_TEACHER) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
-            <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php'])) ? 'active' : ''; ?>"><i class="bi bi-journal-bookmark"></i> <span>My Subjects</span></a></li>
+            <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php'])) ? 'active' : ''; ?>"><i class="bi bi-journal-bookmark"></i> <span>My Classes</span></a></li>
             <li><a href="grading.php" class="<?php echo (in_array($current_page, ['grading.php', 'gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-calculator-fill"></i> <span>Grades</span></a></li>
             <li><a href="attendance.php" class="<?php echo (in_array($current_page, ['attendance.php', 'attendance_sheet.php'])) ? 'active' : ''; ?>"><i class="bi bi-calendar-check-fill"></i> <span>Attendance</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-check-fill"></i> <span>Assessments</span></a></li>
@@ -111,8 +114,11 @@
         <?php } ?>
     </ul>
 
-    <!-- Logout Section: Pinned to bottom of Blue area -->
+    <!-- Account Settings & Logout Section: Pinned to bottom of Blue area -->
     <div class="sidebar-footer">
+        <a href="../../modules/common/account_settings.php" class="<?php echo ($current_page == 'account_settings.php') ? 'active' : ''; ?>" style="display: block; padding: 10px 15px; color: rgba(255,255,255,0.8); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <i class="bi bi-gear me-3"></i> Account Settings
+        </a>
         <a href="../../logout.php" class="logout-link">
             <i class="bi bi-box-arrow-right me-3"></i> Logout Account
         </a>

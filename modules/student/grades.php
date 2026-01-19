@@ -9,6 +9,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_STUDENT) {
 $page_title = "My Grades";
 $student_id = $_SESSION['user_id'];
 
+// Term filter from URL (default to viewing all terms)
+$selected_term = $_GET['term'] ?? 'all';
+$valid_terms = ['all', 'prelim', 'midterm', 'prefinal', 'final'];
+if (!in_array($selected_term, $valid_terms)) {
+    $selected_term = 'all';
+}
+$term_names = [
+    'all' => 'All Terms',
+    'prelim' => 'Prelim',
+    'midterm' => 'Midterm',
+    'prefinal' => 'Pre-Finals',
+    'final' => 'Finals'
+];
+
 // Get current academic year
 $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
 $current_ay_id = $current_ay['id'] ?? 0;
@@ -33,49 +47,50 @@ $section_info = $conn->query("
 
 $section_id = $section_info['id'] ?? 0;
 
-// Get grades from the grades table
-$grades = $conn->query("
-    SELECT g.*, c.course_code as subject_code, c.title as subject_title
+// Get grades from the grades table - with all 4 terms
+$grades_query = $conn->query("
+    SELECT g.*, cs.subject_code, cs.subject_title
     FROM grades g
-    INNER JOIN classes cl ON g.class_id = cl.id
-    INNER JOIN courses c ON cl.course_id = c.id
-    WHERE g.student_id = $student_id
-    ORDER BY c.course_code
+    INNER JOIN curriculum_subjects cs ON g.subject_id = cs.id
+    WHERE g.student_id = $student_id AND g.section_id = $section_id
+    ORDER BY cs.subject_code
 ");
 
-// Get grades from student_grade_details with components
-$detailed_grades = [];
-$components_query = $conn->query("
-    SELECT sgd.*, gc.component_name, gc.component_type, gc.weight, gc.max_score, gc.class_id,
-           cs.subject_code, cs.subject_title
-    FROM student_grade_details sgd
-    INNER JOIN grade_components gc ON sgd.component_id = gc.id
-    INNER JOIN classes cl ON gc.class_id = cl.id
-    LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
-    WHERE sgd.student_id = $student_id
-    ORDER BY cs.subject_code, gc.component_type, gc.component_name
-");
-
-while ($row = $components_query->fetch_assoc()) {
-    $subject_code = $row['subject_code'] ?? 'Unknown';
-    if (!isset($detailed_grades[$subject_code])) {
-        $detailed_grades[$subject_code] = [
-            'subject_title' => $row['subject_title'],
-            'components' => []
-        ];
-    }
-    $detailed_grades[$subject_code]['components'][] = $row;
+// Fallback to old class-based grades if no term-based grades found
+$grades_list = [];
+while ($row = $grades_query->fetch_assoc()) {
+    $grades_list[] = $row;
 }
 
-// Calculate GPA/Average
+// If no grades from curriculum_subjects, try class-based
+if (empty($grades_list)) {
+    $old_grades = $conn->query("
+        SELECT g.*, c.course_code as subject_code, c.title as subject_title
+        FROM grades g
+        INNER JOIN classes cl ON g.class_id = cl.id
+        INNER JOIN courses c ON cl.course_id = c.id
+        WHERE g.student_id = $student_id
+        ORDER BY c.course_code
+    ");
+    while ($row = $old_grades->fetch_assoc()) {
+        $grades_list[] = $row;
+    }
+}
+
+// Calculate GPA/Average based on selected term or final_grade
 $total_grade = 0;
 $grade_count = 0;
-$grades_list = [];
-$grades->data_seek(0);
-while ($g = $grades->fetch_assoc()) {
-    $grades_list[] = $g;
-    if ($g['final_grade'] > 0) {
-        $total_grade += $g['final_grade'];
+
+foreach ($grades_list as $g) {
+    $grade_value = 0;
+    if ($selected_term == 'all') {
+        $grade_value = $g['final_grade'] ?? 0;
+    } else {
+        $grade_value = $g[$selected_term] ?? 0;
+    }
+    
+    if ($grade_value > 0) {
+        $total_grade += $grade_value;
         $grade_count++;
     }
 }
@@ -88,14 +103,24 @@ include '../../includes/header.php';
     <?php include '../../includes/sidebar.php'; ?>
     
     <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h4 class="fw-bold mb-1"><i class="bi bi-bar-chart-fill text-primary me-2"></i>My Grades</h4>
                 <small class="text-muted"><?php echo htmlspecialchars($current_ay['year_name'] ?? ''); ?></small>
             </div>
-            <button class="btn btn-outline-primary" onclick="window.print()">
-                <i class="bi bi-printer me-1"></i> Print
-            </button>
+            <div class="d-flex gap-2 align-items-center">
+                <!-- Term Filter Dropdown -->
+                <select class="form-select form-select-sm rounded-pill shadow-sm" style="width: auto; min-width: 150px;" onchange="window.location.href='?term='+this.value">
+                    <?php foreach ($term_names as $key => $name): ?>
+                    <option value="<?php echo $key; ?>" <?php echo $selected_term == $key ? 'selected' : ''; ?>>
+                        📋 <?php echo $name; ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> Print
+                </button>
+            </div>
         </div>
 
         <?php if ($section_info): ?>
@@ -126,11 +151,12 @@ include '../../includes/header.php';
 
         <!-- Grades Summary Table -->
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold"><i class="bi bi-table text-success me-2"></i>Grades Summary</h5>
+                <span class="badge bg-primary rounded-pill px-3 py-2"><?php echo $term_names[$selected_term]; ?></span>
             </div>
             <div class="card-body p-0">
-                <?php if (empty($grades_list) && empty($detailed_grades)): ?>
+                <?php if (empty($grades_list)): ?>
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-clipboard-x display-4"></i>
                     <p class="mt-2">No grades available yet</p>
@@ -142,32 +168,72 @@ include '../../includes/header.php';
                             <tr>
                                 <th>Subject Code</th>
                                 <th>Subject Title</th>
+                                <?php if ($selected_term == 'all'): ?>
+                                <th class="text-center">Prelim</th>
                                 <th class="text-center">Midterm</th>
+                                <th class="text-center">Pre-Final</th>
                                 <th class="text-center">Final</th>
-                                <th class="text-center">Final Grade</th>
+                                <th class="text-center">Average</th>
+                                <?php else: ?>
+                                <th class="text-center"><?php echo $term_names[$selected_term]; ?> Grade</th>
+                                <?php endif; ?>
+                                <th class="text-center">Rating</th>
                                 <th class="text-center">Remarks</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($grades_list as $grade): ?>
+                            <?php foreach ($grades_list as $grade): 
+                                // Determine grade value and rating
+                                if ($selected_term == 'all') {
+                                    $display_grade = $grade['final_grade'] ?? 0;
+                                } else {
+                                    $display_grade = $grade[$selected_term] ?? 0;
+                                }
+                                
+                                // Calculate rating (College scale)
+                                $rating = 'N/A';
+                                if ($display_grade >= 97) $rating = '1.00';
+                                elseif ($display_grade >= 94) $rating = '1.25';
+                                elseif ($display_grade >= 91) $rating = '1.50';
+                                elseif ($display_grade >= 88) $rating = '1.75';
+                                elseif ($display_grade >= 85) $rating = '2.00';
+                                elseif ($display_grade >= 82) $rating = '2.25';
+                                elseif ($display_grade >= 79) $rating = '2.50';
+                                elseif ($display_grade >= 76) $rating = '2.75';
+                                elseif ($display_grade >= 75) $rating = '3.00';
+                                elseif ($display_grade > 0) $rating = '5.00';
+                                
+                                $remarks = $display_grade >= 75 ? 'PASSED' : ($display_grade > 0 ? 'FAILED' : 'Pending');
+                            ?>
                             <tr>
                                 <td><span class="badge bg-primary"><?php echo htmlspecialchars($grade['subject_code']); ?></span></td>
                                 <td><?php echo htmlspecialchars($grade['subject_title']); ?></td>
-                                <td class="text-center"><?php echo $grade['midterm'] ? number_format($grade['midterm'], 2) : '-'; ?></td>
-                                <td class="text-center"><?php echo $grade['final'] ? number_format($grade['final'], 2) : '-'; ?></td>
+                                <?php if ($selected_term == 'all'): ?>
+                                <td class="text-center"><?php echo ($grade['prelim'] ?? 0) > 0 ? number_format($grade['prelim'], 2) : '-'; ?></td>
+                                <td class="text-center"><?php echo ($grade['midterm'] ?? 0) > 0 ? number_format($grade['midterm'], 2) : '-'; ?></td>
+                                <td class="text-center"><?php echo ($grade['prefinal'] ?? 0) > 0 ? number_format($grade['prefinal'], 2) : '-'; ?></td>
+                                <td class="text-center"><?php echo ($grade['final'] ?? 0) > 0 ? number_format($grade['final'], 2) : '-'; ?></td>
                                 <td class="text-center">
                                     <strong class="<?php echo ($grade['final_grade'] >= 75) ? 'text-success' : 'text-danger'; ?>">
-                                        <?php echo $grade['final_grade'] ? number_format($grade['final_grade'], 2) : '-'; ?>
+                                        <?php echo ($grade['final_grade'] ?? 0) > 0 ? number_format($grade['final_grade'], 2) : '-'; ?>
                                     </strong>
                                 </td>
+                                <?php else: ?>
                                 <td class="text-center">
-                                    <?php if ($grade['remarks']): ?>
-                                    <span class="badge <?php echo ($grade['remarks'] == 'PASSED' || $grade['final_grade'] >= 75) ? 'bg-success' : 'bg-danger'; ?>">
-                                        <?php echo htmlspecialchars($grade['remarks'] ?: ($grade['final_grade'] >= 75 ? 'PASSED' : 'FAILED')); ?>
+                                    <strong class="<?php echo ($display_grade >= 75) ? 'text-success' : ($display_grade > 0 ? 'text-danger' : 'text-muted'); ?>">
+                                        <?php echo $display_grade > 0 ? number_format($display_grade, 2) : '-'; ?>
+                                    </strong>
+                                </td>
+                                <?php endif; ?>
+                                <td class="text-center">
+                                    <span class="badge <?php echo $display_grade >= 75 ? 'bg-success' : ($display_grade > 0 ? 'bg-danger' : 'bg-secondary'); ?>">
+                                        <?php echo $rating; ?>
                                     </span>
-                                    <?php else: ?>
-                                    <span class="badge bg-secondary">Pending</span>
-                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge <?php echo $remarks == 'PASSED' ? 'bg-success' : ($remarks == 'FAILED' ? 'bg-danger' : 'bg-secondary'); ?>">
+                                        <?php echo $remarks; ?>
+                                    </span>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
