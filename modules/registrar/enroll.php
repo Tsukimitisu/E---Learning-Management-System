@@ -21,6 +21,8 @@ $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_ac
 $current_ay_id = $current_ay['id'] ?? 0;
 
 // Fetch students from this branch with balance info
+// If branch_id is 0 or NULL, show all students (for registrars without assigned branch)
+$branch_condition = $branch_id > 0 ? "up.branch_id = $branch_id" : "(up.branch_id IS NULL OR up.branch_id = 0 OR up.branch_id > 0)";
 $students_query = "
     SELECT 
         s.user_id,
@@ -34,12 +36,15 @@ $students_query = "
     INNER JOIN user_profiles up ON s.user_id = up.user_id
     LEFT JOIN programs p ON s.course_id = p.id
     LEFT JOIN shs_strands ss ON s.course_id = ss.id
-    WHERE up.branch_id = $branch_id
+    WHERE $branch_condition
     ORDER BY up.last_name, up.first_name
 ";
 $students_result = $conn->query($students_query);
 
 // Fetch sections (classes) for this branch
+// Fetch sections (classes) for this branch
+// If branch_id is 0 or NULL, show all classes
+$class_branch_condition = $branch_id > 0 ? "cl.branch_id = $branch_id" : "(cl.branch_id IS NULL OR cl.branch_id >= 0)";
 $sections_query = "
     SELECT 
         cl.id,
@@ -64,8 +69,8 @@ $sections_query = "
     LEFT JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
     LEFT JOIN users u ON cl.teacher_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
-    WHERE cl.branch_id = $branch_id
-    AND cl.academic_year_id = $current_ay_id
+    WHERE $class_branch_condition
+    AND (cl.academic_year_id = $current_ay_id OR cl.academic_year_id IS NULL)
     AND cl.current_enrolled < cl.max_capacity
     ORDER BY COALESCE(p.program_name, ss.strand_name), cs.subject_code, cl.section_name
 ";
@@ -73,12 +78,13 @@ $sections_result = $conn->query($sections_query);
 
 // Get student's current enrollments for display
 function getStudentEnrollments($conn, $student_id, $branch_id) {
+    $branch_cond = $branch_id > 0 ? "cl.branch_id = $branch_id" : "1=1";
     $result = $conn->query("
-        SELECT cl.section_name, cs.subject_code, cs.subject_title, e.status
+        SELECT cl.section_name, cs.subject_code, cs.subject_title, e.status, e.id as enrollment_id
         FROM enrollments e
         INNER JOIN classes cl ON e.class_id = cl.id
         LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
-        WHERE e.student_id = $student_id AND cl.branch_id = $branch_id
+        WHERE e.student_id = $student_id AND $branch_cond
         ORDER BY cs.subject_code
     ");
     $enrollments = [];

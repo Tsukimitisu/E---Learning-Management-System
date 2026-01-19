@@ -305,9 +305,28 @@ function loadSubjects() {
         semester: semester
     });
     
+    console.log('Fetching subjects with params:', params.toString());
+    
     fetch('process/teacher_assignment_api.php?' + params)
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.text();
+        })
+        .then(text => {
+            console.log('Raw API Response:', text);
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                console.error('JSON parse error:', e);
+                document.getElementById('subjectsList').innerHTML = '<div class="alert alert-danger">Invalid JSON response: ' + text.substring(0, 200) + '</div>';
+                throw e;
+            }
+        })
         .then(data => {
+            console.log('Parsed API Response:', data);
+            if (data.debug) {
+                console.log('Debug info:', data.debug);
+            }
             document.getElementById('subjectCount').textContent = (data.subjects?.length || 0) + ' subjects';
             
             if (data.success && data.subjects.length > 0) {
@@ -348,19 +367,26 @@ function loadSubjects() {
                         </div>
                     `;
                 });
+                console.log('Setting HTML to subjectsList:', html.substring(0, 200));
                 document.getElementById('subjectsList').innerHTML = html;
+                console.log('HTML set successfully, element content length:', document.getElementById('subjectsList').innerHTML.length);
             } else {
+                let errorMsg = 'No subjects found for this selection';
+                if (data.message) {
+                    errorMsg = data.message;
+                }
                 document.getElementById('subjectsList').innerHTML = `
                     <div class="text-center py-5 text-muted">
                         <i class="bi bi-book fs-1 d-block mb-3"></i>
-                        No subjects found for this selection
+                        ${errorMsg}
+                        <br><small>Program: ${programId}, Year Level: ${yearLevelId}, Semester: ${semester}</small>
                     </div>
                 `;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('subjectsList').innerHTML = '<div class="alert alert-danger">Error loading subjects</div>';
+            document.getElementById('subjectsList').innerHTML = '<div class="alert alert-danger">Error loading subjects: ' + error.message + '</div>';
         });
 }
 

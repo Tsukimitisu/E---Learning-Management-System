@@ -37,13 +37,22 @@ if ($row = $result->fetch_assoc()) {
     $stats['new_today'] = $row['count'] ?? 0;
 }
 
+// Get registrar's branch
+$registrar_id = $_SESSION['user_id'];
+$registrar_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $registrar_id")->fetch_assoc();
+$branch_id = $registrar_profile['branch_id'] ?? 0;
+
+// Build branch condition - if registrar has no branch assigned, show all students
+$branch_condition = $branch_id > 0 ? "up.branch_id = $branch_id" : "1=1";
+
 // Student List with balance calculation
 $students_query = "
     SELECT 
         s.user_id, s.student_no, s.course_id,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
         u.email, u.status,
-        c.course_code, c.title as course_title,
+        COALESCE(p.program_code, ss.strand_code) as course_code, 
+        COALESCE(p.program_name, ss.strand_name) as course_title,
         COALESCE((SELECT SUM(amount) FROM payments WHERE student_id = s.user_id AND status = 'verified'), 0) as total_paid,
         COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) as total_fees,
         COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) - 
@@ -51,7 +60,9 @@ $students_query = "
     FROM students s
     INNER JOIN users u ON s.user_id = u.id
     INNER JOIN user_profiles up ON s.user_id = up.user_id
-    LEFT JOIN courses c ON s.course_id = c.id
+    LEFT JOIN programs p ON s.course_id = p.id
+    LEFT JOIN shs_strands ss ON s.course_id = ss.id AND p.id IS NULL
+    WHERE $branch_condition
     ORDER BY s.student_no DESC
 ";
 $students_result = $conn->query($students_query);
@@ -133,11 +144,11 @@ include '../../includes/header.php';
                         <select id="programFilter" class="form-select">
                             <option value="">All Programs</option>
                             <?php
-                            $courses_result->data_seek(0);
-                            while ($course = $courses_result->fetch_assoc()):
+                            $programs_result->data_seek(0);
+                            while ($program = $programs_result->fetch_assoc()):
                             ?>
-                                <option value="course-<?php echo $course['id']; ?>">
-                                    <?php echo htmlspecialchars($course['course_code'] . ' - ' . $course['title']); ?>
+                                <option value="program-<?php echo $program['id']; ?>">
+                                    <?php echo htmlspecialchars($program['program_code'] . ' - ' . $program['program_name']); ?>
                                 </option>
                             <?php endwhile; ?>
                             <?php
@@ -181,8 +192,8 @@ include '../../includes/header.php';
                         </thead>
                         <tbody>
                             <?php while ($student = $students_result->fetch_assoc()):
-                                $program_label = $student['course_code'] ? ($student['course_code'] . ' - ' . $student['course_title']) : 'SHS';
-                                $program_key = $student['course_id'] ? 'course-' . $student['course_id'] : 'shs';
+                                $program_label = $student['course_code'] ? ($student['course_code'] . ' - ' . $student['course_title']) : 'No Program';
+                                $program_key = $student['course_id'] ? 'program-' . $student['course_id'] : 'none';
                                 $status_class = $student['status'] === 'active' ? 'success' : 'secondary';
                                 $balance = (float)$student['balance'];
                                 $balance_class = $balance > 0 ? 'danger' : ($balance < 0 ? 'warning' : 'success');

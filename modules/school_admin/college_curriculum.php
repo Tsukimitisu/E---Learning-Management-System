@@ -302,6 +302,42 @@ function goBack() {
         window.location.href = 'curriculum.php';
     }
 }
+
+// Filter year levels by selected program
+function filterYearLevelsByProgram() {
+    const programId = document.getElementById('collegeSubjectProgram').value;
+    const yearLevelSelect = document.getElementById('collegeSubjectYearLevel');
+    
+    // Clear current options
+    yearLevelSelect.innerHTML = '<option value="">-- Select Year Level --</option>';
+    
+    if (!programId) {
+        yearLevelSelect.innerHTML = '<option value="">-- Select Program First --</option>';
+        return;
+    }
+    
+    // Filter year levels for the selected program
+    const filteredYearLevels = collegeYearLevels.filter(yl => yl.program_id == programId);
+    
+    if (filteredYearLevels.length === 0) {
+        yearLevelSelect.innerHTML = '<option value="">-- No Year Levels for this Program --</option>';
+        return;
+    }
+    
+    // Add filtered options
+    filteredYearLevels.forEach(yl => {
+        const option = document.createElement('option');
+        option.value = yl.id;
+        option.textContent = yl.year_name;
+        yearLevelSelect.appendChild(option);
+    });
+}
+
+// Reset year level when modal opens
+document.getElementById('addCollegeSubjectModal')?.addEventListener('show.bs.modal', function() {
+    document.getElementById('collegeSubjectProgram').value = '';
+    document.getElementById('collegeSubjectYearLevel').innerHTML = '<option value="">-- Select Program First --</option>';
+});
 </script>
 
 <?php include '../../includes/footer.php'; ?>

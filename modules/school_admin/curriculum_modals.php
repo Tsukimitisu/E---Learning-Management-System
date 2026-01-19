@@ -631,7 +631,7 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Program</label>
-                                    <select class="form-select" name="program_id">
+                                    <select class="form-select" name="program_id" id="collegeSubjectProgram" onchange="filterYearLevelsByProgram()">
                                         <option value="">-- Select Program --</option>
                                         <?php 
                                         $programs_result = $conn->query("SELECT id, program_code, program_name FROM programs WHERE is_active = 1 ORDER BY program_code");
@@ -643,14 +643,8 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Year Level</label>
-                                    <select class="form-select" name="year_level_id">
-                                        <option value="">-- Select Year Level --</option>
-                                        <?php 
-                                        $yearlevels_result = $conn->query("SELECT id, year_name, program_id FROM program_year_levels WHERE is_active = 1 ORDER BY year_level");
-                                        while ($yl = $yearlevels_result->fetch_assoc()): 
-                                        ?>
-                                        <option value="<?php echo $yl['id']; ?>"><?php echo htmlspecialchars($yl['year_name']); ?></option>
-                                        <?php endwhile; ?>
+                                    <select class="form-select" name="year_level_id" id="collegeSubjectYearLevel">
+                                        <option value="">-- Select Program First --</option>
                                     </select>
                                 </div>
                             </div>

@@ -48,10 +48,18 @@ function getYearLevels() {
     if ($type === 'college') {
         $query = "SELECT id, year_name as name FROM program_year_levels WHERE program_id = ? AND is_active = 1 ORDER BY year_level";
         $stmt = $conn->prepare($query);
+        if (!$stmt) {
+            echo json_encode(['success' => false, 'message' => 'Query error: ' . $conn->error]);
+            return;
+        }
         $stmt->bind_param("i", $program_id);
     } else {
-        $query = "SELECT id, CONCAT('Grade ', grade_level) as name FROM shs_grade_levels WHERE strand_id = ? AND is_active = 1 ORDER BY grade_level";
+        $query = "SELECT id, grade_name as name FROM shs_grade_levels WHERE strand_id = ? AND is_active = 1 ORDER BY grade_level";
         $stmt = $conn->prepare($query);
+        if (!$stmt) {
+            echo json_encode(['success' => false, 'message' => 'Query error: ' . $conn->error]);
+            return;
+        }
         $stmt->bind_param("i", $program_id);
     }
     
@@ -73,8 +81,24 @@ function getSubjects() {
     $year_level_id = (int)($_GET['year_level_id'] ?? 0);
     $semester = $_GET['semester'] ?? '1st';
     
-    // Convert semester format: '1st' -> '1', '2nd' -> '2'
-    $semester_num = str_replace(['1st', '2nd', 'summer'], ['1', '2', 'summer'], $semester);
+    // Convert semester format: '1st' -> 1, '2nd' -> 2, 'summer' -> 3
+    $semester_num = 1;
+    if ($semester === '2nd') {
+        $semester_num = 2;
+    } else if ($semester === 'summer') {
+        $semester_num = 3;
+    }
+    
+    // Debug info
+    $debug = [
+        'branch_id' => $branch_id,
+        'academic_year_id' => $current_ay_id,
+        'type' => $type,
+        'program_id' => $program_id,
+        'year_level_id' => $year_level_id,
+        'semester' => $semester,
+        'semester_num' => $semester_num
+    ];
     
     if ($type === 'college') {
         $query = "
@@ -85,12 +109,18 @@ function getSubjects() {
                 AND tsa.branch_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1
             LEFT JOIN users u ON tsa.teacher_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
-            WHERE cs.program_id = ? AND cs.year_level_id = ? AND (cs.semester = ? OR cs.semester = ?) AND cs.is_active = 1
+            WHERE cs.program_id = ? AND cs.year_level_id = ? AND cs.semester = ? AND cs.is_active = 1
             ORDER BY cs.subject_code
         ";
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("iiiiss", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester, $semester_num);
+        if (!$stmt) {
+            echo json_encode(['success' => false, 'message' => 'Query prepare error: ' . $conn->error, 'debug' => $debug]);
+            return;
+        }
+        $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
     } else {
+        // For SHS, get subjects that match the grade level (shs_grade_level_id)
+        // Include subjects where shs_strand_id matches OR is NULL (core subjects for all strands)
         $query = "
             SELECT cs.id, cs.subject_code, cs.subject_title, cs.units,
                    tsa.teacher_id, CONCAT(up.first_name, ' ', up.last_name) as teacher_name
@@ -99,14 +129,26 @@ function getSubjects() {
                 AND tsa.branch_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1
             LEFT JOIN users u ON tsa.teacher_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
-            WHERE cs.shs_strand_id = ? AND cs.shs_grade_level_id = ? AND (cs.semester = ? OR cs.semester = ?) AND cs.is_active = 1
+            WHERE (cs.shs_strand_id = ? OR cs.shs_strand_id IS NULL) 
+                AND cs.shs_grade_level_id = ? 
+                AND cs.semester = ? 
+                AND cs.is_active = 1
+                AND cs.subject_type IN ('shs_core', 'shs_applied', 'shs_specialized')
             ORDER BY cs.subject_code
         ";
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("iiiiss", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester, $semester_num);
+        if (!$stmt) {
+            echo json_encode(['success' => false, 'message' => 'Query prepare error: ' . $conn->error, 'debug' => $debug]);
+            return;
+        }
+        $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
     }
     
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        echo json_encode(['success' => false, 'message' => 'Query execute error: ' . $stmt->error, 'debug' => $debug]);
+        return;
+    }
+    
     $result = $stmt->get_result();
     
     $subjects = [];
@@ -114,7 +156,7 @@ function getSubjects() {
         $subjects[] = $row;
     }
     
-    echo json_encode(['success' => true, 'subjects' => $subjects]);
+    echo json_encode(['success' => true, 'subjects' => $subjects, 'debug' => $debug]);
 }
 
 function assignTeacher() {
