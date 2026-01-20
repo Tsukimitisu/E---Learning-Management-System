@@ -9,37 +9,23 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 $page_title = "Payment History";
 $registrar_id = $_SESSION['user_id'];
 
-// Get registrar's branch
+/** 
+ * BACKEND LOGIC - UNTOUCHED 
+ */
 $registrar_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $registrar_id")->fetch_assoc();
 $branch_id = $registrar_profile['branch_id'] ?? 0;
-
-// Get branch info
 $branch = $conn->query("SELECT * FROM branches WHERE id = $branch_id")->fetch_assoc();
 
-// Filters
 $start_date = $_GET['start_date'] ?? date('Y-m-01');
 $end_date = $_GET['end_date'] ?? date('Y-m-d');
 $payment_type = $_GET['payment_type'] ?? 'all';
 $search = clean_input($_GET['search'] ?? '');
 
-// Build query
 $where = "p.branch_id = $branch_id";
-$params = [];
-$types = "";
+if ($start_date && $end_date) { $where .= " AND DATE(p.created_at) BETWEEN '$start_date' AND '$end_date'"; }
+if ($payment_type != 'all') { $where .= " AND p.payment_type = '$payment_type'"; }
+if (!empty($search)) { $where .= " AND (s.student_no LIKE '%$search%' OR up.first_name LIKE '%$search%' OR up.last_name LIKE '%$search%' OR p.or_number LIKE '%$search%')"; }
 
-if ($start_date && $end_date) {
-    $where .= " AND DATE(p.created_at) BETWEEN '$start_date' AND '$end_date'";
-}
-
-if ($payment_type != 'all') {
-    $where .= " AND p.payment_type = '$payment_type'";
-}
-
-if (!empty($search)) {
-    $where .= " AND (s.student_no LIKE '%$search%' OR up.first_name LIKE '%$search%' OR up.last_name LIKE '%$search%' OR p.or_number LIKE '%$search%')";
-}
-
-// Get summary stats
 $summary = $conn->query("
     SELECT 
         COUNT(*) as total_count,
@@ -50,7 +36,6 @@ $summary = $conn->query("
     WHERE $where
 ")->fetch_assoc();
 
-// Get payments
 $payments = $conn->query("
     SELECT p.*, s.student_no, 
            CONCAT(up.first_name, ' ', up.last_name) as student_name,
@@ -66,208 +51,217 @@ $payments = $conn->query("
 ");
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
-    
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="fw-bold mb-1"><i class="bi bi-clock-history me-2"></i>Payment History</h4>
-                <small class="text-muted">Branch: <?php echo htmlspecialchars($branch['name'] ?? 'Unknown'); ?></small>
-            </div>
-            <div>
-                <a href="record_payment.php" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i> Record Payment
-                </a>
-                <button class="btn btn-outline-success" onclick="exportToExcel()">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Export
-                </button>
-            </div>
-        </div>
+<style>
+    /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
 
-        <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm bg-primary text-white">
-                    <div class="card-body text-center">
-                        <h6 class="opacity-75">Total Collections</h6>
-                        <h3 class="fw-bold mb-0">₱<?php echo number_format($summary['total_amount'] ?? 0, 2); ?></h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm bg-success text-white">
-                    <div class="card-body text-center">
-                        <h6 class="opacity-75">Tuition Fees</h6>
-                        <h3 class="fw-bold mb-0">₱<?php echo number_format($summary['tuition_total'] ?? 0, 2); ?></h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm bg-info text-white">
-                    <div class="card-body text-center">
-                        <h6 class="opacity-75">Other Fees</h6>
-                        <h3 class="fw-bold mb-0">₱<?php echo number_format($summary['other_total'] ?? 0, 2); ?></h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm bg-warning text-dark">
-                    <div class="card-body text-center">
-                        <h6 class="opacity-75">Transactions</h6>
-                        <h3 class="fw-bold mb-0"><?php echo number_format($summary['total_count'] ?? 0); ?></h3>
-                    </div>
-                </div>
-            </div>
-        </div>
+    /* --- FANTASTIC FINANCE UI --- */
+    .finance-stat-card {
+        background: white; border-radius: 15px; padding: 20px; border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; transition: 0.3s;
+    }
+    .finance-stat-card:hover { transform: translateY(-5px); }
 
-        <!-- Filters -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <form method="GET" class="row g-3">
-                    <div class="col-md-2">
-                        <label class="form-label small">Start Date</label>
-                        <input type="date" class="form-control" name="start_date" value="<?php echo $start_date; ?>">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">End Date</label>
-                        <input type="date" class="form-control" name="end_date" value="<?php echo $end_date; ?>">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">Payment Type</label>
-                        <select class="form-select" name="payment_type">
-                            <option value="all">All Types</option>
-                            <option value="tuition" <?php echo $payment_type == 'tuition' ? 'selected' : ''; ?>>Tuition</option>
-                            <option value="miscellaneous" <?php echo $payment_type == 'miscellaneous' ? 'selected' : ''; ?>>Miscellaneous</option>
-                            <option value="laboratory" <?php echo $payment_type == 'laboratory' ? 'selected' : ''; ?>>Laboratory</option>
-                            <option value="library" <?php echo $payment_type == 'library' ? 'selected' : ''; ?>>Library</option>
-                            <option value="registration" <?php echo $payment_type == 'registration' ? 'selected' : ''; ?>>Registration</option>
-                            <option value="id_card" <?php echo $payment_type == 'id_card' ? 'selected' : ''; ?>>ID Card</option>
-                            <option value="diploma" <?php echo $payment_type == 'diploma' ? 'selected' : ''; ?>>Diploma</option>
-                            <option value="transcript" <?php echo $payment_type == 'transcript' ? 'selected' : ''; ?>>Transcript</option>
-                            <option value="clearance" <?php echo $payment_type == 'clearance' ? 'selected' : ''; ?>>Clearance</option>
-                            <option value="other" <?php echo $payment_type == 'other' ? 'selected' : ''; ?>>Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small">Search</label>
-                        <input type="text" class="form-control" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                               placeholder="Student No, Name, or OR#">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-search me-1"></i> Filter
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    .filter-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px; }
+    .modern-input { border-radius: 50px; border: 1px solid #ddd; font-size: 0.85rem; font-weight: 600; padding-left: 15px; }
 
-        <!-- Payments Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <?php if ($payments->num_rows == 0): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-receipt display-4"></i>
-                    <p class="mt-2 mb-0">No payment records found</p>
-                </div>
-                <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="paymentsTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>OR Number</th>
-                                <th>Reference</th>
-                                <th>Student</th>
-                                <th>Type</th>
-                                <th>Method</th>
-                                <th class="text-end">Amount</th>
-                                <th>A.Y. / Sem</th>
-                                <th>Recorded By</th>
-                                <th>Date</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($p = $payments->fetch_assoc()): 
-                                $type_colors = [
-                                    'tuition' => 'primary', 'miscellaneous' => 'secondary', 'laboratory' => 'info',
-                                    'library' => 'warning', 'registration' => 'success', 'id_card' => 'dark',
-                                    'diploma' => 'danger', 'transcript' => 'primary', 'clearance' => 'success', 'other' => 'secondary'
-                                ];
-                            ?>
-                            <tr>
-                                <td><strong><?php echo htmlspecialchars($p['or_number'] ?? '-'); ?></strong></td>
-                                <td><small class="text-muted"><?php echo $p['reference_no']; ?></small></td>
-                                <td>
-                                    <strong><?php echo htmlspecialchars($p['student_no']); ?></strong>
-                                    <br><small><?php echo htmlspecialchars($p['student_name']); ?></small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-<?php echo $type_colors[$p['payment_type']] ?? 'secondary'; ?>">
-                                        <?php echo ucfirst(str_replace('_', ' ', $p['payment_type'])); ?>
-                                    </span>
-                                </td>
-                                <td><small><?php echo ucfirst(str_replace('_', ' ', $p['payment_method'])); ?></small></td>
-                                <td class="text-end fw-bold">₱<?php echo number_format($p['amount'], 2); ?></td>
-                                <td>
-                                    <small><?php echo $p['year_name'] ?? '-'; ?></small>
-                                    <br><small class="text-muted"><?php echo ucfirst($p['semester'] ?? '-'); ?></small>
-                                </td>
-                                <td><small><?php echo htmlspecialchars($p['recorded_by_name'] ?? '-'); ?></small></td>
-                                <td>
-                                    <small><?php echo date('M d, Y', strtotime($p['created_at'])); ?></small>
-                                    <br><small class="text-muted"><?php echo date('h:i A', strtotime($p['created_at'])); ?></small>
-                                </td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="printReceipt(<?php echo $p['id']; ?>)">
-                                        <i class="bi bi-printer"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
-            </div>
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
+    }
+
+    .table-modern thead th { 
+        background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; 
+        letter-spacing: 1px; padding: 15px 20px; position: sticky; top: -1px; z-index: 5;
+    }
+    .table-modern tbody td { padding: 12px 15px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
+
+    .btn-maroon-action {
+        background-color: var(--maroon); color: white; border: none; border-radius: 50px;
+        font-weight: 700; padding: 8px 20px; transition: 0.3s; font-size: 0.85rem;
+    }
+    .btn-maroon-action:hover { background-color: #600000; transform: translateY(-2px); color: white; }
+
+    .btn-excel { background-color: #28a745; color: white; border-radius: 50px; border: none; font-weight: 700; padding: 8px 20px; font-size: 0.85rem; transition: 0.3s; }
+    .btn-excel:hover { background-color: #1e7e34; color: white; }
+
+    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } }
+</style>
+
+<!-- Part 1: Fixed Header -->
+<div class="header-fixed-part animate__animated animate__fadeInDown">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0" style="color: var(--blue);"><i class="bi bi-clock-history me-2 text-maroon"></i>Financial Ledger</h4>
+            <p class="text-muted small mb-0">Reviewing: <?php echo htmlspecialchars($branch['name'] ?? 'General Branch'); ?></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="record_payment.php" class="btn btn-maroon-action shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> New Payment
+            </a>
+            <button class="btn btn-excel shadow-sm" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export CSV
+            </button>
         </div>
     </div>
 </div>
 
+<!-- Part 2: Scrollable Body -->
+<div class="body-scroll-part">
+    
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4 animate__animated animate__fadeIn">
+        <div class="col-md-3">
+            <div class="finance-stat-card border-start border-primary border-5">
+                <div class="p-2 bg-primary bg-opacity-10 text-primary rounded"><i class="bi bi-wallet2 fs-4"></i></div>
+                <div><h4 class="mb-0 fw-bold">₱<?php echo number_format($summary['total_amount'] ?? 0, 2); ?></h4><small class="text-muted text-uppercase fw-bold" style="font-size:0.6rem;">Total Collections</small></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="finance-stat-card border-start border-success border-5">
+                <div class="p-2 bg-success bg-opacity-10 text-success rounded"><i class="bi bi-mortarboard fs-4"></i></div>
+                <div><h4 class="mb-0 fw-bold">₱<?php echo number_format($summary['tuition_total'] ?? 0, 2); ?></h4><small class="text-muted text-uppercase fw-bold" style="font-size:0.6rem;">Tuition Fees</small></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="finance-stat-card border-start border-info border-5">
+                <div class="p-2 bg-info bg-opacity-10 text-info rounded"><i class="bi bi-box-seam fs-4"></i></div>
+                <div><h4 class="mb-0 fw-bold">₱<?php echo number_format($summary['other_total'] ?? 0, 2); ?></h4><small class="text-muted text-uppercase fw-bold" style="font-size:0.6rem;">Other Collections</small></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="finance-stat-card border-start border-warning border-5">
+                <div class="p-2 bg-warning bg-opacity-10 text-warning rounded"><i class="bi bi-receipt-cutoff fs-4"></i></div>
+                <div><h4 class="mb-0 fw-bold"><?php echo number_format($summary['total_count'] ?? 0); ?></h4><small class="text-muted text-uppercase fw-bold" style="font-size:0.6rem;">Transaction Count</small></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="filter-card animate__animated animate__fadeIn">
+        <form method="GET" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">START DATE</label>
+                <input type="date" class="form-control modern-input" name="start_date" value="<?php echo $start_date; ?>">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">END DATE</label>
+                <input type="date" class="form-control modern-input" name="end_date" value="<?php echo $end_date; ?>">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">PAYMENT TYPE</label>
+                <select class="form-select modern-input" name="payment_type">
+                    <option value="all">All Types</option>
+                    <?php 
+                    $types = ['tuition', 'miscellaneous', 'laboratory', 'library', 'registration', 'id_card', 'diploma', 'transcript', 'clearance', 'other'];
+                    foreach($types as $t): ?>
+                        <option value="<?php echo $t; ?>" <?php echo $payment_type == $t ? 'selected' : ''; ?>><?php echo ucfirst(str_replace('_', ' ', $t)); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">SEARCH KEYWORD</label>
+                <input type="text" class="form-control modern-input" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Student ID, Name, or OR#">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold" style="background-color: var(--blue);">
+                    <i class="bi bi-filter me-1"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="main-card-modern animate__animated animate__fadeInUp">
+        <div class="table-responsive">
+            <table class="table table-hover table-modern align-middle mb-0" id="paymentsTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Official Receipt</th>
+                        <th>Student Account</th>
+                        <th>Category</th>
+                        <th>Method</th>
+                        <th class="text-end">Amount</th>
+                        <th>Recorded By</th>
+                        <th class="text-center">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($payments->num_rows == 0): ?>
+                        <tr><td colspan="7" class="text-center py-5 text-muted">No matching transaction records found.</td></tr>
+                    <?php else: while ($p = $payments->fetch_assoc()): 
+                        $type_colors = ['tuition' => 'primary', 'miscellaneous' => 'secondary', 'laboratory' => 'info', 'library' => 'warning', 'registration' => 'success', 'id_card' => 'dark', 'diploma' => 'danger', 'transcript' => 'primary', 'clearance' => 'success', 'other' => 'secondary'];
+                    ?>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($p['or_number'] ?? '-'); ?></div>
+                            <small class="text-muted" style="font-size:0.7rem;"><?php echo $p['reference_no']; ?></small>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-maroon small"><?php echo htmlspecialchars($p['student_no']); ?></div>
+                            <small class="text-dark fw-semibold"><?php echo htmlspecialchars($p['student_name']); ?></small>
+                        </td>
+                        <td>
+                            <span class="badge bg-<?php echo $type_colors[$p['payment_type']] ?? 'secondary'; ?> bg-opacity-10 text-<?php echo $type_colors[$p['payment_type']] ?? 'secondary'; ?> border border-<?php echo $type_colors[$p['payment_type']] ?? 'secondary'; ?> border-opacity-25 px-3">
+                                <?php echo strtoupper(str_replace('_', ' ', $p['payment_type'])); ?>
+                            </span>
+                        </td>
+                        <td><small class="text-muted fw-bold"><?php echo strtoupper($p['payment_method']); ?></small></td>
+                        <td class="text-end fw-bold text-blue">₱<?php echo number_format($p['amount'], 2); ?></td>
+                        <td>
+                            <div class="small fw-bold text-dark"><?php echo htmlspecialchars($p['recorded_by_name'] ?? '-'); ?></div>
+                            <small class="text-muted" style="font-size:0.7rem;"><?php echo date('M d, Y • h:i A', strtotime($p['created_at'])); ?></small>
+                        </td>
+                        <td class="text-center">
+                            <button class="action-btn-circle text-primary border" onclick="printReceipt(<?php echo $p['id']; ?>)">
+                                <i class="bi bi-printer-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endwhile; endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include '../../includes/footer.php'; ?>
+
+<!-- --- SCRIPTS --- -->
 <script>
 function exportToExcel() {
     const table = document.getElementById('paymentsTable');
-    if (!table) {
-        alert('No data to export');
-        return;
-    }
+    if (!table) return alert('No data to export');
     
     let csv = [];
     const rows = table.querySelectorAll('tr');
-    
     rows.forEach(row => {
         const cols = row.querySelectorAll('td, th');
         const rowData = [];
-        cols.forEach(col => {
-            rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+        cols.forEach((col, index) => {
+            if (index < 6) { // Don't export the action column
+                rowData.push('"' + col.innerText.replace(/"/g, '""').replace(/\n/g, ' ') + '"');
+            }
         });
         csv.push(rowData.join(','));
     });
     
-    const csvContent = csv.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'payment_history_<?php echo date('Y-m-d'); ?>.csv';
+    link.download = 'ELMS_Payment_History_<?php echo date('Y-m-d'); ?>.csv';
     link.click();
 }
 
 function printReceipt(paymentId) {
-    window.open('process/print_receipt.php?id=' + paymentId, '_blank', 'width=400,height=600');
+    window.open('process/print_receipt.php?id=' + paymentId, '_blank', 'width=450,height=700');
 }
 </script>
-
-<?php include '../../includes/footer.php'; ?>
+</body>
+</html>

@@ -9,25 +9,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 $page_title = "Student Enrollment";
 $registrar_id = $_SESSION['user_id'];
 
-// Get registrar's branch
+/** 
+ * BACKEND LOGIC - UNTOUCHED 
+ */
 $registrar_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $registrar_id")->fetch_assoc();
 $branch_id = $registrar_profile['branch_id'] ?? 0;
-
-// Get branch info
 $branch = $conn->query("SELECT * FROM branches WHERE id = $branch_id")->fetch_assoc();
-
-// Get current academic year
 $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
 $current_ay_id = $current_ay['id'] ?? 0;
 
-// Fetch students from this branch with balance info
-// If branch_id is 0 or NULL, show all students (for registrars without assigned branch)
 $branch_condition = $branch_id > 0 ? "up.branch_id = $branch_id" : "(up.branch_id IS NULL OR up.branch_id = 0 OR up.branch_id > 0)";
 $students_query = "
     SELECT 
-        s.user_id,
-        s.student_no,
-        CONCAT(up.first_name, ' ', up.last_name) as full_name,
+        s.user_id, s.student_no, CONCAT(up.first_name, ' ', up.last_name) as full_name,
         COALESCE(p.program_code, ss.strand_code) as program_code,
         COALESCE(p.program_name, ss.strand_name) as program_name,
         COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) as total_fees,
@@ -41,21 +35,11 @@ $students_query = "
 ";
 $students_result = $conn->query($students_query);
 
-// Fetch sections (classes) for this branch
-// Fetch sections (classes) for this branch
-// If branch_id is 0 or NULL, show all classes
 $class_branch_condition = $branch_id > 0 ? "cl.branch_id = $branch_id" : "(cl.branch_id IS NULL OR cl.branch_id >= 0)";
 $sections_query = "
     SELECT 
-        cl.id,
-        cl.section_name,
-        cs.subject_code,
-        cs.subject_title,
-        cs.units,
-        cl.max_capacity,
-        cl.current_enrolled,
-        cl.schedule,
-        cl.room,
+        cl.id, cl.section_name, cs.subject_code, cs.subject_title, cs.units,
+        cl.max_capacity, cl.current_enrolled, cl.schedule, cl.room,
         CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
         COALESCE(p.program_code, ss.strand_code) as program_code,
         COALESCE(p.program_name, ss.strand_name) as program_name,
@@ -76,203 +60,206 @@ $sections_query = "
 ";
 $sections_result = $conn->query($sections_query);
 
-// Get student's current enrollments for display
-function getStudentEnrollments($conn, $student_id, $branch_id) {
-    $branch_cond = $branch_id > 0 ? "cl.branch_id = $branch_id" : "1=1";
-    $result = $conn->query("
-        SELECT cl.section_name, cs.subject_code, cs.subject_title, e.status, e.id as enrollment_id
-        FROM enrollments e
-        INNER JOIN classes cl ON e.class_id = cl.id
-        LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
-        WHERE e.student_id = $student_id AND $branch_cond
-        ORDER BY cs.subject_code
-    ");
-    $enrollments = [];
-    while ($row = $result->fetch_assoc()) {
-        $enrollments[] = $row;
-    }
-    return $enrollments;
-}
-
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+<style>
+    /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
 
-    <div id="content">
-        <div class="navbar-custom d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="color: #003366;">
-                <i class="bi bi-pencil-square"></i> Student Enrollment
-            </h4>
-            <div>
-                <span class="badge bg-info me-2"><?php echo htmlspecialchars($branch['name'] ?? 'Unknown Branch'); ?></span>
-                <span class="badge bg-secondary">A.Y. <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?></span>
+    /* --- FANTASTIC ENROLLMENT UI --- */
+    .student-list-container {
+        height: 450px;
+        overflow-y: auto;
+        border-radius: 12px;
+        border: 1px solid #eee;
+    }
+
+    .student-card-item {
+        border-left: 4px solid transparent;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+    .student-card-item:hover { background-color: #fcfcfc; border-left-color: var(--blue); }
+    .student-card-item.active { background-color: #e7f5ff; border-left-color: var(--blue); border-right: none; }
+
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
+    }
+    .card-header-blue { background: var(--blue); color: white; padding: 15px 25px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+    .card-header-maroon { background: var(--maroon); color: white; padding: 15px 25px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+    .table-modern thead th { 
+        background: #fcfcfc; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #888; 
+        padding: 12px 15px; position: sticky; top: -1px; z-index: 5;
+    }
+    .table-modern tbody td { padding: 12px 15px; vertical-align: middle; font-size: 0.85rem; border-bottom: 1px solid #f1f1f1; }
+
+    .btn-enroll-action {
+        background: var(--blue); color: white; border: none; border-radius: 8px; 
+        padding: 6px 12px; transition: 0.3s;
+    }
+    .btn-enroll-action:hover:not(:disabled) { background: #002244; transform: scale(1.1); }
+    .btn-enroll-action:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Search & Filter inputs */
+    .modern-input { border-radius: 50px; border: 1px solid #ddd; padding-left: 20px; font-size: 0.9rem; }
+    .modern-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px rgba(128,0,0,0.1); }
+
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+    }
+</style>
+
+<!-- Part 1: Fixed Header -->
+<div class="header-fixed-part animate__animated animate__fadeInDown">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0" style="color: var(--blue);"><i class="bi bi-pencil-square me-2 text-maroon"></i>Admissions & Enrollment</h4>
+            <p class="text-muted small mb-0"><?php echo htmlspecialchars($branch['name'] ?? 'Registrar Panel'); ?> • AY <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?></p>
+        </div>
+        <div id="selectedStudentBadge" class="badge bg-light text-maroon border border-maroon p-2 px-3 rounded-pill animate__animated animate__bounceIn" style="display:none;"></div>
+    </div>
+</div>
+
+<!-- Part 2: Scrollable Body -->
+<div class="body-scroll-part">
+    
+    <div id="alertContainer"></div>
+
+    <div class="row g-4">
+        <!-- Left Column: Student Search -->
+        <div class="col-lg-4 animate__animated animate__fadeInLeft">
+            <div class="main-card-modern mb-4">
+                <div class="card-header-maroon">
+                    <i class="bi bi-person-search me-2"></i> Find Student
+                </div>
+                <div class="p-4">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 rounded-end-pill modern-input" id="studentSearch" placeholder="Search name or ID...">
+                    </div>
+
+                    <div class="student-list-container shadow-sm bg-white" id="studentList">
+                        <?php while ($student = $students_result->fetch_assoc()): 
+                            $balance = $student['total_fees'] - $student['total_paid'];
+                            $has_payment = $student['total_paid'] > 0;
+                        ?>
+                        <div class="list-group-item student-item p-3 border-bottom" 
+                           data-student-id="<?php echo $student['user_id']; ?>"
+                           data-student-name="<?php echo htmlspecialchars($student['full_name']); ?>"
+                           data-student-no="<?php echo htmlspecialchars($student['student_no']); ?>"
+                           data-total-fees="<?php echo $student['total_fees']; ?>"
+                           data-total-paid="<?php echo $student['total_paid']; ?>"
+                           data-has-payment="<?php echo $has_payment ? '1' : '0'; ?>">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold text-dark small mb-0"><?php echo htmlspecialchars($student['full_name']); ?></div>
+                                    <small class="text-muted" style="font-size: 0.7rem;"><?php echo htmlspecialchars($student['student_no']); ?></small>
+                                </div>
+                                <span class="badge <?php echo $has_payment ? 'bg-success' : 'bg-danger'; ?> rounded-pill" style="font-size: 0.6rem;">
+                                    <?php echo $has_payment ? 'PAID' : 'UNPAID'; ?>
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2 align-items-center">
+                                <small class="text-blue fw-bold" style="font-size: 0.7rem;"><?php echo htmlspecialchars($student['program_code'] ?? 'GENERAL'); ?></small>
+                                <?php if ($balance > 0): ?>
+                                    <small class="text-danger fw-bold" style="font-size: 0.7rem;">Bal: ₱<?php echo number_format($balance, 2); ?></small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endwhile; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Enrollments Widget -->
+            <div class="main-card-modern animate__animated animate__fadeInUp" id="currentEnrollmentsCard" style="display:none;">
+                <div class="card-header-modern bg-white"><i class="bi bi-list-check me-2"></i>Active Enrolled Loads</div>
+                <div class="p-0">
+                    <ul class="list-group list-group-flush" id="currentEnrollmentsList"></ul>
+                </div>
             </div>
         </div>
 
-        <div id="alertContainer"></div>
-
-        <div class="row">
-            <!-- Student Selection Card -->
-            <div class="col-md-4">
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #800000; color: white;">
-                        <i class="bi bi-person-check"></i> Select Student
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Search Student</label>
-                            <input type="text" class="form-control" id="studentSearch" placeholder="Type student name or number...">
-                        </div>
-                        <div style="max-height: 400px; overflow-y: auto;">
-                            <div class="list-group" id="studentList">
-                                <?php while ($student = $students_result->fetch_assoc()): 
-                                    $balance = $student['total_fees'] - $student['total_paid'];
-                                    $has_payment = $student['total_paid'] > 0;
-                                ?>
-                                <a href="#" class="list-group-item list-group-item-action student-item" 
-                                   data-student-id="<?php echo $student['user_id']; ?>"
-                                   data-student-name="<?php echo htmlspecialchars($student['full_name']); ?>"
-                                   data-student-no="<?php echo htmlspecialchars($student['student_no']); ?>"
-                                   data-total-fees="<?php echo $student['total_fees']; ?>"
-                                   data-total-paid="<?php echo $student['total_paid']; ?>"
-                                   data-has-payment="<?php echo $has_payment ? '1' : '0'; ?>">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1"><?php echo htmlspecialchars($student['full_name']); ?></h6>
-                                        <small class="text-muted"><?php echo htmlspecialchars($student['student_no']); ?></small>
-                                    </div>
-                                    <small class="text-muted">
-                                        <?php echo htmlspecialchars($student['program_code'] ?? 'No Program'); ?>
-                                    </small>
-                                    <div class="mt-1 d-flex justify-content-between">
-                                        <?php if ($has_payment): ?>
-                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No Payment</span>
-                                        <?php endif; ?>
-                                        <?php if ($balance > 0): ?>
-                                            <small class="text-danger">Bal: ₱<?php echo number_format($balance, 2); ?></small>
-                                        <?php endif; ?>
-                                    </div>
-                                </a>
-                                <?php endwhile; ?>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Right Column: Sections Picker -->
+        <div class="col-lg-8 animate__animated animate__fadeInRight">
+            <div class="main-card-modern">
+                <div class="card-header-blue d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-grid-3x3-gap me-2"></i>Available Class Sections</span>
+                    <!-- Program Filter -->
+                    <select class="form-select form-select-sm border-0 rounded-pill shadow-sm" id="programFilter" style="width: 220px; font-size: 0.75rem;">
+                        <option value="">All Programs/Strands</option>
+                        <?php 
+                        $programs_list = []; $sections_result->data_seek(0);
+                        while ($sec = $sections_result->fetch_assoc()) {
+                            $key = $sec['program_code'] ?? 'Other';
+                            if (!isset($programs_list[$key])) { $programs_list[$key] = $sec['program_name'] ?? 'Other'; }
+                        }
+                        foreach ($programs_list as $code => $name): ?>
+                        <option value="<?php echo htmlspecialchars($code); ?>"><?php echo htmlspecialchars($code . ' - ' . $name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                
-                <!-- Selected Student Enrollments -->
-                <div class="card shadow-sm mt-3" id="currentEnrollmentsCard" style="display:none;">
-                    <div class="card-header bg-info text-white">
-                        <i class="bi bi-list-check"></i> Current Enrollments
+                <div class="p-4">
+                    <div id="paymentWarning" class="alert bg-danger bg-opacity-10 border border-danger border-opacity-25 text-danger mb-4 small" style="display:none;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Financial restriction: Student has no verified payments. Record a payment before proceeding.
                     </div>
-                    <div class="card-body p-0">
-                        <ul class="list-group list-group-flush" id="currentEnrollmentsList">
-                        </ul>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Available Sections Card -->
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #003366; color: white;">
-                        <i class="bi bi-grid-3x3-gap"></i> Available Sections
-                        <span id="selectedStudentBadge" class="badge bg-light text-dark ms-2" style="display:none;"></span>
-                    </div>
-                    <div class="card-body">
-                        <div id="paymentWarning" class="alert alert-warning" style="display:none;">
-                            <i class="bi bi-exclamation-triangle"></i> Student has no payment. Please record a payment first before enrolling.
-                        </div>
-                        
-                        <!-- Filter by Program -->
-                        <div class="mb-3">
-                            <select class="form-select" id="programFilter">
-                                <option value="">All Programs/Strands</option>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-modern align-middle mb-0" id="sectionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Section & Room</th>
+                                    <th>Subject Details</th>
+                                    <th>Schedule</th>
+                                    <th class="text-center">Slots</th>
+                                    <th class="text-end">Enroll</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 <?php 
-                                $programs_list = [];
                                 $sections_result->data_seek(0);
-                                while ($sec = $sections_result->fetch_assoc()) {
-                                    $key = $sec['program_code'] ?? 'Other';
-                                    if (!isset($programs_list[$key])) {
-                                        $programs_list[$key] = $sec['program_name'] ?? 'Other';
-                                    }
-                                }
-                                foreach ($programs_list as $code => $name): 
+                                if ($sections_result->num_rows == 0): ?>
+                                    <tr><td colspan="5" class="text-center py-5 text-muted">No sections available for enrollment.</td></tr>
+                                <?php else: while ($section = $sections_result->fetch_assoc()): 
+                                    $pct = $section['max_capacity'] > 0 ? ($section['current_enrolled'] / $section['max_capacity']) * 100 : 0;
+                                    $b_clr = $pct >= 90 ? 'bg-danger' : ($pct >= 70 ? 'bg-warning' : 'bg-success');
                                 ?>
-                                <option value="<?php echo htmlspecialchars($code); ?>"><?php echo htmlspecialchars($code . ' - ' . $name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-hover table-sm" id="sectionsTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Section</th>
-                                        <th>Subject</th>
-                                        <th>Program</th>
-                                        <th>Year Level</th>
-                                        <th>Schedule</th>
-                                        <th>Slots</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php 
-                                    $sections_result->data_seek(0);
-                                    while ($section = $sections_result->fetch_assoc()): 
-                                        $percentage = $section['max_capacity'] > 0 ? ($section['current_enrolled'] / $section['max_capacity']) * 100 : 0;
-                                        $badge_class = $percentage >= 90 ? 'bg-warning' : 'bg-success';
-                                    ?>
-                                    <tr data-program="<?php echo htmlspecialchars($section['program_code'] ?? 'Other'); ?>">
-                                        <td>
-                                            <strong><?php echo htmlspecialchars($section['section_name'] ?? 'TBA'); ?></strong>
-                                            <?php if ($section['room']): ?>
-                                            <br><small class="text-muted">Room: <?php echo htmlspecialchars($section['room']); ?></small>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <strong><?php echo htmlspecialchars($section['subject_code'] ?? '-'); ?></strong>
-                                            <br><small class="text-muted"><?php echo htmlspecialchars($section['subject_title'] ?? '-'); ?></small>
-                                            <?php if ($section['units']): ?>
-                                            <br><small class="badge bg-secondary"><?php echo $section['units']; ?> units</small>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><small><?php echo htmlspecialchars($section['program_code'] ?? '-'); ?></small></td>
-                                        <td><small><?php echo htmlspecialchars($section['year_level'] ?? '-'); ?></small></td>
-                                        <td>
-                                            <small><?php echo htmlspecialchars($section['schedule'] ?? 'TBA'); ?></small>
-                                            <?php if ($section['teacher_name']): ?>
-                                            <br><small class="text-muted"><?php echo htmlspecialchars($section['teacher_name']); ?></small>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <span class="badge <?php echo $badge_class; ?>">
-                                                <?php echo $section['current_enrolled']; ?>/<?php echo $section['max_capacity']; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary enroll-btn" 
-                                                    data-class-id="<?php echo $section['id']; ?>"
-                                                    data-class-name="<?php echo htmlspecialchars(($section['section_name'] ?? '') . ' - ' . ($section['subject_code'] ?? '')); ?>"
-                                                    disabled>
-                                                <i class="bi bi-plus-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <?php if ($sections_result->num_rows == 0): ?>
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-grid-3x3-gap display-4"></i>
-                            <p class="mt-2">No sections available. Please contact the Branch Admin to create sections.</p>
-                        </div>
-                        <?php endif; ?>
+                                <tr data-program="<?php echo htmlspecialchars($section['program_code'] ?? 'Other'); ?>">
+                                    <td>
+                                        <div class="fw-bold text-dark"><?php echo htmlspecialchars($section['section_name']); ?></div>
+                                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?php echo htmlspecialchars($section['room'] ?: 'TBA'); ?></small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-blue small"><?php echo htmlspecialchars($section['subject_code']); ?></div>
+                                        <small class="text-muted text-truncate d-block" style="max-width: 180px;"><?php echo htmlspecialchars($section['subject_title']); ?></small>
+                                        <span class="badge bg-light text-dark border small mt-1"><?php echo $section['units']; ?> Units</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted d-block" style="font-size:0.75rem;"><i class="bi bi-clock me-1 text-maroon"></i><?php echo htmlspecialchars($section['schedule'] ?: 'TBA'); ?></small>
+                                        <small class="text-muted italic"><i class="bi bi-person me-1"></i><?php echo htmlspecialchars($section['teacher_name'] ?: 'No Teacher'); ?></small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge <?php echo $b_clr; ?> px-2 py-2 w-100"><?php echo $section['current_enrolled']; ?> / <?php echo $section['max_capacity']; ?></span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn-enroll-action enroll-btn" 
+                                                data-class-id="<?php echo $section['id']; ?>"
+                                                data-class-name="<?php echo htmlspecialchars($section['section_name'] . ' - ' . $section['subject_code']); ?>"
+                                                disabled>
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endwhile; endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -280,7 +267,9 @@ include '../../includes/header.php';
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php include '../../includes/footer.php'; ?>
+
+<!-- --- JAVASCRIPT LOGIC - UNTOUCHED & RE-WIRED --- -->
 <script>
 let selectedStudentId = null;
 let selectedStudentName = '';
@@ -290,16 +279,10 @@ let selectedHasPayment = false;
 document.getElementById('studentSearch').addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const studentItems = document.querySelectorAll('.student-item');
-    
     studentItems.forEach(item => {
         const name = item.getAttribute('data-student-name').toLowerCase();
         const studentNo = item.getAttribute('data-student-no').toLowerCase();
-        
-        if (name.includes(searchTerm) || studentNo.includes(searchTerm)) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
-        }
+        item.style.display = (name.includes(searchTerm) || studentNo.includes(searchTerm)) ? '' : 'none';
     });
 });
 
@@ -307,142 +290,88 @@ document.getElementById('studentSearch').addEventListener('input', function(e) {
 document.getElementById('programFilter').addEventListener('change', function(e) {
     const selectedProgram = e.target.value;
     const rows = document.querySelectorAll('#sectionsTable tbody tr');
-    
     rows.forEach(row => {
-        if (!selectedProgram || row.getAttribute('data-program') === selectedProgram) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
+        if (!selectedProgram || row.getAttribute('data-program') === selectedProgram) { row.style.display = ''; } 
+        else { row.style.display = 'none'; }
     });
 });
 
-// Student selection
+// Student selection (RESTORED logic)
 document.querySelectorAll('.student-item').forEach(item => {
     item.addEventListener('click', function(e) {
         e.preventDefault();
-        
-        // Remove active class from all items
         document.querySelectorAll('.student-item').forEach(i => i.classList.remove('active'));
-        
-        // Add active class to clicked item
         this.classList.add('active');
         
-        // Store selected student
         selectedStudentId = this.getAttribute('data-student-id');
         selectedStudentName = this.getAttribute('data-student-name');
         selectedHasPayment = this.getAttribute('data-has-payment') === '1';
         
-        // Update badge
         const badge = document.getElementById('selectedStudentBadge');
-        badge.textContent = 'Selected: ' + selectedStudentName;
+        badge.innerHTML = `<i class="bi bi-person-fill me-2"></i>Selecting: ${selectedStudentName}`;
         badge.style.display = 'inline-block';
 
         const warning = document.getElementById('paymentWarning');
-        if (!selectedHasPayment) {
-            warning.style.display = 'block';
-        } else {
-            warning.style.display = 'none';
-        }
+        warning.style.display = (!selectedHasPayment) ? 'block' : 'none';
         
-        // Enable enroll buttons if has payment
         document.querySelectorAll('.enroll-btn').forEach(btn => btn.disabled = !selectedHasPayment);
-        
-        // Load current enrollments
         loadCurrentEnrollments(selectedStudentId);
     });
 });
 
-// Load current enrollments for selected student
+// AJAX: Load current enrollments (RESTORED endpoint)
 async function loadCurrentEnrollments(studentId) {
     const card = document.getElementById('currentEnrollmentsCard');
     const list = document.getElementById('currentEnrollmentsList');
-    
     try {
         const response = await fetch(`process/get_student_enrollments.php?student_id=${studentId}`);
         const data = await response.json();
-        
         if (data.status === 'success' && data.enrollments.length > 0) {
             list.innerHTML = data.enrollments.map(e => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center p-3">
                     <div>
-                        <strong>${e.subject_code || 'N/A'}</strong><br>
+                        <div class="fw-bold text-dark small">${e.subject_code || 'N/A'}</div>
                         <small class="text-muted">${e.section_name || 'TBA'}</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger unenroll-btn" 
-                            data-enrollment-id="${e.enrollment_id}"
-                            data-class-name="${e.subject_code}">
-                        <i class="bi bi-x-circle"></i>
+                    <button class="btn btn-sm btn-outline-danger unenroll-btn border-0" data-enrollment-id="${e.enrollment_id}" data-class-name="${e.subject_code}">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </li>
             `).join('');
             card.style.display = 'block';
-            
-            // Attach unenroll handlers
-            document.querySelectorAll('.unenroll-btn').forEach(btn => {
-                btn.addEventListener('click', handleUnenroll);
-            });
+            document.querySelectorAll('.unenroll-btn').forEach(btn => btn.addEventListener('click', handleUnenroll));
         } else {
-            list.innerHTML = '<li class="list-group-item text-muted">No current enrollments</li>';
+            list.innerHTML = '<li class="list-group-item text-muted small p-4 text-center">No active enrollments for this student</li>';
             card.style.display = 'block';
         }
-    } catch (error) {
-        console.error('Error loading enrollments:', error);
-    }
+    } catch (error) { console.error('Error loading enrollments:', error); }
 }
 
-// Handle unenroll
+// AJAX: Handle Unenroll (RESTORED endpoint)
 async function handleUnenroll() {
     const enrollmentId = this.getAttribute('data-enrollment-id');
     const className = this.getAttribute('data-class-name');
-    
-    if (!confirm(`Remove ${selectedStudentName} from ${className}?`)) {
-        return;
-    }
-    
+    if (!confirm(`Remove load ${className} from ${selectedStudentName}?`)) return;
     try {
         const formData = new FormData();
         formData.append('enrollment_id', enrollmentId);
-        
-        const response = await fetch('process/unenroll_student.php', {
-            method: 'POST',
-            body: formData
-        });
-        
+        const response = await fetch('process/unenroll_student.php', { method: 'POST', body: formData });
         const data = await response.json();
-        
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred during unenrollment', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1000); } 
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('Error during unenrollment', 'danger'); }
 }
 
-// Enrollment process
+// AJAX: Enrollment Process (RESTORED endpoint)
 document.querySelectorAll('.enroll-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
-        if (!selectedStudentId) {
-            showAlert('Please select a student first', 'warning');
-            return;
-        }
-
-        if (!selectedHasPayment) {
-            showAlert('Student has no payment recorded. Please record a payment first.', 'danger');
-            return;
-        }
+        if (!selectedStudentId) return showAlert('Please select a student', 'warning');
+        if (!selectedHasPayment) return showAlert('Financial clearance required', 'danger');
         
         const classId = this.getAttribute('data-class-id');
         const className = this.getAttribute('data-class-name');
+        if (!confirm(`Enroll ${selectedStudentName} in ${className}?`)) return;
         
-        if (!confirm(`Enroll ${selectedStudentName} in ${className}?`)) {
-            return;
-        }
-        
-        // Disable button and show loading
         this.disabled = true;
         this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
         
@@ -450,41 +379,17 @@ document.querySelectorAll('.enroll-btn').forEach(btn => {
             const formData = new FormData();
             formData.append('student_id', selectedStudentId);
             formData.append('class_id', classId);
-            
-            const response = await fetch('process/process_enroll.php', {
-                method: 'POST',
-                body: formData
-            });
-            
+            const response = await fetch('process/process_enroll.php', { method: 'POST', body: formData });
             const data = await response.json();
-            
-            if (data.status === 'success') {
-                showAlert(data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showAlert(data.message, 'danger');
-                this.disabled = false;
-                this.innerHTML = '<i class="bi bi-plus-circle"></i>';
-            }
-        } catch (error) {
-            showAlert('An error occurred during enrollment', 'danger');
-            this.disabled = false;
-            this.innerHTML = '<i class="bi bi-plus-circle"></i>';
-        }
+            if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1000); } 
+            else { showAlert(data.message, 'danger'); this.disabled = false; this.innerHTML = '<i class="bi bi-plus-lg"></i>'; }
+        } catch (error) { showAlert('Enrollment failed', 'danger'); this.disabled = false; }
     });
 });
 
 function showAlert(message, type) {
-    const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
+    const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm animate__animated animate__shakeX" role="alert"><i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     document.getElementById('alertContainer').innerHTML = alertHtml;
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </body>

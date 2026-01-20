@@ -9,11 +9,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_STUDENT) {
 $page_title = "My Classes";
 $student_id = $_SESSION['user_id'];
 
-// Get current academic year
+/** 
+ * BACKEND LOGIC - UNTOUCHED 
+ */
 $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
 $current_ay_id = $current_ay['id'] ?? 0;
 
-// Get enrolled section
 $section_info = $conn->query("
     SELECT s.*, 
            COALESCE(p.program_name, ss.strand_name) as program_name,
@@ -35,7 +36,6 @@ $section_info = $conn->query("
 
 $section_id = $section_info['id'] ?? 0;
 
-// Get subjects for current section
 $subjects = [];
 if ($section_id > 0) {
     $subjects_query = $conn->query("
@@ -63,7 +63,6 @@ if ($section_id > 0) {
     }
 }
 
-// Get classmates
 $classmates = [];
 if ($section_id > 0) {
     $classmates_query = $conn->query("
@@ -80,185 +79,192 @@ if ($section_id > 0) {
 }
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+<style>
+    /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+
+    /* --- FANTASTIC CLASS UI --- */
+    .section-banner-card {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); border-left: 6px solid var(--maroon);
+        margin-bottom: 30px; overflow: hidden;
+    }
     
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="fw-bold mb-1"><i class="bi bi-book-fill text-primary me-2"></i>My Classes</h4>
-                <small class="text-muted"><?php echo htmlspecialchars($current_ay['year_name'] ?? ''); ?></small>
+    .info-label { font-size: 0.65rem; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .info-value { font-weight: 700; color: var(--blue); font-size: 1rem; }
+
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
+    }
+    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+    .table-modern thead th { background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; padding: 15px 20px; position: sticky; top: -1px; z-index: 5; }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+
+    .classmate-circle {
+        width: 40px; height: 40px; border-radius: 50%; background: #eee;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; color: var(--maroon); border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .classmate-item {
+        padding: 10px; border-radius: 12px; transition: 0.3s;
+    }
+    .classmate-item:hover { background: #f8f9fa; transform: scale(1.02); }
+
+    .btn-enter-class {
+        background-color: var(--maroon); color: white; border: none;
+        border-radius: 8px; font-weight: 700; padding: 6px 15px; transition: 0.3s;
+    }
+    .btn-enter-class:hover { background-color: #600000; color: white; }
+
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+    }
+</style>
+
+<!-- Part 1: Fixed Header -->
+<div class="header-fixed-part animate__animated animate__fadeInDown">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0" style="color: var(--blue);"><i class="bi bi-book-half me-2 text-maroon"></i>My Current Classes</h4>
+            <p class="text-muted small mb-0">Academic Year: <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?></p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-dark text-maroon border px-3 py-2 rounded-pill shadow-sm">
+                <i class="bi bi-people-fill me-1"></i> Peers: <?php echo count($classmates); ?>
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Part 2: Scrollable Body -->
+<div class="body-scroll-part">
+    
+    <?php if (!$section_info): ?>
+    <div class="alert bg-white border-start border-warning border-4 shadow-sm p-4 animate__animated animate__shakeX">
+        <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+        <div>
+            <h6 class="fw-bold mb-1">No Section Assignment</h6>
+            <p class="mb-0 small text-muted">You are not currently enrolled in any section for this academic year. Please contact the registrar.</p>
+        </div>
+    </div>
+    <?php else: ?>
+
+    <!-- Section Information Banner -->
+    <div class="section-banner-card p-4 animate__animated animate__fadeIn">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-3 border-end">
+                <label class="info-label">Section Name</label>
+                <div class="h4 fw-bold text-maroon mb-0"><?php echo htmlspecialchars($section_info['section_name']); ?></div>
+            </div>
+            <div class="col-md-4 border-end px-md-4">
+                <label class="info-label">Academic Program</label>
+                <div class="info-value"><?php echo htmlspecialchars($section_info['program_name']); ?></div>
+                <small class="text-muted"><?php echo htmlspecialchars($section_info['program_code']); ?> | <?php echo htmlspecialchars($section_info['year_level']); ?></small>
+            </div>
+            <div class="col-md-3 border-end px-md-4">
+                <label class="info-label">Class Adviser</label>
+                <div class="info-value" style="font-size: 0.9rem;"><i class="bi bi-person-badge me-2 text-muted"></i><?php echo htmlspecialchars($section_info['adviser_name'] ?? 'TBA'); ?></div>
+                <small class="text-muted">Room: <?php echo htmlspecialchars($section_info['room'] ?? 'TBA'); ?></small>
+            </div>
+            <div class="col-md-2 text-center">
+                <span class="badge bg-blue px-3 py-2"><?php echo htmlspecialchars($section_info['semester']); ?> Semester</span>
             </div>
         </div>
+    </div>
 
-        <?php if (!$section_info): ?>
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            You are not enrolled in any section for this academic year. Please contact the registrar.
+    <!-- Subjects List -->
+    <div class="main-card-modern mb-5 animate__animated animate__fadeInUp">
+        <div class="card-header-modern d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-journal-check me-2"></i>Enrolled Subjects (<?php echo count($subjects); ?>)</span>
         </div>
-        <?php else: ?>
-
-        <!-- Section Info Card -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5 class="fw-bold text-primary mb-3">
-                            <i class="bi bi-collection me-2"></i>Section Information
-                        </h5>
-                        <table class="table table-borderless mb-0">
-                            <tr>
-                                <td class="text-muted" width="150">Section:</td>
-                                <td><strong><?php echo htmlspecialchars($section_info['section_name']); ?></strong></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Program:</td>
-                                <td><?php echo htmlspecialchars($section_info['program_name']); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Year Level:</td>
-                                <td><?php echo htmlspecialchars($section_info['year_level']); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Semester:</td>
-                                <td><?php echo htmlspecialchars($section_info['semester']); ?> Semester</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h5 class="fw-bold text-primary mb-3">
-                            <i class="bi bi-info-circle me-2"></i>Additional Info
-                        </h5>
-                        <table class="table table-borderless mb-0">
-                            <tr>
-                                <td class="text-muted" width="150">Branch:</td>
-                                <td><?php echo htmlspecialchars($section_info['branch_name']); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Room:</td>
-                                <td><?php echo htmlspecialchars($section_info['room'] ?? 'TBA'); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Adviser:</td>
-                                <td><?php echo htmlspecialchars($section_info['adviser_name'] ?? 'TBA'); ?></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Classmates:</td>
-                                <td><?php echo count($classmates); ?> students</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-modern align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Subject & Code</th>
+                        <th class="text-center">Units</th>
+                        <th>Instructor</th>
+                        <th class="text-center">Resources</th>
+                        <th class="text-end pe-4">Enter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($subjects)): ?>
+                        <tr><td colspan="5" class="text-center py-5 text-muted">No subjects have been assigned to this section yet.</td></tr>
+                    <?php else: foreach ($subjects as $subject): ?>
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($subject['subject_title']); ?></div>
+                                <span class="badge bg-light text-blue border border-blue small" style="font-size: 0.65rem;"><?php echo htmlspecialchars($subject['subject_code']); ?></span>
+                            </td>
+                            <td class="text-center fw-bold text-maroon"><?php echo $subject['units']; ?></td>
+                            <td>
+                                <?php if ($subject['teacher_name']): ?>
+                                    <div class="fw-bold text-dark small">Prof. <?php echo htmlspecialchars($subject['teacher_name']); ?></div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;"><?php echo htmlspecialchars($subject['teacher_email']); ?></div>
+                                <?php else: ?>
+                                    <span class="text-muted italic small">To be assigned</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-light text-info border border-info px-3">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i><?php echo $subject['materials_count']; ?>
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="subject_view.php?id=<?php echo $subject['id']; ?>&teacher=<?php echo $subject['teacher_id']; ?>" class="btn btn-enter-class shadow-sm">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
         </div>
+    </div>
 
-        <!-- Subjects -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-journal-text text-success me-2"></i>Enrolled Subjects (<?php echo count($subjects); ?>)</h5>
-            </div>
-            <div class="card-body p-0">
-                <?php if (empty($subjects)): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox display-4"></i>
-                    <p class="mt-2">No subjects assigned yet</p>
-                </div>
+    <!-- Classmates Accordion -->
+    <div class="main-card-modern animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+        <div class="card-header-modern bg-white d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-people-fill me-2 text-info"></i>Class Peers (<?php echo count($classmates); ?>)</span>
+            <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse" data-bs-target="#peerGrid">
+                <i class="bi bi-chevron-expand"></i>
+            </button>
+        </div>
+        <div class="collapse show" id="peerGrid">
+            <div class="card-body p-4">
+                <?php if (empty($classmates)): ?>
+                    <div class="text-center py-3 text-muted small">No other students enrolled in this section.</div>
                 <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Subject Code</th>
-                                <th>Subject Title</th>
-                                <th>Units</th>
-                                <th>Schedule</th>
-                                <th>Teacher</th>
-                                <th class="text-center">Materials</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($subjects as $subject): ?>
-                            <tr>
-                                <td>
-                                    <span class="badge bg-primary"><?php echo htmlspecialchars($subject['subject_code']); ?></span>
-                                </td>
-                                <td>
-                                    <strong><?php echo htmlspecialchars($subject['subject_title']); ?></strong>
-                                    <br>
-                                    <small class="text-muted">
-                                        Lecture: <?php echo $subject['lecture_hours']; ?>hrs | 
-                                        Lab: <?php echo $subject['lab_hours']; ?>hrs
-                                    </small>
-                                </td>
-                                <td><?php echo $subject['units']; ?></td>
-                                <td><small class="text-muted">See schedule</small></td>
-                                <td>
-                                    <?php if ($subject['teacher_name']): ?>
-                                    <div>
-                                        <i class="bi bi-person-badge me-1"></i>
-                                        <?php echo htmlspecialchars($subject['teacher_name']); ?>
-                                    </div>
-                                    <small class="text-muted"><?php echo htmlspecialchars($subject['teacher_email']); ?></small>
-                                    <?php else: ?>
-                                    <span class="badge bg-secondary">TBA</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-info"><?php echo $subject['materials_count']; ?></span>
-                                </td>
-                                <td>
-                                    <a href="subject_view.php?id=<?php echo $subject['id']; ?>&teacher=<?php echo $subject['teacher_id']; ?>" 
-                                       class="btn btn-sm btn-primary">
-                                        <i class="bi bi-arrow-right"></i> Enter
-                                    </a>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Classmates -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-people text-info me-2"></i>Classmates (<?php echo count($classmates); ?>)</h5>
-                <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#classmatesList">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-            <div class="collapse" id="classmatesList">
-                <div class="card-body">
-                    <?php if (empty($classmates)): ?>
-                    <p class="text-muted text-center mb-0">No classmates found</p>
-                    <?php else: ?>
-                    <div class="row">
-                        <?php foreach ($classmates as $classmate): ?>
-                        <div class="col-md-4 col-lg-3 mb-3">
-                            <div class="d-flex align-items-center p-2 border rounded">
-                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
-                                     style="width: 40px; height: 40px;">
-                                    <?php echo strtoupper(substr($classmate['name'], 0, 1)); ?>
+                    <div class="row g-3">
+                        <?php foreach ($classmates as $mate): ?>
+                        <div class="col-md-4 col-lg-3">
+                            <div class="classmate-item d-flex align-items-center border shadow-xs">
+                                <div class="classmate-circle me-3">
+                                    <?php echo strtoupper(substr($mate['name'], 0, 1)); ?>
                                 </div>
-                                <div>
-                                    <small class="fw-bold d-block"><?php echo htmlspecialchars($classmate['name']); ?></small>
-                                    <small class="text-muted"><?php echo htmlspecialchars($classmate['email']); ?></small>
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-dark text-truncate small"><?php echo htmlspecialchars($mate['name']); ?></div>
+                                    <div class="text-muted text-truncate" style="font-size: 0.7rem;"><?php echo htmlspecialchars($mate['email']); ?></div>
                                 </div>
                             </div>
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <?php endif; ?>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
-        <?php endif; ?>
     </div>
+
+    <?php endif; ?>
 </div>
 
 <?php include '../../includes/footer.php'; ?>

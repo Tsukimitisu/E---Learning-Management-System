@@ -9,11 +9,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_STUDENT) {
 $student_id = $_SESSION['user_id'];
 $page_title = "Class Schedule";
 
-// Get current academic year
+/** 
+ * BACKEND LOGIC - UNTOUCHED 
+ */
 $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
 $current_ay_id = $current_ay['id'] ?? 0;
 
-// Get student's section
 $section = $conn->query("
     SELECT sst.*, sec.*, 
            p.program_name, p.program_code,
@@ -26,14 +27,9 @@ $section = $conn->query("
     LIMIT 1
 ")->fetch_assoc();
 
-// Get schedule from classes table if available
 $classes = [];
 if ($section) {
     $section_name = $section['section_name'];
-    $program_id = $section['program_id'];
-    $strand_id = $section['shs_strand_id'];
-    
-    // Try to get schedule from classes
     $classes_query = $conn->query("
         SELECT cl.*, cs.subject_code, cs.subject_title, cs.units,
                CONCAT(up.first_name, ' ', up.last_name) as teacher_name
@@ -43,31 +39,20 @@ if ($section) {
         WHERE cl.section_name = '$section_name' AND cl.academic_year_id = $current_ay_id
         ORDER BY cl.schedule
     ");
-    while ($row = $classes_query->fetch_assoc()) {
-        $classes[] = $row;
-    }
+    while ($row = $classes_query->fetch_assoc()) { $classes[] = $row; }
 }
 
-// Get subjects from teacher assignments for schedule display
 $subjects = [];
 if ($section) {
     $branch_id = $section['branch_id'];
     $program_id = $section['program_id'] ?? 0;
     $strand_id = $section['shs_strand_id'] ?? 0;
-    
-    // Build WHERE conditions based on available data
     $where_conditions = [];
-    if ($program_id > 0) {
-        $where_conditions[] = "cs.program_id = $program_id";
-    }
-    if ($strand_id > 0) {
-        $where_conditions[] = "cs.shs_strand_id = $strand_id";
-    }
+    if ($program_id > 0) { $where_conditions[] = "cs.program_id = $program_id"; }
+    if ($strand_id > 0) { $where_conditions[] = "cs.shs_strand_id = $strand_id"; }
     
-    // Only query if we have valid conditions
     if (!empty($where_conditions)) {
         $program_filter = "(" . implode(" OR ", $where_conditions) . ")";
-        
         $subjects_query = $conn->query("
             SELECT tsa.*, cs.subject_code, cs.subject_title, cs.units,
                    cs.lecture_hours, cs.lab_hours,
@@ -81,188 +66,192 @@ if ($section) {
               AND $program_filter
             ORDER BY cs.subject_code
         ");
-        while ($row = $subjects_query->fetch_assoc()) {
-            $subjects[] = $row;
-        }
+        while ($row = $subjects_query->fetch_assoc()) { $subjects[] = $row; }
     }
 }
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
-    
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="fw-bold mb-1"><i class="bi bi-calendar-week me-2"></i>Class Schedule</h4>
-                <small class="text-muted">Academic Year: <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?></small>
-            </div>
-            <?php if ($section): ?>
-            <span class="badge bg-primary fs-6"><?php echo htmlspecialchars($section['section_name']); ?></span>
-            <?php endif; ?>
-        </div>
+<style>
+    /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
 
-        <?php if (!$section): ?>
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            You are not currently enrolled in any section. Please contact the registrar's office.
-        </div>
-        <?php else: ?>
+    /* --- FANTASTIC SCHEDULE UI --- */
+    .section-info-card {
+        background: white; border-radius: 15px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        border-left: 6px solid var(--maroon);
+        overflow: hidden; margin-bottom: 30px;
+    }
 
-        <!-- Section Info Card -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-3 text-center border-end">
-                        <div class="display-6 text-primary fw-bold"><?php echo htmlspecialchars($section['section_name']); ?></div>
-                        <small class="text-muted">Section</small>
-                    </div>
-                    <div class="col-md-3">
-                        <span class="text-muted small">Program/Strand</span>
-                        <div class="fw-bold"><?php echo htmlspecialchars($section['program_name'] ?? $section['strand_name'] ?? 'N/A'); ?></div>
-                    </div>
-                    <div class="col-md-3">
-                        <span class="text-muted small">Year Level</span>
-                        <div class="fw-bold"><?php echo htmlspecialchars($section['year_level'] ?? 'N/A'); ?></div>
-                    </div>
-                    <div class="col-md-3">
-                        <span class="text-muted small">Semester</span>
-                        <div class="fw-bold"><?php echo ucfirst($section['semester'] ?? 'N/A'); ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    .table-modern { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+    .table-modern thead th { 
+        background: var(--blue); color: white; font-size: 0.75rem; 
+        text-transform: uppercase; letter-spacing: 1px; padding: 15px 20px; border: none;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
 
-        <!-- Schedule from Classes Table -->
-        <?php if (!empty($classes)): ?>
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-clock text-primary me-2"></i>Class Schedule</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Subject Code</th>
-                                <th>Subject Title</th>
-                                <th>Units</th>
-                                <th>Schedule</th>
-                                <th>Room</th>
-                                <th>Instructor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($classes as $class): ?>
-                            <tr>
-                                <td>
-                                    <span class="badge bg-primary"><?php echo htmlspecialchars($class['subject_code']); ?></span>
-                                </td>
-                                <td><?php echo htmlspecialchars($class['subject_title']); ?></td>
-                                <td class="text-center"><?php echo $class['units']; ?></td>
-                                <td>
-                                    <?php if ($class['schedule']): ?>
-                                    <i class="bi bi-clock me-1"></i><?php echo htmlspecialchars($class['schedule']); ?>
-                                    <?php else: ?>
-                                    <span class="text-muted">TBA</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($class['room']): ?>
-                                    <i class="bi bi-geo-alt me-1"></i><?php echo htmlspecialchars($class['room']); ?>
-                                    <?php else: ?>
-                                    <span class="text-muted">TBA</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($class['teacher_name']): ?>
-                                    <i class="bi bi-person me-1"></i><?php echo htmlspecialchars($class['teacher_name']); ?>
-                                    <?php else: ?>
-                                    <span class="text-muted">TBA</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
+    .schedule-badge { background: #e7f5ff; color: var(--blue); font-weight: 700; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; }
+    .unit-badge { background: #fff5f5; color: var(--maroon); font-weight: 800; padding: 5px 10px; border-radius: 6px; }
 
-        <!-- Subjects List -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-book text-success me-2"></i>Enrolled Subjects</h5>
-            </div>
-            <div class="card-body p-0">
-                <?php if (empty($subjects)): ?>
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-calendar-x display-4"></i>
-                    <p class="mb-0 mt-2">No subjects assigned yet</p>
-                </div>
-                <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Subject Code</th>
-                                <th>Subject Title</th>
-                                <th class="text-center">Units</th>
-                                <th class="text-center">Lec Hours</th>
-                                <th class="text-center">Lab Hours</th>
-                                <th>Instructor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            $total_units = 0;
-                            foreach ($subjects as $subject): 
-                                $total_units += $subject['units'];
-                            ?>
-                            <tr>
-                                <td>
-                                    <a href="subject_view.php?id=<?php echo $subject['curriculum_subject_id']; ?>&teacher=<?php echo $subject['teacher_id']; ?>" 
-                                       class="text-decoration-none">
-                                        <span class="badge bg-primary"><?php echo htmlspecialchars($subject['subject_code']); ?></span>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="subject_view.php?id=<?php echo $subject['curriculum_subject_id']; ?>&teacher=<?php echo $subject['teacher_id']; ?>" 
-                                       class="text-decoration-none text-dark">
-                                        <?php echo htmlspecialchars($subject['subject_title']); ?>
-                                    </a>
-                                </td>
-                                <td class="text-center"><?php echo $subject['units']; ?></td>
-                                <td class="text-center"><?php echo $subject['lecture_hours']; ?></td>
-                                <td class="text-center"><?php echo $subject['lab_hours']; ?></td>
-                                <td>
-                                    <?php if ($subject['teacher_name']): ?>
-                                    <i class="bi bi-person me-1"></i><?php echo htmlspecialchars($subject['teacher_name']); ?>
-                                    <?php else: ?>
-                                    <span class="text-muted">TBA</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <th colspan="2" class="text-end">Total Units:</th>
-                                <th class="text-center"><?php echo $total_units; ?></th>
-                                <th colspan="3"></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
+    /* Mobile handling */
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+        .section-info-card .row > div { border: none !important; margin-bottom: 15px; text-align: center; }
+    }
+</style>
 
-        <?php endif; ?>
+<!-- Part 1: Fixed Header -->
+<div class="header-fixed-part d-flex justify-content-between align-items-center animate__animated animate__fadeInDown">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">
+                <li class="breadcrumb-item"><a href="dashboard.php" style="color: var(--maroon); text-decoration: none;">Student Portal</a></li>
+                <li class="breadcrumb-item active">Schedule</li>
+            </ol>
+        </nav>
+        <h4 class="fw-bold mb-0" style="color: var(--blue);"><i class="bi bi-calendar-week-fill me-2"></i>Registration & Schedule</h4>
     </div>
+    <div class="text-end">
+        <span class="badge bg-light text-dark border px-3 py-2 shadow-sm">
+            AY: <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?>
+        </span>
+    </div>
+</div>
+
+<!-- Part 2: Scrollable Body -->
+<div class="body-scroll-part">
+    
+    <?php if (!$section): ?>
+    <div class="alert bg-white border-start border-warning border-4 shadow-sm p-4 animate__animated animate__shakeX">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+            <div>
+                <h6 class="fw-bold mb-1">Section Not Assigned</h6>
+                <p class="mb-0 small text-muted">You are not currently enrolled in any section. Please visit the Registrar's Office to finalize your enrollment.</p>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+
+    <!-- Section Identity Card -->
+    <div class="section-info-card p-4 animate__animated animate__fadeInUp">
+        <div class="row align-items-center text-center text-md-start">
+            <div class="col-md-3 border-end">
+                <small class="text-muted text-uppercase fw-bold opacity-50" style="font-size: 0.65rem;">Current Section</small>
+                <div class="h2 fw-extrabold mb-0 text-maroon"><?php echo htmlspecialchars($section['section_name']); ?></div>
+            </div>
+            <div class="col-md-4 border-end px-md-4">
+                <small class="text-muted text-uppercase fw-bold opacity-50" style="font-size: 0.65rem;">Academic Program</small>
+                <div class="fw-bold text-dark"><?php echo htmlspecialchars($section['program_name'] ?? $section['strand_name'] ?? 'N/A'); ?></div>
+                <small class="text-muted"><?php echo htmlspecialchars($section['program_code'] ?? $section['strand_code'] ?? ''); ?></small>
+            </div>
+            <div class="col-md-3 border-end px-md-4">
+                <small class="text-muted text-uppercase fw-bold opacity-50" style="font-size: 0.65rem;">Year & Semester</small>
+                <div class="fw-bold text-dark"><?php echo htmlspecialchars($section['year_level'] ?? 'N/A'); ?></div>
+                <span class="badge bg-blue small"><?php echo ucfirst($section['semester'] ?? 'N/A'); ?> Semester</span>
+            </div>
+            <div class="col-md-2 text-center">
+                <i class="bi bi-qr-code-scan display-6 text-muted opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Schedule Table -->
+    <?php if (!empty($classes)): ?>
+    <h6 class="fw-bold mb-3 text-uppercase small opacity-75" style="letter-spacing: 1px;"><i class="bi bi-clock-fill me-2 text-maroon"></i>Weekly Class Times</h6>
+    <div class="table-modern mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th class="text-center">Units</th>
+                        <th>Schedule</th>
+                        <th>Room</th>
+                        <th>Instructor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($classes as $class): ?>
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($class['subject_code']); ?></div>
+                            <small class="text-muted"><?php echo htmlspecialchars($class['subject_title']); ?></small>
+                        </td>
+                        <td class="text-center"><span class="unit-badge"><?php echo $class['units']; ?></span></td>
+                        <td>
+                            <span class="schedule-badge">
+                                <i class="bi bi-clock me-1"></i><?php echo $class['schedule'] ?: 'TBA'; ?>
+                            </span>
+                        </td>
+                        <td><span class="text-primary fw-semibold"><i class="bi bi-geo-alt me-1"></i><?php echo $class['room'] ?: 'TBA'; ?></span></td>
+                        <td>
+                            <small class="fw-bold text-muted">
+                                <i class="bi bi-person-badge me-1"></i><?php echo htmlspecialchars($class['teacher_name'] ?: 'To be assigned'); ?>
+                            </small>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Enrolled Curriculum List -->
+    <h6 class="fw-bold mb-3 text-uppercase small opacity-75" style="letter-spacing: 1px;"><i class="bi bi-journal-check me-2 text-maroon"></i>Enrolled Curriculum Subjects</h6>
+    <div class="table-modern animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr style="background: #f8f9fa;">
+                        <th class="ps-4">Code</th>
+                        <th>Title</th>
+                        <th class="text-center">Units</th>
+                        <th class="text-center">Hours (Lec/Lab)</th>
+                        <th>Assigned Teacher</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $total_units = 0;
+                    if (empty($subjects)): ?>
+                        <tr><td colspan="5" class="text-center py-5 text-muted">No specific curriculum subjects listed for this section.</td></tr>
+                    <?php else: 
+                        foreach ($subjects as $subject): 
+                        $total_units += $subject['units'];
+                    ?>
+                    <tr>
+                        <td class="ps-4"><span class="badge bg-dark text-maroon border border-maroon"><?php echo htmlspecialchars($subject['subject_code']); ?></span></td>
+                        <td class="fw-bold text-dark"><?php echo htmlspecialchars($subject['subject_title']); ?></td>
+                        <td class="text-center fw-bold"><?php echo $subject['units']; ?></td>
+                        <td class="text-center"><small class="text-muted"><?php echo $subject['lecture_hours']; ?> / <?php echo $subject['lab_hours']; ?></small></td>
+                        <td>
+                            <small class="text-muted italic">
+                                <?php echo $subject['teacher_name'] ? '<i class="bi bi-person me-1"></i>'.htmlspecialchars($subject['teacher_name']) : 'TBA'; ?>
+                            </small>
+                        </td>
+                    </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold" style="background: #fcfcfc;">
+                        <td colspan="2" class="text-end ps-4 text-uppercase small">Total Academic Units Enrolled:</td>
+                        <td class="text-center"><span class="h5 mb-0 fw-bold text-maroon"><?php echo $total_units; ?></span></td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <?php endif; ?>
 </div>
 
 <?php include '../../includes/footer.php'; ?>

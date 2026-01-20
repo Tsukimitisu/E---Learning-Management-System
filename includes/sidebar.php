@@ -1,14 +1,17 @@
 <!-- Sidebar Overlay for Mobile -->
-<div class="overlay" id="sidebarOverlay"></div>
+<div class="overlay animate__animated animate__fadeIn" id="sidebarOverlay"></div>
 
 <nav id="sidebar">
     <!-- Top Branding Section (Maroon) -->
     <div class="sidebar-header shadow-sm">
         <img src="../../assets/image/datamexlogo.png" alt="ELMS Logo" class="sidebar-logo">
-        <h3 class="mb-0 fw-bold" style="font-size: 1.1rem; letter-spacing: 1px;">ELMS</h3>
-        <p class="mb-0 small opacity-75" style="font-size: 0.65rem; letter-spacing: 2px;">DATAMEX COLLEGE OF SAINT ADELINE</p>
+        <div class="brand-text text-center">
+            <h3 class="mb-0 fw-bold" style="font-size: 1.1rem; letter-spacing: 1px;">ELMS</h3>
+            <p class="mb-0 small opacity-75" style="font-size: 0.6rem; letter-spacing: 1px;">DATAMEX COLLEGE</p>
+        </div>
     </div>
 
+    <!-- Branch Admin Context (Backend logic preserved) -->
     <?php if (($_SESSION['role_id'] ?? null) == ROLE_BRANCH_ADMIN): ?>
         <?php
             $branch_label = 'Unassigned';
@@ -24,9 +27,9 @@
                 $branch_stmt->close();
             }
         ?>
-        <div class="px-3 py-2" style="background-color: #e7f3ff; border-bottom: 1px solid #d0e4ff;">
-            <span class="badge bg-info text-dark">
-                <i class="bi bi-building"></i> <?php echo htmlspecialchars($branch_label); ?>
+        <div class="px-3 py-2 text-center" style="background: rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span class="badge bg-light text-dark fw-bold" style="font-size: 0.65rem;">
+                <i class="bi bi-building me-1"></i> <?php echo htmlspecialchars($branch_label); ?>
             </span>
         </div>
     <?php endif; ?>
@@ -90,7 +93,7 @@
         // --- 5. TEACHER MENU ---
         if ($_SESSION['role_id'] == ROLE_TEACHER) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
-            <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php'])) ? 'active' : ''; ?>"><i class="bi bi-journal-bookmark"></i> <span>My Classes</span></a></li>
+            <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php', 'classroom.php'])) ? 'active' : ''; ?>"><i class="bi bi-journal-bookmark"></i> <span>My Classes</span></a></li>
             <li><a href="grading.php" class="<?php echo (in_array($current_page, ['grading.php', 'gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-calculator-fill"></i> <span>Grades</span></a></li>
             <li><a href="attendance.php" class="<?php echo (in_array($current_page, ['attendance.php', 'attendance_sheet.php'])) ? 'active' : ''; ?>"><i class="bi bi-calendar-check-fill"></i> <span>Attendance</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-check-fill"></i> <span>Assessments</span></a></li>
@@ -98,7 +101,7 @@
             <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-text"></i> <span>Reports</span></a></li>
         <?php }
 
-        // --- 6. STUDENT MENU ---
+        // --- 6. STUDENT MENU (RESTORED ALL MISSING ITEMS) ---
         if ($_SESSION['role_id'] == ROLE_STUDENT) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="my_classes.php" class="<?php echo (in_array($current_page, ['my_classes.php', 'subject_view.php'])) ? 'active' : ''; ?>"><i class="bi bi-book-fill"></i> <span>My Classes</span></a></li>
@@ -114,50 +117,45 @@
         <?php } ?>
     </ul>
 
-    <!-- Account Settings & Logout Section: Pinned to bottom of Blue area -->
+  <!-- Bottom Pinned Footer Section -->
     <div class="sidebar-footer">
-        <a href="../../modules/common/account_settings.php" class="<?php echo ($current_page == 'account_settings.php') ? 'active' : ''; ?>" style="display: block; padding: 10px 15px; color: rgba(255,255,255,0.8); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <i class="bi bi-gear me-3"></i> Account Settings
+        <a href="../../modules/common/account_settings.php" class="footer-link <?php echo ($current_page == 'account_settings.php') ? 'active' : ''; ?>">
+            <i class="bi bi-person-gear"></i> 
+            <span>Account Settings</span>
         </a>
-        <a href="../../logout.php" class="logout-link">
-            <i class="bi bi-box-arrow-right me-3"></i> Logout Account
+        <a href="javascript:void(0);" class="footer-link logout-link" id="logoutTrigger">
+            <i class="bi bi-box-arrow-right"></i> 
+            <span>Logout Account</span>
         </a>
     </div>
 </nav>
-
-<!-- Page Content Area Starts -->
 <div id="content">
     <!-- Navbar with Profile Alignment & Notification -->
     <nav class="navbar-custom animate__animated animate__fadeInDown">
         <div class="d-flex align-items-center">
-            <button type="button" id="sidebarCollapse" class="burger-btn me-3 position-relative">
+            <!-- NO BORDER BURGER -->
+            <button type="button" id="sidebarCollapse" class="burger-btn me-3">
                 <i class="bi bi-list"></i>
-                <!-- Mobile Notification Badge on Burger -->
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-lg-none" id="notificationBadge" style="display:none; font-size: 0.5rem;">
-                    <span id="notificationCount">0</span>
-                </span>
             </button>
             
-            <!-- Desktop Notification Bell -->
-            <div class="position-relative d-none d-lg-block me-3" style="cursor: pointer;">
-                <i class="bi bi-bell text-muted fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadgeDesktop" style="display:none; font-size: 0.6rem;">
-                    <span id="notificationCountDesktop">0</span>
+            <div class="position-relative ms-2" style="cursor:pointer;">
+                <i class="bi bi-bell fs-5 text-muted"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none; font-size: 0.5rem;">
+                    <span id="notificationCount">0</span>
                 </span>
             </div>
         </div>
         
         <div class="user-profile">
             <div class="user-info-text d-none d-sm-block">
-                <!-- Role on top (Blue bold), Name below (Muted) -->
+                <!-- Name on top (Bold), Role below (Uppercase Blue) -->
                 <span class="role" style="color: var(--blue); font-weight: 800; font-size: 0.8rem;">USER <?php echo strtoupper(htmlspecialchars($_SESSION['role'])); ?></span>
                 <span class="name" style="color: #666; font-size: 0.75rem; display: block;"><?php echo htmlspecialchars($_SESSION['name'] ?? 'User Account'); ?></span>
             </div>
-            <div class="avatar-circle shadow-sm">
+            <div class="avatar-circle">
                 <?php echo strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)); ?>
             </div>
         </div>
     </nav>
     
-    <!-- Main Scrollable Container -->
     <div class="main-content-body">
