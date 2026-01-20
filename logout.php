@@ -10,13 +10,13 @@ if (isset($_SESSION['user_id'])) {
     $stmt->bind_param("iss", $user_id, $action, $ip_address);
     $stmt->execute();
     
-    // Remove from active sessions
+    
     $session_id = session_id();
     $stmt = $conn->prepare("DELETE FROM active_sessions WHERE session_id = ?");
     $stmt->bind_param("s", $session_id);
     $stmt->execute();
     
-    // Release any resource locks held by this user
+    
     $stmt = $conn->prepare("DELETE FROM resource_locks WHERE user_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();

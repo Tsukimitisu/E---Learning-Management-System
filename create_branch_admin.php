@@ -10,7 +10,7 @@ $new_hash = password_hash($password, PASSWORD_DEFAULT);
 $check = $conn->query("SELECT id FROM users WHERE email = '$email'");
 
 if ($check->num_rows > 0) {
-    echo "<p style='color:orange;'>Branch Admin already exists.</p>";
+    // Comment removed
 } else {
     $conn->query("INSERT INTO users (email, password, status) VALUES ('$email', '$new_hash', 'active')");
     $admin_id = $conn->insert_id;
@@ -20,7 +20,7 @@ if ($check->num_rows > 0) {
     
     $conn->query("INSERT INTO user_roles (user_id, role_id) VALUES ($admin_id, 3)");
     
-    echo "<p style='color:green;'>✓ Branch Admin created!</p>";
+    // Comment removed
 }
 
 echo "<div style='background:lightgreen; padding:20px; border-radius:5px;'>";

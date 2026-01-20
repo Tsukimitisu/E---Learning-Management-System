@@ -156,8 +156,9 @@ include '../../includes/header.php';
         <!-- Academic Years List -->
         <div class="row mb-4">
             <?php 
-            $academic_years_result->data_seek(0);
-            while ($ay = $academic_years_result->fetch_assoc()): 
+            if ($academic_years_result && $academic_years_result instanceof mysqli_result) {
+                $academic_years_result->data_seek(0);
+                while ($ay = $academic_years_result->fetch_assoc()) {
             ?>
             <div class="col-md-6 col-lg-4 mb-3">
                 <div class="card ay-card <?php echo $ay['is_active'] ? 'active' : ''; ?>">
@@ -168,6 +169,17 @@ include '../../includes/header.php';
                                 <span class="badge <?php echo $ay['is_active'] ? 'bg-success' : 'bg-secondary'; ?>">
                                     <?php echo $ay['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
                                 </span>
+            <?php 
+                            }
+                // End while
+            } else {
+                echo '<div class="col-12"><div class="alert alert-danger">Failed to load academic years. Please contact the administrator.</div>';
+                if (isset($conn)) {
+                    echo '<pre style="color:red;">SQL Error: ' . htmlspecialchars($conn->error) . '</pre>';
+                }
+                echo '</div>';
+            }
+            ?>
                             </div>
                             <div class="dropdown">
                                 <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
@@ -212,7 +224,6 @@ include '../../includes/header.php';
                     </div>
                 </div>
             </div>
-            <?php endwhile; ?>
         </div>
 
         <!-- Grading Terms Configuration -->
