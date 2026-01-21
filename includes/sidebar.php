@@ -7,7 +7,7 @@
         <img src="../../assets/image/datamexlogo.png" alt="ELMS Logo" class="sidebar-logo">
         <div class="brand-text text-center">
             <h3 class="mb-0 fw-bold" style="font-size: 1.1rem; letter-spacing: 1px;">ELMS</h3>
-            <p class="mb-0 small opacity-75" style="font-size: 0.6rem; letter-spacing: 1px;">DATAMEX COLLEGE</p>
+            <p class="mb-0 small opacity-75" style="font-size: 0.6rem; letter-spacing: 1px;">DATAMEX COLLEGE OF SAINT ADELINE</p>
         </div>
     </div>
 

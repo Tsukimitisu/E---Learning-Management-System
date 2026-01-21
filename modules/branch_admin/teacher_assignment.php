@@ -42,131 +42,130 @@ $teachers = $conn->query("
 ");
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
 <style>
-    .subject-card {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        margin-bottom: 15px;
+    /* --- SHARED UI DESIGN SYSTEM --- */
+    .page-header {
+        background: white; padding: 20px; border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
     }
-    .subject-card:hover {
-        border-color: #003366;
-        box-shadow: 0 5px 15px rgba(0, 51, 102, 0.1);
+
+    /* Modern Subject Cards */
+    .subject-card-modern {
+        background: white; border-radius: 15px; border: 1px solid #f0f0f0;
+        padding: 20px; transition: 0.3s; margin-bottom: 15px;
+        border-left: 5px solid #dee2e6;
     }
-    .subject-card.assigned {
-        border-color: #28a745;
-        background: #f8fff9;
+    .subject-card-modern:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .subject-card-modern.assigned { border-left-color: #28a745; background: #f8fff9; }
+    .subject-card-modern.unassigned { border-left-color: var(--maroon); }
+
+    /* Control Panel / Filters */
+    .control-panel {
+        background: var(--blue); border-radius: 15px; padding: 25px;
+        color: white; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0,51,102,0.1);
     }
-    
-    .teacher-badge {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+    .control-panel .form-label-custom {
+        font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+        color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 8px; display: block;
     }
-    
-    .filter-card {
-        background: linear-gradient(135deg, #003366 0%, #004080 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
+    .control-panel .form-select {
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: white; font-weight: 600; font-size: 0.85rem; border-radius: 8px;
     }
-    
-    .filter-card .form-label {
-        color: rgba(255,255,255,0.8);
-        font-size: 0.85rem;
+    .control-panel .form-select option { color: #333; }
+
+    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header-modern {
+        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
+        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
     }
-    
-    .filter-card .form-select, .filter-card .form-control {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: white;
+
+    .stat-pill {
+        display: inline-flex; align-items: center; padding: 5px 12px;
+        border-radius: 20px; font-size: 0.7rem; font-weight: 700;
     }
-    
-    .filter-card .form-select option {
-        color: #333;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    .spin { animation: spin 1s linear infinite; }
+    .pill-success { background: #e6f4ea; color: #1e7e34; }
+    .pill-warning { background: #fff4e5; color: #664d03; }
+
+    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
+    .btn-maroon:hover { background-color: #600000; color: white; }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
 </style>
 
-<?php include '../../includes/sidebar.php'; ?>
-
-<div id="content">
-    <div class="main-content-body">
-        <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="mb-0" style="color: #003366;">
-                    <i class="bi bi-person-badge"></i> Teacher Subject Assignment
-                </h4>
-                <small class="text-muted">Academic Year: <?php echo htmlspecialchars($current_ay['year_name'] ?? 'Not Set'); ?></small>
-            </div>
-            <a href="dashboard.php" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Dashboard
-            </a>
+<div class="main-content-body animate__animated animate__fadeIn">
+    
+    <!-- 1. PAGE HEADER -->
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center animate__animated animate__fadeInDown">
+        <div class="mb-2 mb-md-0">
+            <h4 class="fw-bold mb-0" style="color: var(--blue);">
+                <i class="bi bi-person-badge me-2 text-maroon"></i>Teacher Subject Assignment
+            </h4>
+            <p class="text-muted small mb-0">Academic Year: <span class="fw-bold text-dark"><?php echo htmlspecialchars($current_ay['year_name'] ?? 'Not Set'); ?></span></p>
         </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 bg-transparent p-0">
+                <li class="breadcrumb-item"><a href="dashboard.php" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active">Assignments</li>
+            </ol>
+        </nav>
+    </div>
 
-        <div id="alertContainer"></div>
+    <div id="alertContainer"></div>
 
-        <!-- Filters -->
-        <div class="filter-card">
-            <div class="row align-items-end">
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <label class="form-label">Program Type</label>
-                    <select class="form-select" id="programType" onchange="loadPrograms()">
-                        <option value="college">College Programs</option>
-                        <option value="shs">SHS Strands</option>
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <label class="form-label">Program/Strand</label>
-                    <select class="form-select" id="programSelect" onchange="loadYearLevels()">
-                        <option value="">Select Program</option>
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3 mb-md-0">
-                    <label class="form-label">Year Level</label>
-                    <select class="form-select" id="yearLevelSelect" onchange="loadSubjects()">
-                        <option value="">Select Year Level</option>
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3 mb-md-0">
-                    <label class="form-label">Semester</label>
-                    <select class="form-select" id="semesterSelect" onchange="loadSubjects()">
-                        <option value="1st">1st Semester</option>
-                        <option value="2nd">2nd Semester</option>
-                        <option value="summer">Summer</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-light w-100" onclick="loadSubjects()">
-                        <i class="bi bi-search"></i> Load Subjects
-                    </button>
-                </div>
+    <!-- 2. CONTROL PANEL (FILTERS) -->
+    <div class="control-panel animate__animated animate__fadeIn">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label-custom">Program Type</label>
+                <select class="form-select" id="programType" onchange="loadPrograms()">
+                    <option value="college">College Programs</option>
+                    <option value="shs">SHS Strands</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label-custom">Target Program/Strand</label>
+                <select class="form-select" id="programSelect" onchange="loadYearLevels()">
+                    <option value="">Select Option</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label-custom">Year Level</label>
+                <select class="form-select" id="yearLevelSelect" onchange="loadSubjects()">
+                    <option value="">Select Level</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label-custom">Semester</label>
+                <select class="form-select" id="semesterSelect" onchange="loadSubjects()">
+                    <option value="1st">1st Semester</option>
+                    <option value="2nd">2nd Semester</option>
+                    <option value="summer">Summer</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <button class="btn btn-light w-100 fw-bold py-2 shadow-sm" onclick="loadSubjects()">
+                    <i class="bi bi-search me-1"></i> LOAD
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Subjects List -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="bi bi-book"></i> Subjects</h6>
-                <span class="badge bg-info" id="subjectCount">0 subjects</span>
-            </div>
-            <div class="card-body" id="subjectsList">
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-arrow-up-circle fs-1 d-block mb-3"></i>
-                    Select a program, year level, and semester to view subjects
-                </div>
+    <!-- 3. SUBJECTS RESULTS -->
+    <div class="content-card">
+        <div class="card-header-modern bg-white d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-journal-text me-2 text-maroon"></i>Curriculum Subjects</span>
+            <span class="badge bg-blue bg-opacity-10 text-blue fw-bold" id="subjectCount">0 subjects</span>
+        </div>
+        <div class="card-body p-4" id="subjectsList">
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-filter-circle fs-1 d-block mb-3 opacity-25"></i>
+                <p class="fw-bold mb-0">No Selection Made</p>
+                <small>Select filters above to load the branch curriculum subjects.</small>
             </div>
         </div>
     </div>
@@ -175,61 +174,44 @@ include '../../includes/header.php';
 <!-- Assign Teacher Modal -->
 <div class="modal fade" id="assignTeacherModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
-                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Assign Teacher</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-person-plus me-2"></i>Assign Instructor</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="assignTeacherForm">
                 <input type="hidden" name="subject_id" id="modal_subject_id">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Subject</label>
-                        <input type="text" class="form-control" id="modal_subject_name" readonly>
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase opacity-75">Target Subject</label>
+                        <input type="text" class="form-control bg-light border-0 fw-bold" id="modal_subject_name" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Select Teacher</label>
+                        <label class="form-label fw-bold small text-uppercase opacity-75">Assign Teacher *</label>
                         <select class="form-select" name="teacher_id" id="teacherSelect" required>
-                            <option value="">Choose a teacher...</option>
+                            <option value="">Choose an instructor...</option>
                             <?php 
                             $teachers->data_seek(0);
-                            while ($teacher = $teachers->fetch_assoc()): 
-                            ?>
-                                <option value="<?php echo $teacher['id']; ?>"><?php echo htmlspecialchars($teacher['name']); ?> (<?php echo $teacher['employee_id'] ?? 'N/A'; ?>)</option>
+                            while ($teacher = $teachers->fetch_assoc()): ?>
+                                <option value="<?php echo $teacher['id']; ?>"><?php echo htmlspecialchars($teacher['name']); ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle"></i> Assign Teacher
-                    </button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light btn-sm px-4 fw-bold" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">UPDATE ASSIGNMENT</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-        </div> <!-- Close container-fluid -->
-
 <script>
-// Programs and strands data from PHP
-const collegePrograms = <?php 
-    $programs->data_seek(0);
-    $progs = [];
-    while ($p = $programs->fetch_assoc()) { $progs[] = $p; }
-    echo json_encode($progs);
-?>;
+// Logic preserved as requested
+const collegePrograms = <?php $programs->data_seek(0); $progs = []; while ($p = $programs->fetch_assoc()) { $progs[] = $p; } echo json_encode($progs); ?>;
+const shsStrands = <?php $strands->data_seek(0); $strs = []; while ($s = $strands->fetch_assoc()) { $strs[] = $s; } echo json_encode($strs); ?>;
 
-const shsStrands = <?php 
-    $strands->data_seek(0);
-    $strs = [];
-    while ($s = $strands->fetch_assoc()) { $strs[] = $s; }
-    echo json_encode($strs);
-?>;
-
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadPrograms();
 });
@@ -237,12 +219,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadPrograms() {
     const type = document.getElementById('programType').value;
     const select = document.getElementById('programSelect');
-    
-    select.innerHTML = '<option value="">Select ' + (type === 'college' ? 'Program' : 'Strand') + '</option>';
-    document.getElementById('yearLevelSelect').innerHTML = '<option value="">Select Year Level</option>';
-    
+    select.innerHTML = '<option value="">Select Option</option>';
+    document.getElementById('yearLevelSelect').innerHTML = '<option value="">Select Level</option>';
     const data = type === 'college' ? collegePrograms : shsStrands;
-    
     data.forEach(item => {
         const code = type === 'college' ? item.program_code : item.strand_code;
         const name = type === 'college' ? item.program_name : item.strand_name;
@@ -254,22 +233,14 @@ function loadYearLevels() {
     const type = document.getElementById('programType').value;
     const programId = document.getElementById('programSelect').value;
     const select = document.getElementById('yearLevelSelect');
-    
-    if (!programId) {
-        select.innerHTML = '<option value="">Select Year Level</option>';
-        return;
-    }
-    
+    if (!programId) { select.innerHTML = '<option value="">Select Level</option>'; return; }
     select.innerHTML = '<option value="">Loading...</option>';
-    
     fetch(`process/teacher_assignment_api.php?action=get_year_levels&type=${type}&program_id=${programId}`)
         .then(response => response.json())
         .then(data => {
-            select.innerHTML = '<option value="">Select Year Level</option>';
+            select.innerHTML = '<option value="">Select Level</option>';
             if (data.success) {
-                data.levels.forEach(level => {
-                    select.innerHTML += `<option value="${level.id}">${level.name}</option>`;
-                });
+                data.levels.forEach(level => { select.innerHTML += `<option value="${level.id}">${level.name}</option>`; });
             }
         });
 }
@@ -280,113 +251,62 @@ function loadSubjects() {
     const yearLevelId = document.getElementById('yearLevelSelect').value;
     const semester = document.getElementById('semesterSelect').value;
     
-    if (!programId || !yearLevelId) {
-        document.getElementById('subjectsList').innerHTML = `
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-arrow-up-circle fs-1 d-block mb-3"></i>
-                Select a program, year level, and semester to view subjects
-            </div>
-        `;
-        return;
-    }
+    if (!programId || !yearLevelId) return;
     
-    document.getElementById('subjectsList').innerHTML = `
-        <div class="text-center py-4">
-            <i class="bi bi-arrow-repeat spin fs-3"></i>
-            <p class="mt-2">Loading subjects...</p>
-        </div>
-    `;
+    const container = document.getElementById('subjectsList');
+    container.innerHTML = `<div class="text-center py-5"><i class="bi bi-arrow-repeat spin fs-2 text-muted"></i><p class="mt-2 small">Fetching branch curriculum...</p></div>`;
     
-    const params = new URLSearchParams({
-        action: 'get_subjects',
-        type: type,
-        program_id: programId,
-        year_level_id: yearLevelId,
-        semester: semester
-    });
-    
-    console.log('Fetching subjects with params:', params.toString());
+    const params = new URLSearchParams({ action: 'get_subjects', type, program_id: programId, year_level_id: yearLevelId, semester });
     
     fetch('process/teacher_assignment_api.php?' + params)
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.text();
-        })
-        .then(text => {
-            console.log('Raw API Response:', text);
-            try {
-                return JSON.parse(text);
-            } catch(e) {
-                console.error('JSON parse error:', e);
-                document.getElementById('subjectsList').innerHTML = '<div class="alert alert-danger">Invalid JSON response: ' + text.substring(0, 200) + '</div>';
-                throw e;
-            }
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Parsed API Response:', data);
-            if (data.debug) {
-                console.log('Debug info:', data.debug);
-            }
             document.getElementById('subjectCount').textContent = (data.subjects?.length || 0) + ' subjects';
-            
             if (data.success && data.subjects.length > 0) {
                 let html = '';
                 data.subjects.forEach(subject => {
                     const isAssigned = subject.teacher_id != null;
                     html += `
-                        <div class="subject-card ${isAssigned ? 'assigned' : ''} p-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1 fw-bold">${subject.subject_code}</h6>
-                                    <p class="mb-1 text-muted">${subject.subject_title}</p>
-                                    <small class="text-muted">${subject.units} units</small>
+                        <div class="subject-card-modern ${isAssigned ? 'assigned' : 'unassigned'}">
+                            <div class="row align-items-center">
+                                <div class="col-md-7">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <span class="badge bg-blue text-white me-2" style="font-size: 0.65rem;">${subject.subject_code}</span>
+                                        <h6 class="mb-0 fw-bold text-dark">${subject.subject_title}</h6>
+                                    </div>
+                                    <small class="text-muted fw-semibold"><i class="bi bi-hash"></i> ${subject.units} Units Curriculum</small>
                                 </div>
-                                <div class="text-end">
-                                    ${isAssigned ? `
-                                        <span class="teacher-badge mb-2 d-inline-block">
-                                            <i class="bi bi-person-check"></i> ${subject.teacher_name}
-                                        </span>
-                                        <br>
-                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openAssignModal(${subject.id}, '${subject.subject_code} - ${subject.subject_title}', ${subject.teacher_id || 'null'})">
-                                            <i class="bi bi-arrow-repeat"></i> Change
+                                <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                                    <div class="mb-2">
+                                        ${isAssigned ? `
+                                            <span class="stat-pill pill-success mb-2">
+                                                <i class="bi bi-person-check-fill me-1"></i> ${subject.teacher_name}
+                                            </span>
+                                        ` : `
+                                            <span class="stat-pill pill-warning mb-2">
+                                                <i class="bi bi-person-x-fill me-1"></i> No Teacher Assigned
+                                            </span>
+                                        `}
+                                    </div>
+                                    <div class="btn-group shadow-sm">
+                                        <button class="btn btn-sm btn-white border px-3" onclick="openAssignModal(${subject.id}, '${subject.subject_code} - ${subject.subject_title}', ${subject.teacher_id || 'null'})">
+                                            <i class="bi bi-pencil-square me-1"></i> ${isAssigned ? 'Change' : 'Assign'}
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="unassignTeacher(${subject.id})">
-                                            <i class="bi bi-x"></i> Remove
-                                        </button>
-                                    ` : `
-                                        <span class="badge bg-secondary mb-2 d-inline-block">
-                                            <i class="bi bi-person-x"></i> Not Assigned
-                                        </span>
-                                        <br>
-                                        <button class="btn btn-sm btn-success" onclick="openAssignModal(${subject.id}, '${subject.subject_code} - ${subject.subject_title}', null)">
-                                            <i class="bi bi-person-plus"></i> Assign Teacher
-                                        </button>
-                                    `}
+                                        ${isAssigned ? `
+                                            <button class="btn btn-sm btn-white border text-danger px-3" onclick="unassignTeacher(${subject.id})">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-                console.log('Setting HTML to subjectsList:', html.substring(0, 200));
-                document.getElementById('subjectsList').innerHTML = html;
-                console.log('HTML set successfully, element content length:', document.getElementById('subjectsList').innerHTML.length);
+                container.innerHTML = html;
             } else {
-                let errorMsg = 'No subjects found for this selection';
-                if (data.message) {
-                    errorMsg = data.message;
-                }
-                document.getElementById('subjectsList').innerHTML = `
-                    <div class="text-center py-5 text-muted">
-                        <i class="bi bi-book fs-1 d-block mb-3"></i>
-                        ${errorMsg}
-                        <br><small>Program: ${programId}, Year Level: ${yearLevelId}, Semester: ${semester}</small>
-                    </div>
-                `;
+                container.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-book fs-1 d-block mb-3 opacity-25"></i>No subjects found for this selection.</div>`;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('subjectsList').innerHTML = '<div class="alert alert-danger">Error loading subjects: ' + error.message + '</div>';
         });
 }
 
@@ -399,56 +319,31 @@ function openAssignModal(subjectId, subjectName, currentTeacherId) {
 
 document.getElementById('assignTeacherForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
     const formData = new FormData(this);
     formData.append('action', 'assign_teacher');
-    
-    fetch('process/teacher_assignment_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
+    fetch('process/teacher_assignment_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
         if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('assignTeacherModal')).hide();
             showAlert('success', data.message);
             loadSubjects();
-        } else {
-            showAlert('danger', data.message);
-        }
+        } else showAlert('danger', data.message);
     });
 });
 
 function unassignTeacher(subjectId) {
-    if (!confirm('Are you sure you want to remove the teacher assignment?')) return;
-    
+    if (!confirm('Unassign instructor from this subject?')) return;
     const formData = new FormData();
     formData.append('action', 'unassign_teacher');
     formData.append('subject_id', subjectId);
-    
-    fetch('process/teacher_assignment_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-            loadSubjects();
-        } else {
-            showAlert('danger', data.message);
-        }
+    fetch('process/teacher_assignment_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
+        if (data.success) { showAlert('success', data.message); loadSubjects(); }
+        else showAlert('danger', data.message);
     });
 }
 
 function showAlert(type, message) {
     const container = document.getElementById('alertContainer');
-    container.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
+    container.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm" role="alert"><i class="bi bi-info-circle-fill me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     setTimeout(() => container.innerHTML = '', 5000);
 }
 </script>

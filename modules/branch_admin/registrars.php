@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
 $page_title = "Manage Registrars";
 $branch_admin_id = $_SESSION['user_id'];
 
-// Get branch admin's branch
+// Get branch admin's branch (Logic preserved)
 $admin_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $branch_admin_id")->fetch_assoc();
 $branch_id = $admin_profile['branch_id'] ?? 0;
 
@@ -19,7 +19,7 @@ $branch = $conn->query("SELECT * FROM branches WHERE id = $branch_id")->fetch_as
 $message = '';
 $error = '';
 
-// Handle add registrar
+// Handle add registrar (Logic preserved)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
     $email = clean_input($_POST['email']);
     $password = $_POST['password'];
@@ -27,11 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
     $last_name = clean_input($_POST['last_name']);
     $contact_no = clean_input($_POST['contact_no'] ?? '');
     
-    // Validate
     if (empty($email) || empty($password) || empty($first_name) || empty($last_name)) {
         $error = "All required fields must be filled.";
     } else {
-        // Check if email exists
         $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $check->bind_param("s", $email);
         $check->execute();
@@ -40,20 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
         } else {
             $conn->begin_transaction();
             try {
-                // Create user
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $stmt = $conn->prepare("INSERT INTO users (email, password, status) VALUES (?, ?, 'active')");
                 $stmt->bind_param("ss", $email, $hashed_password);
                 $stmt->execute();
                 $new_user_id = $conn->insert_id;
                 
-                // Assign role
                 $role_id = ROLE_REGISTRAR;
                 $stmt = $conn->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
                 $stmt->bind_param("ii", $new_user_id, $role_id);
                 $stmt->execute();
                 
-                // Create profile
                 $stmt = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, contact_no, branch_id) VALUES (?, ?, ?, ?, ?)");
                 $stmt->bind_param("isssi", $new_user_id, $first_name, $last_name, $contact_no, $branch_id);
                 $stmt->execute();
@@ -68,12 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
     }
 }
 
-// Handle toggle status
+// Handle toggle status (Logic preserved)
 if (isset($_GET['toggle']) && isset($_GET['id'])) {
     $user_id = (int)$_GET['id'];
     $new_status = $_GET['toggle'] == 'activate' ? 'active' : 'inactive';
     
-    // Verify this registrar belongs to this branch
     $verify = $conn->query("
         SELECT u.id FROM users u 
         INNER JOIN user_profiles up ON u.id = up.user_id 
@@ -85,11 +79,9 @@ if (isset($_GET['toggle']) && isset($_GET['id'])) {
         $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
         $stmt->bind_param("si", $new_status, $user_id);
         if ($stmt->execute()) {
-            $message = "Registrar account " . ($new_status ? "activated" : "deactivated") . " successfully!";
+            $message = "Registrar account updated successfully!";
         }
-    } else {
-        $error = "Invalid registrar account.";
-    }
+    } else { $error = "Invalid registrar account."; }
 }
 
 // Get registrars for this branch
@@ -104,111 +96,151 @@ $registrars = $conn->query("
 ");
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+<style>
+    /* --- SHARED UI DESIGN SYSTEM --- */
+    .page-header {
+        background: white; padding: 20px; border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
+    }
+
+    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
     
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="fw-bold mb-1"><i class="bi bi-person-badge me-2"></i>Manage Registrars</h4>
-                <small class="text-muted">Branch: <?php echo htmlspecialchars($branch['name'] ?? 'Unknown'); ?></small>
-            </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRegistrarModal">
+    .card-header-modern {
+        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
+        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+    }
+
+    .table-modern thead th { 
+        background: #f8f9fa; font-size: 0.7rem; text-transform: uppercase; 
+        color: #888; padding: 15px 20px; border-bottom: 1px solid #eee;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.85rem; }
+    
+    .status-pill {
+        padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .status-active { background: #e6f4ea; color: #1e7e34; }
+    .status-inactive { background: #f8f9fa; color: #6c757d; border: 1px solid #eee; }
+
+    .avatar-circle-sm {
+        width: 40px; height: 40px; background: var(--blue); color: white;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.9rem; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
+    .btn-maroon:hover { background-color: #600000; color: white; transform: translateY(-1px); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #adb5bd; }
+    .empty-state i { font-size: 3.5rem; margin-bottom: 15px; display: block; opacity: 0.5; }
+</style>
+
+<div class="main-content-body animate__animated animate__fadeIn">
+    
+    <!-- 1. PAGE HEADER -->
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center animate__animated animate__fadeInDown">
+        <div class="mb-2 mb-md-0">
+            <h4 class="fw-bold mb-0" style="color: var(--blue);">
+                <i class="bi bi-person-badge-fill me-2 text-maroon"></i>Manage Registrars
+            </h4>
+            <p class="text-muted small mb-0">Branch Office: <span class="fw-bold text-dark"><?php echo htmlspecialchars($branch['name'] ?? 'Unknown'); ?></span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-maroon btn-sm px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addRegistrarModal">
                 <i class="bi bi-plus-circle me-1"></i> Add Registrar
             </button>
         </div>
+    </div>
 
-        <?php if ($message): ?>
-        <div class="alert alert-success alert-dismissible fade show">
-            <i class="bi bi-check-circle me-2"></i><?php echo $message; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- 2. ALERTS -->
+    <?php if ($message): ?>
+        <div class="alert alert-success border-0 shadow-sm animate__animated animate__headShake">
+            <i class="bi bi-check-circle-fill me-2"></i> <?php echo $message; ?>
         </div>
-        <?php endif; ?>
-
-        <?php if ($error): ?>
-        <div class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-circle me-2"></i><?php echo $error; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <?php endif; ?>
+    <?php if ($error): ?>
+        <div class="alert alert-danger border-0 shadow-sm animate__animated animate__shakeX">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <?php echo $error; ?>
         </div>
-        <?php endif; ?>
+    <?php endif; ?>
 
-        <!-- Registrars List -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-people me-2"></i>Registrar Accounts</h5>
+    <!-- 3. REGISTRARS LIST -->
+    <div class="content-card">
+        <div class="card-header-modern bg-white">
+            <i class="bi bi-people me-2"></i> Authorized Registrar Accounts
+        </div>
+        <div class="card-body p-0">
+            <?php if ($registrars->num_rows == 0): ?>
+            <div class="empty-state">
+                <i class="bi bi-person-x"></i>
+                <p class="fw-bold">No registrar accounts found for this branch.</p>
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addRegistrarModal">
+                    Create First Account
+                </button>
             </div>
-            <div class="card-body p-0">
-                <?php if ($registrars->num_rows == 0): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-person-x display-4"></i>
-                    <p class="mt-2">No registrar accounts found for this branch.</p>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRegistrarModal">
-                        <i class="bi bi-plus-circle me-1"></i> Add First Registrar
-                    </button>
-                </div>
-                <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Contact</th>
-                                <th class="text-center">Status</th>
-                                <th>Created</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($reg = $registrars->fetch_assoc()): ?>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                                            <?php echo strtoupper(substr($reg['first_name'], 0, 1)); ?>
-                                        </div>
-                                        <div>
-                                            <strong><?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?></strong>
-                                            <br><small class="text-muted">Registrar</small>
-                                        </div>
+            <?php else: ?>
+            <div class="table-responsive">
+                <table class="table table-hover table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Account Name</th>
+                            <th>Email Address</th>
+                            <th>Contact No.</th>
+                            <th class="text-center">Status</th>
+                            <th>Date Created</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($reg = $registrars->fetch_assoc()): ?>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle-sm me-3">
+                                        <?php echo strtoupper(substr($reg['first_name'], 0, 1)); ?>
                                     </div>
-                                </td>
-                                <td><?php echo htmlspecialchars($reg['email']); ?></td>
-                                <td><?php echo htmlspecialchars($reg['contact_no'] ?? '-'); ?></td>
-                                <td class="text-center">
-                                    <?php if ($reg['status'] == 'active'): ?>
-                                    <span class="badge bg-success">Active</span>
-                                    <?php else: ?>
-                                    <span class="badge bg-danger">Inactive</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo date('M d, Y', strtotime($reg['created_at'])); ?></td>
-                                <td class="text-center">
+                                    <div>
+                                        <div class="fw-bold text-dark"><?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?></div>
+                                        <small class="text-muted" style="font-size: 0.65rem;">OFFICE REGISTRAR</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><small><?php echo htmlspecialchars($reg['email']); ?></small></td>
+                            <td><?php echo htmlspecialchars($reg['contact_no'] ?? '-'); ?></td>
+                            <td class="text-center">
+                                <span class="status-pill <?php echo $reg['status'] == 'active' ? 'status-active' : 'status-inactive'; ?>">
+                                    <?php echo ucfirst($reg['status']); ?>
+                                </span>
+                            </td>
+                            <td><small><?php echo date('M d, Y', strtotime($reg['created_at'])); ?></small></td>
+                            <td class="text-end">
+                                <div class="btn-group shadow-sm">
                                     <?php if ($reg['status'] == 'active'): ?>
                                     <a href="?toggle=deactivate&id=<?php echo $reg['id']; ?>" 
-                                       class="btn btn-sm btn-outline-danger" 
-                                       onclick="return confirm('Are you sure you want to deactivate this account?');">
-                                        <i class="bi bi-x-circle"></i> Deactivate
+                                       class="btn btn-sm btn-white border text-danger" 
+                                       onclick="return confirm('Suspend this registrar account?');" title="Deactivate">
+                                        <i class="bi bi-person-x-fill"></i>
                                     </a>
                                     <?php else: ?>
                                     <a href="?toggle=activate&id=<?php echo $reg['id']; ?>" 
-                                       class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-check-circle"></i> Activate
+                                       class="btn btn-sm btn-white border text-success" title="Activate">
+                                        <i class="bi bi-person-check-fill"></i>
                                     </a>
                                     <?php endif; ?>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="resetPassword(<?php echo $reg['id']; ?>)">
-                                        <i class="bi bi-key"></i> Reset Password
+                                    <button class="btn btn-sm btn-white border text-primary" onclick="resetPassword(<?php echo $reg['id']; ?>)" title="Reset Password">
+                                        <i class="bi bi-key-fill"></i>
                                     </button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -216,44 +248,46 @@ include '../../includes/header.php';
 <!-- Add Registrar Modal -->
 <div class="modal fade" id="addRegistrarModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add Registrar Account</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-maroon text-dark py-3">
+                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-person-plus me-2"></i>Add Registrar Account</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="first_name" required>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-uppercase opacity-75">First Name *</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-uppercase opacity-75">Last Name *</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="last_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                    <div class="mt-3">
+                        <label class="form-label small fw-bold text-uppercase opacity-75">Email Address *</label>
                         <input type="email" class="form-control" name="email" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <div class="mt-3">
+                        <label class="form-label small fw-bold text-uppercase opacity-75">Temporary Password *</label>
                         <input type="password" class="form-control" name="password" required minlength="6">
-                        <small class="text-muted">Minimum 6 characters</small>
+                        <small class="text-muted">Will require update on first login.</small>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contact Number</label>
+                    <div class="mt-3">
+                        <label class="form-label small fw-bold text-uppercase opacity-75">Contact Number</label>
                         <input type="text" class="form-control" name="contact_no">
                     </div>
-                    <div class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        This registrar will be assigned to <strong><?php echo htmlspecialchars($branch['name'] ?? 'this branch'); ?></strong>
+                    <div class="mt-4 p-3 bg-light rounded-3 border-start border-4 border-info">
+                        <small class="text-muted d-flex">
+                            <i class="bi bi-info-circle-fill text-info me-2"></i>
+                            Account will be restricted to <strong><?php echo htmlspecialchars($branch['name'] ?? 'current branch'); ?></strong> operations.
+                        </small>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="add_registrar" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i> Create Account
-                    </button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light btn-sm px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="add_registrar" class="btn btn-maroon btn-sm px-4 fw-bold">Create Account</button>
                 </div>
             </form>
         </div>
@@ -271,9 +305,9 @@ function resetPassword(userId) {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                alert('Password reset successfully! New password: password123');
+                Swal.fire('Success', 'Password reset to: password123', 'success');
             } else {
-                alert('Error: ' + data.message);
+                Swal.fire('Error', data.message, 'error');
             }
         });
     }
