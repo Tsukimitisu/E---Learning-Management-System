@@ -77,344 +77,279 @@ $teachers = $conn->query("
 ");
 
 include '../../includes/header.php';
+include '../../includes/sidebar.php'; 
 ?>
 
 <style>
+    /* --- SHARED UI DESIGN SYSTEM --- */
+    .page-header {
+        background: white; padding: 20px; border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
+    }
+
     .nav-pills .nav-link {
-        background: #f8f9fa;
-        color: #333;
-        margin-right: 8px;
-        border: 1px solid #e0e0e0;
-        transition: all 0.2s ease;
+        background: #f8f9fa; color: #555; margin-right: 8px; border-radius: 10px;
+        font-weight: 700; font-size: 0.75rem; text-transform: uppercase;
+        padding: 10px 20px; border: 1px solid #eee; transition: 0.3s;
     }
-    .nav-pills .nav-link:hover {
-        background: #e9ecef;
+    .nav-pills .nav-link.active { background: var(--maroon); color: white; border-color: var(--maroon); box-shadow: 0 4px 10px rgba(128,0,0,0.2); }
+
+    /* Program Cards */
+    .program-card-modern {
+        background: white; border-radius: 15px; border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
+        cursor: pointer; height: 100%; position: relative; overflow: hidden;
+        border-bottom: 4px solid var(--blue);
     }
-    .nav-pills .nav-link.active {
-        background: #800000;
-        border-color: #800000;
-        color: white;
-    }
-    
-    .program-card {
-        background: linear-gradient(135deg, #003366 0%, #004080 100%);
-        border-radius: 15px;
-        color: white;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        min-height: 200px;
-    }
-    .program-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.3);
-    }
-    .program-card.shs {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    }
-    .program-card.shs:hover {
-        box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+    .program-card-modern:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .program-card-modern.shs { border-bottom-color: #28a745; }
+
+    .program-card-header {
+        padding: 25px; background: #fcfcfc; border-bottom: 1px solid #f0f0f0;
+        display: flex; justify-content: space-between; align-items: start;
     }
     
+    .program-icon-box {
+        width: 45px; height: 45px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; margin-bottom: 10px;
+    }
+
+    /* Year Level & Section Cards */
     .year-level-card {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        cursor: pointer;
+        background: white; border: 2px solid #e9ecef; border-radius: 15px;
+        transition: all 0.3s ease; cursor: pointer; height: 100%;
     }
-    .year-level-card:hover {
-        border-color: #800000;
-        box-shadow: 0 5px 15px rgba(128, 0, 0, 0.15);
-    }
-    .year-level-card.active {
-        border-color: #800000;
-        background: #fff5f5;
-    }
-    
+    .year-level-card:hover { border-color: var(--maroon); box-shadow: 0 5px 15px rgba(128, 0, 0, 0.1); transform: translateY(-3px); }
+
     .section-card {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        cursor: pointer;
+        background: white; border-radius: 12px; border: 1px solid #eee;
+        padding: 20px; transition: 0.3s; cursor: pointer; height: 100%;
     }
-    .section-card:hover {
-        border-color: #003366;
-        box-shadow: 0 5px 15px rgba(0, 51, 102, 0.15);
-        transform: translateY(-3px);
-    }
+    .section-card:hover { border-color: var(--blue); background: #f8faff; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
     
-    .stat-badge {
-        background: rgba(255,255,255,0.2);
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header-modern {
+        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
+        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
     }
-    
-    .add-section-btn {
-        background: #800000;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 20px;
-        transition: all 0.2s ease;
+
+    .stat-pill {
+        display: inline-flex; align-items: center; padding: 5px 12px;
+        background: #f1f3f5; border-radius: 20px; font-size: 0.7rem;
+        font-weight: 700; color: #666; margin-right: 5px;
     }
-    .add-section-btn:hover {
-        background: #600000;
-        color: white;
+
+    /* List Items */
+    .subject-list-item, .student-item {
+        padding: 12px 20px; border-bottom: 1px solid #f5f5f5;
+        display: flex; justify-content: space-between; align-items: center; transition: 0.2s;
     }
-    
-    .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: #6c757d;
-    }
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: 15px;
-        opacity: 0.3;
-    }
-    
-    .subject-list-item {
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .subject-list-item:last-child {
-        border-bottom: none;
-    }
-    .subject-list-item:hover {
-        background: #f8f9fa;
-    }
-    
-    .student-item {
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-    }
-    .student-item:hover {
-        background: #f8f9fa;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    .spin { animation: spin 1s linear infinite; }
+    .subject-list-item:hover, .student-item:hover { background-color: #fcfcfc; }
+
+    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
+    .btn-maroon:hover { background-color: #600000; color: white; transform: translateY(-1px); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #adb5bd; }
+    .empty-state i { font-size: 3.5rem; margin-bottom: 15px; display: block; opacity: 0.5; }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
 </style>
 
-<?php include '../../includes/sidebar.php'; ?>
+<div class="main-content-body animate__animated animate__fadeIn">
+    
+    <!-- 1. PAGE HEADER -->
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center animate__animated animate__fadeInDown">
+        <div class="mb-2 mb-md-0">
+            <h4 class="fw-bold mb-0" style="color: var(--blue);">
+                <i class="bi bi-grid-3x3-gap me-2 text-maroon"></i>Programs & Sections
+            </h4>
+            <p class="text-muted small mb-0">Academic Year: <span class="fw-bold"><?php echo htmlspecialchars($current_ay['year_name'] ?? 'Not Set'); ?></span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="dashboard.php" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
 
-<div id="content">
-    <div class="main-content-body">
-        <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="mb-0" style="color: #003366;">
-                    <i class="bi bi-grid-3x3-gap"></i> Programs & Sections Management
-                </h4>
-                <small class="text-muted">Academic Year: <?php echo htmlspecialchars($current_ay['year_name'] ?? 'Not Set'); ?></small>
+    <div id="alertContainer"></div>
+
+    <!-- 2. MAIN VIEW: PROGRAMS GRID -->
+    <div id="programsView">
+        <!-- College Programs -->
+        <div class="mb-5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary p-2 rounded-3 me-3 text-white shadow-sm"><i class="bi bi-mortarboard fs-5"></i></div>
+                <h5 class="fw-bold mb-0" style="color: #444;">College Programs</h5>
+            </div>
+            
+            <div class="row g-4" id="collegeProgramsGrid">
+                <?php if ($programs->num_rows > 0): ?>
+                    <?php while ($program = $programs->fetch_assoc()): ?>
+                        <div class="col-xl-4 col-md-6">
+                            <div class="program-card-modern" onclick="viewProgramYearLevels(<?php echo $program['id']; ?>, 'college', '<?php echo htmlspecialchars(addslashes($program['program_name'])); ?>')">
+                                <div class="program-card-header">
+                                    <div>
+                                        <div class="program-icon-box bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-book-half"></i>
+                                        </div>
+                                        <h5 class="mb-1 fw-bold text-dark"><?php echo htmlspecialchars($program['program_code']); ?></h5>
+                                        <p class="text-muted small mb-0 fw-semibold line-clamp-1"><?php echo htmlspecialchars($program['program_name']); ?></p>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted opacity-50 fs-5"></i>
+                                </div>
+                                <div class="p-3 bg-light bg-opacity-50">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="stat-pill"><i class="bi bi-journal-text me-1"></i> <?php echo $program['subject_count']; ?> Subjects</span>
+                                        <span class="stat-pill"><i class="bi bi-layers me-1"></i> <?php echo count($program_year_levels[$program['id']] ?? []); ?> Levels</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="empty-state bg-white rounded-4 shadow-sm">
+                            <i class="bi bi-mortarboard"></i>
+                            <p class="fw-bold">No college programs found.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- SHS Strands -->
+        <div class="mb-5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-success p-2 rounded-3 me-3 text-white shadow-sm"><i class="bi bi-grid fs-5"></i></div>
+                <h5 class="fw-bold mb-0" style="color: #444;">Senior High School Strands</h5>
+            </div>
+            
+            <div class="row g-4" id="shsStrandsGrid">
+                <?php if ($strands->num_rows > 0): ?>
+                    <?php while ($strand = $strands->fetch_assoc()): ?>
+                        <div class="col-xl-4 col-md-6">
+                            <div class="program-card-modern shs" onclick="viewProgramYearLevels(<?php echo $strand['id']; ?>, 'shs', '<?php echo htmlspecialchars(addslashes($strand['strand_name'])); ?>')">
+                                <div class="program-card-header">
+                                    <div>
+                                        <div class="program-icon-box bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-layers-half"></i>
+                                        </div>
+                                        <h5 class="mb-1 fw-bold text-dark"><?php echo htmlspecialchars($strand['strand_code']); ?></h5>
+                                        <p class="text-muted small mb-0 fw-semibold line-clamp-1"><?php echo htmlspecialchars($strand['strand_name']); ?></p>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted opacity-50 fs-5"></i>
+                                </div>
+                                <div class="p-3 bg-light bg-opacity-50">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="stat-pill"><i class="bi bi-book me-1"></i> <?php echo $strand['subject_count']; ?> Subjects</span>
+                                        <span class="stat-pill"><i class="bi bi-tag me-1"></i> <?php echo htmlspecialchars($strand['track_name'] ?? 'N/A'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="empty-state bg-white rounded-4 shadow-sm">
+                            <i class="bi bi-grid"></i>
+                            <p class="fw-bold">No SHS strands found.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. YEAR LEVEL VIEW -->
+    <div id="yearLevelView" style="display: none;">
+        <div class="d-flex align-items-center mb-4">
+            <button class="btn btn-white border shadow-sm btn-sm me-3 rounded-circle" onclick="backToPrograms()">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <h5 class="fw-bold mb-0" id="selectedProgramName" style="color: var(--blue);"></h5>
+        </div>
+        
+        <div class="row g-4" id="yearLevelCards">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <!-- 4. SECTIONS VIEW -->
+    <div id="sectionsView" style="display: none;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-white border shadow-sm btn-sm me-3 rounded-circle" onclick="backToYearLevels()">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <h5 class="fw-bold mb-0" id="selectedYearLevelName" style="color: var(--blue);"></h5>
+            </div>
+            <button class="btn btn-maroon btn-sm px-4 rounded-pill" onclick="openAddSectionModal()">
+                <i class="bi bi-plus-circle me-1"></i> Add Section
+            </button>
+        </div>
+        
+        <ul class="nav nav-pills mb-4" id="semesterTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="changeSemester('1st'); return false;">1st Semester</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="changeSemester('2nd'); return false;">2nd Semester</a>
+            </li>
+            <li class="nav-item" id="summerTab" style="display: none;">
+                <a class="nav-link" href="#" onclick="changeSemester('summer'); return false;">Summer</a>
+            </li>
+        </ul>
+        
+        <div class="content-card mb-5">
+            <div class="card-header-modern bg-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-collection me-2 text-maroon"></i>Sections: <span id="currentSemesterLabel">1st Semester</span></span>
+                <span class="badge bg-blue bg-opacity-10 text-blue fw-bold" id="subjectCountBadge">0 subjects in curriculum</span>
+            </div>
+            <div class="p-4">
+                <div class="row g-3" id="sectionsList">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. SECTION DETAIL VIEW -->
+    <div id="sectionDetailView" style="display: none;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-white border shadow-sm btn-sm me-3 rounded-circle" onclick="backToSections()">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <h5 class="fw-bold mb-0" id="selectedSectionName" style="color: var(--blue);"></h5>
             </div>
             <div class="d-flex gap-2">
-                <a href="dashboard.php" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-left"></i> Dashboard
-                </a>
-            </div>
-        </div>
-
-        <div id="alertContainer"></div>
-
-        <!-- Main View: Programs Grid -->
-        <div id="programsView">
-            <!-- College Programs -->
-            <div class="mb-4">
-                <h5 class="mb-3"><i class="bi bi-mortarboard text-primary"></i> College Programs</h5>
-                <div class="row" id="collegeProgramsGrid">
-                    <?php if ($programs->num_rows > 0): ?>
-                        <?php while ($program = $programs->fetch_assoc()): ?>
-                            <div class="col-lg-4 col-md-6 mb-4">
-                                <div class="program-card p-4" onclick="viewProgramYearLevels(<?php echo $program['id']; ?>, 'college', '<?php echo htmlspecialchars(addslashes($program['program_name'])); ?>')">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <h5 class="mb-1 fw-bold"><?php echo htmlspecialchars($program['program_code']); ?></h5>
-                                            <p class="mb-0 opacity-75" style="font-size: 0.9rem;"><?php echo htmlspecialchars($program['program_name']); ?></p>
-                                        </div>
-                                        <i class="bi bi-journal-bookmark-fill fs-3 opacity-50"></i>
-                                    </div>
-                                    <div class="d-flex gap-2 mt-3">
-                                        <span class="stat-badge">
-                                            <i class="bi bi-book"></i> <?php echo $program['subject_count']; ?> Subjects
-                                        </span>
-                                        <span class="stat-badge">
-                                            <i class="bi bi-layers"></i> <?php echo count($program_year_levels[$program['id']] ?? []); ?> Year Levels
-                                        </span>
-                                    </div>
-                                    <div class="mt-3 text-end">
-                                        <small class="opacity-75"><i class="bi bi-arrow-right-circle"></i> Click to manage sections</small>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <div class="col-12">
-                            <div class="empty-state">
-                                <i class="bi bi-mortarboard"></i>
-                                <p>No college programs found. Contact School Admin to add programs.</p>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- SHS Strands -->
-            <div class="mb-4">
-                <h5 class="mb-3"><i class="bi bi-grid text-success"></i> Senior High School Strands</h5>
-                <div class="row" id="shsStrandsGrid">
-                    <?php if ($strands->num_rows > 0): ?>
-                        <?php while ($strand = $strands->fetch_assoc()): ?>
-                            <div class="col-lg-4 col-md-6 mb-4">
-                                <div class="program-card shs p-4" onclick="viewProgramYearLevels(<?php echo $strand['id']; ?>, 'shs', '<?php echo htmlspecialchars(addslashes($strand['strand_name'])); ?>')">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <h5 class="mb-1 fw-bold"><?php echo htmlspecialchars($strand['strand_code']); ?></h5>
-                                            <p class="mb-0 opacity-75" style="font-size: 0.9rem;"><?php echo htmlspecialchars($strand['strand_name']); ?></p>
-                                        </div>
-                                        <i class="bi bi-layers fs-3 opacity-50"></i>
-                                    </div>
-                                    <div class="d-flex gap-2 mt-3">
-                                        <span class="stat-badge">
-                                            <i class="bi bi-book"></i> <?php echo $strand['subject_count']; ?> Subjects
-                                        </span>
-                                        <span class="stat-badge">
-                                            <i class="bi bi-tag"></i> <?php echo htmlspecialchars($strand['track_name'] ?? 'N/A'); ?>
-                                        </span>
-                                    </div>
-                                    <div class="mt-3 text-end">
-                                        <small class="opacity-75"><i class="bi bi-arrow-right-circle"></i> Click to manage sections</small>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <div class="col-12">
-                            <div class="empty-state">
-                                <i class="bi bi-grid"></i>
-                                <p>No SHS strands found. Contact School Admin to add strands.</p>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Year Level View (Hidden by default) -->
-        <div id="yearLevelView" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="backToPrograms()">
-                        <i class="bi bi-arrow-left"></i> Back
-                    </button>
-                    <span class="fs-5 fw-bold" id="selectedProgramName"></span>
-                </div>
-            </div>
-            
-            <div class="row" id="yearLevelCards">
-                <!-- Year level cards will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Sections View (Hidden by default) -->
-        <div id="sectionsView" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="backToYearLevels()">
-                        <i class="bi bi-arrow-left"></i> Back
-                    </button>
-                    <span class="fs-5 fw-bold" id="selectedYearLevelName"></span>
-                </div>
-                <button class="add-section-btn" onclick="openAddSectionModal()">
-                    <i class="bi bi-plus-circle"></i> Add Section
+                <button class="btn btn-success btn-sm rounded-pill px-3" onclick="openAddStudentModal()">
+                    <i class="bi bi-person-plus"></i> Add Student
+                </button>
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="editSection(currentSectionId)">
+                    <i class="bi bi-pencil"></i> Edit Info
                 </button>
             </div>
-            
-            <!-- Semester Tabs -->
-            <ul class="nav nav-pills mb-4" id="semesterTabs">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#" onclick="changeSemester('1st'); return false;">
-                        <i class="bi bi-1-circle"></i> 1st Semester
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="changeSemester('2nd'); return false;">
-                        <i class="bi bi-2-circle"></i> 2nd Semester
-                    </a>
-                </li>
-                <li class="nav-item" id="summerTab" style="display: none;">
-                    <a class="nav-link" href="#" onclick="changeSemester('summer'); return false;">
-                        <i class="bi bi-sun"></i> Summer
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="row">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="bi bi-collection"></i> Sections - <span id="currentSemesterLabel">1st Semester</span></h6>
-                            <span class="badge bg-info" id="subjectCountBadge">0 subjects in curriculum</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row" id="sectionsList">
-                                <!-- Section cards will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-
-        <!-- Section Detail View (Hidden by default) -->
-        <div id="sectionDetailView" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="backToSections()">
-                        <i class="bi bi-arrow-left"></i> Back
-                    </button>
-                    <span class="fs-5 fw-bold" id="selectedSectionName"></span>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-success btn-sm" onclick="openAddStudentModal()">
-                        <i class="bi bi-person-plus"></i> Add Student
-                    </button>
-                    <button class="btn btn-outline-primary btn-sm" onclick="editSection(currentSectionId)">
-                        <i class="bi bi-pencil"></i> Edit Section
-                    </button>
+        
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <div class="card-header-modern bg-primary text-white"><i class="bi bi-people me-2"></i>Students in Section (<span id="studentCount">0</span>)</div>
+                    <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;" id="sectionStudentsList">
+                        <!-- Dynamic Content -->
+                    </div>
                 </div>
             </div>
             
-            <div class="row">
-                <!-- Students List -->
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0"><i class="bi bi-people"></i> Students in Section (<span id="studentCount">0</span>)</h6>
-                        </div>
-                        <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;" id="sectionStudentsList">
-                            <!-- Students will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Subjects List -->
-                <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header" style="background: #800000; color: white;">
-                            <h6 class="mb-0"><i class="bi bi-book"></i> Subjects for this Section (<span id="subjectCount">0</span>)</h6>
-                        </div>
-                        <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;" id="sectionSubjectsList">
-                            <!-- Subjects will be loaded here -->
-                        </div>
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <div class="card-header-modern bg-maroon text-white" style="background: var(--maroon) !important;"><i class="bi bi-book me-2"></i>Subjects / Curriculum (<span id="subjectCount">0</span>)</div>
+                    <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;" id="sectionSubjectsList">
+                        <!-- Dynamic Content -->
                     </div>
                 </div>
             </div>
@@ -422,12 +357,13 @@ include '../../includes/header.php';
     </div>
 </div>
 
+<!-- Modals -->
 <!-- Add Section Modal -->
 <div class="modal fade" id="addSectionModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #800000 0%, #a00000 100%); color: white;">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add New Section</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-maroon text-dark py-3">
+                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-plus-circle me-2"></i>Add New Section</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addSectionForm">
@@ -437,40 +373,36 @@ include '../../includes/header.php';
                 <input type="hidden" name="grade_level_id" id="modal_grade_level_id">
                 <input type="hidden" name="program_type" id="modal_program_type">
                 <input type="hidden" name="semester" id="modal_semester">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Section Name *</label>
-                        <input type="text" class="form-control" name="section_name" placeholder="e.g., Section A, Block 1, 1A" required>
-                        <small class="text-muted">This section will include all subjects for the selected year level and semester</small>
+                        <label class="form-label fw-bold small text-uppercase opacity-75">Section Name *</label>
+                        <input type="text" class="form-control" name="section_name" placeholder="e.g., Section A" required>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Max Capacity *</label>
+                    <div class="row g-3">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold small text-uppercase opacity-75">Max Capacity *</label>
                             <input type="number" class="form-control" name="max_capacity" value="40" min="1" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Room</label>
-                            <input type="text" class="form-control" name="room" placeholder="e.g., Room 101">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold small text-uppercase opacity-75">Room</label>
+                            <input type="text" class="form-control" name="room" placeholder="Room 101">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Section Adviser</label>
+                        <label class="form-label fw-bold small text-uppercase opacity-75">Section Adviser</label>
                         <select class="form-select" name="adviser_id">
                             <option value="">No Adviser Assigned</option>
                             <?php 
                             $teachers->data_seek(0);
-                            while ($teacher = $teachers->fetch_assoc()): 
-                            ?>
+                            while ($teacher = $teachers->fetch_assoc()): ?>
                                 <option value="<?php echo $teacher['id']; ?>"><?php echo htmlspecialchars($teacher['name']); ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white" style="background-color: #800000;">
-                        <i class="bi bi-check-circle"></i> Create Section
-                    </button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light btn-sm px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-maroon btn-sm px-4 fw-bold">Create Section</button>
                 </div>
             </form>
         </div>
@@ -480,46 +412,43 @@ include '../../includes/header.php';
 <!-- Edit Section Modal -->
 <div class="modal fade" id="editSectionModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" style="background: #003366; color: white;">
-                <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit Section</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-blue text-white py-3" style="background: var(--blue);">
+                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-pencil me-2"></i>Edit Section Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="editSectionForm">
                 <input type="hidden" name="section_id" id="edit_section_id">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Section Name *</label>
+                        <label class="form-label fw-bold small text-uppercase opacity-75">Section Name *</label>
                         <input type="text" class="form-control" name="section_name" id="edit_section_name" required>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Max Capacity *</label>
+                    <div class="row g-3">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold small text-uppercase opacity-75">Max Capacity *</label>
                             <input type="number" class="form-control" name="max_capacity" id="edit_max_capacity" min="1" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Room</label>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold small text-uppercase opacity-75">Room</label>
                             <input type="text" class="form-control" name="room" id="edit_room">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Section Adviser</label>
+                        <label class="form-label fw-bold small text-uppercase opacity-75">Section Adviser</label>
                         <select class="form-select" name="adviser_id" id="edit_adviser_id">
                             <option value="">No Adviser Assigned</option>
                             <?php 
                             $teachers->data_seek(0);
-                            while ($teacher = $teachers->fetch_assoc()): 
-                            ?>
+                            while ($teacher = $teachers->fetch_assoc()): ?>
                                 <option value="<?php echo $teacher['id']; ?>"><?php echo htmlspecialchars($teacher['name']); ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Update Section
-                    </button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light btn-sm px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Update Section</button>
                 </div>
             </form>
         </div>
@@ -529,24 +458,22 @@ include '../../includes/header.php';
 <!-- Add Student to Section Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background: #28a745; color: white;">
-                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Add Students to Section</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fs-6 fw-bold"><i class="bi bi-person-plus me-2"></i>Add Students to Section</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="studentSearch" placeholder="Search students by name or ID...">
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <input type="text" class="form-control rounded-pill px-4" id="studentSearch" placeholder="Search students by name or ID...">
                 </div>
                 <div id="availableStudentsList" style="max-height: 400px; overflow-y: auto;">
-                    <!-- Available students will be loaded here -->
+                    <!-- Available students dynamically loaded -->
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-        </div> <!-- Close container-fluid -->
 
 <script>
 // State variables
@@ -559,24 +486,10 @@ let currentSemester = '1st';
 let currentSectionId = null;
 let currentSectionName = null;
 
-// Program year levels data from PHP
-const programYearLevels = <?php 
-    $pyl_data = [];
-    foreach ($program_year_levels as $pid => $levels) {
-        $pyl_data[$pid] = $levels;
-    }
-    echo json_encode($pyl_data);
-?>;
+// Program data from PHP
+const programYearLevels = <?php echo json_encode($program_year_levels); ?>;
+const strandGradeLevels = <?php echo json_encode($strand_grade_levels); ?>;
 
-const strandGradeLevels = <?php 
-    $sgl_data = [];
-    foreach ($strand_grade_levels as $sid => $levels) {
-        $sgl_data[$sid] = $levels;
-    }
-    echo json_encode($sgl_data);
-?>;
-
-// View program year levels
 function viewProgramYearLevels(programId, type, programName) {
     currentProgramId = programId;
     currentProgramType = type;
@@ -598,39 +511,25 @@ function renderYearLevelCards() {
         : strandGradeLevels[currentProgramId] || [];
     
     if (levels.length === 0) {
-        html = `
-            <div class="col-12">
-                <div class="empty-state">
-                    <i class="bi bi-layers"></i>
-                    <p>No year levels found for this program.</p>
-                </div>
-            </div>
-        `;
+        html = '<div class="col-12"><div class="empty-state"><i class="bi bi-layers"></i><p>No year levels found.</p></div></div>';
     } else {
         levels.forEach(level => {
-            const levelId = currentProgramType === 'college' ? level.id : level.id;
+            const levelId = level.id;
             const levelName = currentProgramType === 'college' ? level.year_name : `Grade ${level.grade_level}`;
             const sectionCount = level.section_count || 0;
             
             html += `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="col-lg-3 col-md-4 col-sm-6">
                     <div class="year-level-card p-4 text-center" onclick="viewSections(${levelId}, '${levelName.replace(/'/g, "\\'")}')">
-                        <div class="mb-3">
-                            <i class="bi bi-mortarboard-fill fs-1" style="color: #800000;"></i>
-                        </div>
+                        <div class="mb-3"><i class="bi bi-mortarboard-fill fs-1" style="color: var(--maroon);"></i></div>
                         <h5 class="fw-bold mb-2">${levelName}</h5>
-                        <div class="d-flex justify-content-center gap-2">
-                            <span class="badge bg-primary">${sectionCount} Sections</span>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted"><i class="bi bi-arrow-right-circle"></i> Manage Sections</small>
-                        </div>
+                        <div class="d-flex justify-content-center gap-2"><span class="badge bg-primary">${sectionCount} Sections</span></div>
+                        <div class="mt-3"><small class="text-muted"><i class="bi bi-arrow-right-circle"></i> Manage</small></div>
                     </div>
                 </div>
             `;
         });
     }
-    
     container.innerHTML = html;
 }
 
@@ -643,14 +542,10 @@ function viewSections(yearLevelId, yearLevelName) {
     document.getElementById('programsView').style.display = 'none';
     document.getElementById('yearLevelView').style.display = 'none';
     document.getElementById('sectionsView').style.display = 'block';
-    document.getElementById('sectionDetailView').style.display = 'none';
     
-    // Reset semester tabs
     document.querySelectorAll('#semesterTabs .nav-link').forEach(el => el.classList.remove('active'));
     document.querySelector('#semesterTabs .nav-link').classList.add('active');
     document.getElementById('currentSemesterLabel').textContent = '1st Semester';
-    
-    // Show summer tab only for college
     document.getElementById('summerTab').style.display = currentProgramType === 'college' ? 'block' : 'none';
     
     loadSections();
@@ -659,27 +554,21 @@ function viewSections(yearLevelId, yearLevelName) {
 
 function changeSemester(semester) {
     currentSemester = semester;
-    
     document.querySelectorAll('#semesterTabs .nav-link').forEach(el => el.classList.remove('active'));
     event.target.closest('.nav-link').classList.add('active');
-    
     const labels = { '1st': '1st Semester', '2nd': '2nd Semester', 'summer': 'Summer' };
     document.getElementById('currentSemesterLabel').textContent = labels[semester];
-    
     loadSections();
     loadSubjectCount();
 }
 
 function loadSections() {
     const container = document.getElementById('sectionsList');
-    container.innerHTML = '<div class="col-12 text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading sections...</div>';
+    container.innerHTML = '<div class="col-12 text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
     
     const params = new URLSearchParams({
-        action: 'get_sections',
-        program_type: currentProgramType,
-        program_id: currentProgramId,
-        year_level_id: currentYearLevelId,
-        semester: currentSemester
+        action: 'get_sections', program_type: currentProgramType, program_id: currentProgramId,
+        year_level_id: currentYearLevelId, semester: currentSemester
     });
     
     fetch('process/sections_api.php?' + params)
@@ -688,18 +577,14 @@ function loadSections() {
             if (data.success && data.sections.length > 0) {
                 let html = '';
                 data.sections.forEach(section => {
+                    const capacityPct = (section.student_count / section.max_capacity * 100);
                     html += `
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="section-card p-4" onclick="viewSectionDetail(${section.id}, '${section.section_name.replace(/'/g, "\\'")}')">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="section-card" onclick="viewSectionDetail(${section.id}, '${section.section_name.replace(/'/g, "\\'")}')">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h5 class="mb-1 fw-bold">${section.section_name}</h5>
-                                        <small class="text-muted">${section.room || 'No room assigned'}</small>
-                                    </div>
+                                    <div><h5 class="mb-1 fw-bold">${section.section_name}</h5><small class="text-muted">${section.room || 'TBA'}</small></div>
                                     <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
+                                        <button class="btn btn-sm btn-light" onclick="event.stopPropagation();" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                         <ul class="dropdown-menu">
                                             <li><a class="dropdown-item" href="#" onclick="event.stopPropagation(); editSection(${section.id})"><i class="bi bi-pencil"></i> Edit</a></li>
                                             <li><a class="dropdown-item text-danger" href="#" onclick="event.stopPropagation(); deleteSection(${section.id})"><i class="bi bi-trash"></i> Delete</a></li>
@@ -707,170 +592,91 @@ function loadSections() {
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2 mb-3">
-                                    <span class="badge bg-primary"><i class="bi bi-people"></i> ${section.student_count} Students</span>
-                                    <span class="badge bg-secondary"><i class="bi bi-person-badge"></i> ${section.adviser_name || 'No Adviser'}</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary"><i class="bi bi-people"></i> ${section.student_count}</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-person"></i> ${section.adviser_name || 'No Adviser'}</span>
                                 </div>
-                                <div class="progress mb-2" style="height: 8px;">
-                                    <div class="progress-bar bg-success" style="width: ${(section.student_count / section.max_capacity * 100)}%"></div>
-                                </div>
-                                <small class="text-muted">${section.student_count}/${section.max_capacity} capacity</small>
-                                <div class="text-end mt-2">
-                                    <small class="text-primary"><i class="bi bi-arrow-right"></i> View Details</small>
-                                </div>
+                                <div class="progress mb-2" style="height: 6px;"><div class="progress-bar bg-success" style="width: ${capacityPct}%"></div></div>
+                                <small class="text-muted">${section.student_count}/${section.max_capacity} Slots</small>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
                 container.innerHTML = html;
             } else {
-                container.innerHTML = `
-                    <div class="col-12">
-                        <div class="empty-state">
-                            <i class="bi bi-collection"></i>
-                            <p>No sections created yet for this semester. Click "Add Section" to create one.</p>
-                        </div>
-                    </div>
-                `;
+                container.innerHTML = '<div class="col-12"><div class="empty-state"><i class="bi bi-collection"></i><p>No sections found for this semester.</p></div></div>';
             }
-        })
-        .catch(error => {
-            container.innerHTML = '<div class="col-12 alert alert-danger">Error loading sections</div>';
-            console.error('Error:', error);
         });
 }
 
 function loadSubjectCount() {
     const params = new URLSearchParams({
-        action: 'get_subjects',
-        program_type: currentProgramType,
-        program_id: currentProgramId,
-        year_level_id: currentYearLevelId,
-        semester: currentSemester
+        action: 'get_subjects', program_type: currentProgramType, program_id: currentProgramId,
+        year_level_id: currentYearLevelId, semester: currentSemester
     });
-    
-    fetch('process/sections_api.php?' + params)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('subjectCountBadge').textContent = data.subjects.length + ' subjects in curriculum';
-            }
-        });
+    fetch('process/sections_api.php?' + params).then(response => response.json()).then(data => {
+        if (data.success) document.getElementById('subjectCountBadge').textContent = data.subjects.length + ' subjects in curriculum';
+    });
 }
 
 function viewSectionDetail(sectionId, sectionName) {
     currentSectionId = sectionId;
     currentSectionName = sectionName;
-    
     document.getElementById('selectedSectionName').textContent = currentProgramName + ' - ' + currentYearLevelName + ' - ' + sectionName;
     document.getElementById('sectionsView').style.display = 'none';
     document.getElementById('sectionDetailView').style.display = 'block';
-    
     loadSectionStudents();
     loadSectionSubjects();
 }
 
 function loadSectionStudents() {
     const container = document.getElementById('sectionStudentsList');
-    container.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading students...</div>';
-    
+    container.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
     fetch('process/sections_api.php?action=get_section_students&section_id=' + currentSectionId)
-        .then(response => response.json())
-        .then(data => {
+        .then(response => response.json()).then(data => {
             document.getElementById('studentCount').textContent = data.students?.length || 0;
-            
             if (data.success && data.students.length > 0) {
                 let html = '';
                 data.students.forEach((student, index) => {
-                    html += `
-                        <div class="student-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>${index + 1}. ${student.name}</strong>
-                                <br><small class="text-muted">${student.student_id || 'N/A'}</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-danger" onclick="removeStudentFromSection(${student.id})">
-                                <i class="bi bi-x"></i>
-                            </button>
-                        </div>
-                    `;
+                    html += `<div class="student-item"><div><strong>${index + 1}. ${student.name}</strong><br><small class="text-muted">${student.student_id || 'N/A'}</small></div>
+                    <button class="btn btn-sm btn-outline-danger border-0" onclick="removeStudentFromSection(${student.id})"><i class="bi bi-trash"></i></button></div>`;
                 });
                 container.innerHTML = html;
-            } else {
-                container.innerHTML = `
-                    <div class="text-center p-4 text-muted">
-                        <i class="bi bi-people fs-1 d-block mb-2"></i>
-                        No students enrolled yet
-                    </div>
-                `;
-            }
+            } else { container.innerHTML = '<div class="text-center p-5 text-muted"><i class="bi bi-people fs-1 d-block mb-2 opacity-25"></i>No students enrolled.</div>'; }
         });
 }
 
 function loadSectionSubjects() {
     const container = document.getElementById('sectionSubjectsList');
-    container.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading subjects...</div>';
-    
+    container.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
     const params = new URLSearchParams({
-        action: 'get_subjects',
-        program_type: currentProgramType,
-        program_id: currentProgramId,
-        year_level_id: currentYearLevelId,
-        semester: currentSemester
+        action: 'get_subjects', program_type: currentProgramType, program_id: currentProgramId,
+        year_level_id: currentYearLevelId, semester: currentSemester
     });
-    
-    fetch('process/sections_api.php?' + params)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('subjectCount').textContent = data.subjects?.length || 0;
-            
-            if (data.success && data.subjects.length > 0) {
-                let html = '';
-                data.subjects.forEach(subject => {
-                    html += `
-                        <div class="subject-list-item">
-                            <div>
-                                <strong>${subject.subject_code}</strong> - ${subject.subject_title}
-                                <br><small class="text-muted">${subject.units} units | ${subject.teacher_name || 'No teacher assigned'}</small>
-                            </div>
-                            <span class="badge bg-info">${subject.units}u</span>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = `
-                    <div class="text-center p-4 text-muted">
-                        <i class="bi bi-book fs-1 d-block mb-2"></i>
-                        No subjects configured for this semester
-                    </div>
-                `;
-            }
-        });
+    fetch('process/sections_api.php?' + params).then(response => response.json()).then(data => {
+        document.getElementById('subjectCount').textContent = data.subjects?.length || 0;
+        if (data.success && data.subjects.length > 0) {
+            let html = '';
+            data.subjects.forEach(subject => {
+                html += `<div class="subject-list-item"><div><strong>${subject.subject_code}</strong> - ${subject.subject_title}<br>
+                <small class="text-muted">${subject.units} Units | ${subject.teacher_name || 'TBA'}</small></div><span class="badge bg-blue bg-opacity-10 text-blue">${subject.units}u</span></div>`;
+            });
+            container.innerHTML = html;
+        } else { container.innerHTML = '<div class="text-center p-5 text-muted"><i class="bi bi-book fs-1 d-block mb-2 opacity-25"></i>No subjects configured.</div>'; }
+    });
 }
 
 function backToPrograms() {
     document.getElementById('programsView').style.display = 'block';
     document.getElementById('yearLevelView').style.display = 'none';
-    document.getElementById('sectionsView').style.display = 'none';
-    document.getElementById('sectionDetailView').style.display = 'none';
-    currentProgramId = null;
-    currentProgramType = null;
-    currentProgramName = null;
 }
 
 function backToYearLevels() {
-    document.getElementById('programsView').style.display = 'none';
     document.getElementById('yearLevelView').style.display = 'block';
     document.getElementById('sectionsView').style.display = 'none';
-    document.getElementById('sectionDetailView').style.display = 'none';
-    currentYearLevelId = null;
-    currentYearLevelName = null;
 }
 
 function backToSections() {
     document.getElementById('sectionsView').style.display = 'block';
     document.getElementById('sectionDetailView').style.display = 'none';
-    currentSectionId = null;
-    currentSectionName = null;
     loadSections();
 }
 
@@ -881,192 +687,100 @@ function openAddSectionModal() {
     document.getElementById('modal_grade_level_id').value = currentProgramType === 'shs' ? currentYearLevelId : '';
     document.getElementById('modal_program_type').value = currentProgramType;
     document.getElementById('modal_semester').value = currentSemester;
-    
     document.getElementById('addSectionForm').reset();
     new bootstrap.Modal(document.getElementById('addSectionModal')).show();
 }
 
-// Add section form submit
 document.getElementById('addSectionForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     formData.append('action', 'add_section');
-    
-    fetch('process/sections_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('addSectionModal')).hide();
-            showAlert('success', data.message);
-            loadSections();
-        } else {
-            showAlert('danger', data.message);
-        }
-    })
-    .catch(error => {
-        showAlert('danger', 'Error creating section');
-        console.error('Error:', error);
+    fetch('process/sections_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
+        if (data.success) { bootstrap.Modal.getInstance(document.getElementById('addSectionModal')).hide(); showAlert('success', data.message); loadSections(); }
+        else showAlert('danger', data.message);
     });
 });
 
 function editSection(sectionId) {
-    fetch('process/sections_api.php?action=get_section&section_id=' + sectionId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('edit_section_id').value = data.section.id;
-                document.getElementById('edit_section_name').value = data.section.section_name;
-                document.getElementById('edit_max_capacity').value = data.section.max_capacity;
-                document.getElementById('edit_room').value = data.section.room || '';
-                document.getElementById('edit_adviser_id').value = data.section.adviser_id || '';
-                new bootstrap.Modal(document.getElementById('editSectionModal')).show();
-            }
-        });
+    fetch('process/sections_api.php?action=get_section&section_id=' + sectionId).then(response => response.json()).then(data => {
+        if (data.success) {
+            document.getElementById('edit_section_id').value = data.section.id;
+            document.getElementById('edit_section_name').value = data.section.section_name;
+            document.getElementById('edit_max_capacity').value = data.section.max_capacity;
+            document.getElementById('edit_room').value = data.section.room || '';
+            document.getElementById('edit_adviser_id').value = data.section.adviser_id || '';
+            new bootstrap.Modal(document.getElementById('editSectionModal')).show();
+        }
+    });
 }
 
 document.getElementById('editSectionForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     formData.append('action', 'update_section');
-    
-    fetch('process/sections_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('editSectionModal')).hide();
-            showAlert('success', data.message);
-            loadSections();
-        } else {
-            showAlert('danger', data.message);
-        }
+    fetch('process/sections_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
+        if (data.success) { bootstrap.Modal.getInstance(document.getElementById('editSectionModal')).hide(); showAlert('success', data.message); loadSections(); }
+        else showAlert('danger', data.message);
     });
 });
 
 function deleteSection(sectionId) {
-    if (!confirm('Are you sure you want to delete this section? All student enrollments will be removed.')) return;
-    
+    if (!confirm('Delete this section? Enrollment records will be removed.')) return;
     const formData = new FormData();
     formData.append('action', 'delete_section');
     formData.append('section_id', sectionId);
-    
-    fetch('process/sections_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-            loadSections();
-        } else {
-            showAlert('danger', data.message);
-        }
+    fetch('process/sections_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
+        if (data.success) { showAlert('success', data.message); loadSections(); }
+        else showAlert('danger', data.message);
     });
 }
 
-function openAddStudentModal() {
-    loadAvailableStudents();
-    new bootstrap.Modal(document.getElementById('addStudentModal')).show();
-}
+function openAddStudentModal() { loadAvailableStudents(); new bootstrap.Modal(document.getElementById('addStudentModal')).show(); }
 
 function loadAvailableStudents(search = '') {
     const container = document.getElementById('availableStudentsList');
-    container.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading students...</div>';
-    
-    const params = new URLSearchParams({
-        action: 'get_available_students',
-        section_id: currentSectionId,
-        program_type: currentProgramType,
-        program_id: currentProgramId,
-        search: search
+    container.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
+    const params = new URLSearchParams({ action: 'get_available_students', section_id: currentSectionId, program_type: currentProgramType, program_id: currentProgramId, search: search });
+    fetch('process/sections_api.php?' + params).then(response => response.json()).then(data => {
+        if (data.success && data.students.length > 0) {
+            let html = '';
+            data.students.forEach(student => {
+                html += `<div class="student-item"><div><strong>${student.name}</strong><br><small class="text-muted">${student.student_id || 'N/A'}</small></div>
+                <button class="btn btn-sm btn-success" onclick="addStudentToSection(${student.id})"><i class="bi bi-plus"></i> Add</button></div>`;
+            });
+            container.innerHTML = html;
+        } else container.innerHTML = '<div class="text-center p-4 text-muted">No students available.</div>';
     });
-    
-    fetch('process/sections_api.php?' + params)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.students.length > 0) {
-                let html = '';
-                data.students.forEach(student => {
-                    html += `
-                        <div class="student-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>${student.name}</strong>
-                                <br><small class="text-muted">${student.student_id || 'N/A'}</small>
-                            </div>
-                            <button class="btn btn-sm btn-success" onclick="addStudentToSection(${student.id})">
-                                <i class="bi bi-plus"></i> Add
-                            </button>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="text-center p-4 text-muted">No available students found</div>';
-            }
-        });
 }
 
-document.getElementById('studentSearch').addEventListener('input', function() {
-    loadAvailableStudents(this.value);
-});
+document.getElementById('studentSearch').addEventListener('input', function() { loadAvailableStudents(this.value); });
 
 function addStudentToSection(studentId) {
     const formData = new FormData();
     formData.append('action', 'add_student_to_section');
     formData.append('section_id', currentSectionId);
     formData.append('student_id', studentId);
-    
-    fetch('process/sections_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadSectionStudents();
-            loadAvailableStudents(document.getElementById('studentSearch').value);
-        } else {
-            showAlert('danger', data.message);
-        }
+    fetch('process/sections_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
+        if (data.success) { loadSectionStudents(); loadAvailableStudents(document.getElementById('studentSearch').value); }
+        else showAlert('danger', data.message);
     });
 }
 
 function removeStudentFromSection(studentId) {
-    if (!confirm('Remove this student from the section?')) return;
-    
+    if (!confirm('Remove student?')) return;
     const formData = new FormData();
     formData.append('action', 'remove_student_from_section');
     formData.append('section_id', currentSectionId);
     formData.append('student_id', studentId);
-    
-    fetch('process/sections_api.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadSectionStudents();
-        } else {
-            showAlert('danger', data.message);
-        }
+    fetch('process/sections_api.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
+        if (data.success) loadSectionStudents();
+        else showAlert('danger', data.message);
     });
 }
 
 function showAlert(type, message) {
     const container = document.getElementById('alertContainer');
-    container.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
+    container.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     setTimeout(() => container.innerHTML = '', 5000);
 }
 </script>
