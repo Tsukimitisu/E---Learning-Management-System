@@ -90,7 +90,6 @@ $section_info = $conn->query("
 ")->fetch_assoc();
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

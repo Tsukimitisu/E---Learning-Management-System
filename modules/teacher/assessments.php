@@ -38,7 +38,6 @@ $classes = $conn->query("
 ");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // This opens the .wrapper and starts #content
 ?>
 
 <style>

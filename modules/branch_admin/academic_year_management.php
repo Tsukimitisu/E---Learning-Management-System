@@ -111,8 +111,7 @@ if ($current_ay) {
     $student_counts = $counts->fetch_all(MYSQLI_ASSOC);
 }
 
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>

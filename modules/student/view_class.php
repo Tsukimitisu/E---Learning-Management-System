@@ -22,7 +22,6 @@ $grade = $conn->query("SELECT midterm, final, final_grade, remarks FROM grades W
 $page_title = "Classroom - " . $class_info['course_code'];
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <div class="animate__animated animate__fadeIn">

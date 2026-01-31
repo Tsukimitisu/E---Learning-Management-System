@@ -65,7 +65,6 @@ $materials = $materials_query->get_result();
 
 $page_title = "Materials - " . ($subject_info['subject_code'] ?? 'Subject');
 include '../../includes/header.php';
-include '../../includes/sidebar.php';
 ?>
 
 <style>

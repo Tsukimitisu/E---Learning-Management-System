@@ -79,7 +79,6 @@ $students_query->execute();
 $students_result = $students_query->get_result();
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

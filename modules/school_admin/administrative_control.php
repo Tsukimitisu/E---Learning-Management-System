@@ -78,7 +78,6 @@ $audit_logs_query = "
 $audit_logs_result = $conn->query($audit_logs_query);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
@@ -198,7 +197,7 @@ include '../../includes/sidebar.php';
                                         <?php if (empty($admin['branch_name'])): ?>
                                             <span class="badge bg-warning text-dark px-3 rounded-pill">⚠ UNASSIGNED</span>
                                         <?php else: ?>
-                                            <span class="badge bg-dark text-dark border border-blue px-3 rounded-pill"><?php echo htmlspecialchars($admin['branch_name']); ?></span>
+                                            <span class="badge bg-dark text-white border border-blue px-3 rounded-pill"><?php echo htmlspecialchars($admin['branch_name']); ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">

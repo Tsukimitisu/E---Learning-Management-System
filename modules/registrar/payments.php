@@ -60,7 +60,6 @@ $stmt->execute();
 $payments_result = $stmt->get_result();
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

@@ -76,7 +76,6 @@ function formatFileSize($bytes) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
