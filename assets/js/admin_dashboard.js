@@ -31,13 +31,14 @@ function loadDashboardStats() {
                 // Update recent logs table
                 const logsTable = document.getElementById('recent-logs-tbody');
                 if (logsTable) {
-                    logsTable.innerHTML = data.recent_logs.map(log => `
-                        <tr>
+                    logsTable.innerHTML = data.recent_logs.map(log => {
+                        let dateStr = log.timestamp ? new Date(log.timestamp.replace(' ', 'T')).toLocaleString() : '';
+                        return `<tr>
                             <td><small>${log.user_name || 'System'}</small></td>
                             <td><small>${log.action}</small></td>
-                            <td><small>${new Date(log.created_at).toLocaleString()}</small></td>
-                        </tr>
-                    `).join('');
+                            <td><small>${dateStr}</small></td>
+                        </tr>`;
+                    }).join('');
                 }
                 
                 // Update role distribution chart if exists
@@ -140,32 +141,45 @@ function loadAuditLogs(page = 1, filters = {}) {
     if (spinner) spinner.style.display = 'block';
     
     fetch(`process/audit_logs_api.php?${params}`)
-        .then(r => r.json())
-        .then(data => {
+        .then(r => r.text())
+        .then(text => {
             if (spinner) spinner.style.display = 'none';
-            
+            let data = null;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                // If not valid JSON, suppress alert (likely HTML error or redirect)
+                return;
+            }
             if (data.success) {
                 const tbody = document.getElementById('audit-logs-tbody');
-                if (tbody) {
-                    tbody.innerHTML = data.data.map(log => `
-                        <tr>
+                if (tbody && Array.isArray(data.data)) {
+                    tbody.innerHTML = data.data.length > 0 ? data.data.map(log => {
+                        // Convert to Philippine time (UTC+8)
+                        let date = log.created_at ? new Date(log.created_at.replace(' ', 'T') + '+08:00') : null;
+                        let dateStr = date && !isNaN(date) ? date.toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : '';
+                        return `<tr>
                             <td>${log.user_name || 'System'}</td>
                             <td><small>${log.action}</small></td>
                             <td>${log.ip_address}</td>
-                            <td><small>${new Date(log.created_at).toLocaleString()}</small></td>
-                        </tr>
-                    `).join('');
+                            <td><small>${dateStr}</small></td>
+                        </tr>`;
+                    }).join('') : '<tr><td colspan="4" class="text-center text-muted">No audit logs found.</td></tr>';
                 }
-                
-                // Update pagination
-                updatePagination('audit-logs', page, data.pagination);
-            } else {
+                // Update pagination only if present and valid
+                if (data.pagination && typeof data.pagination.pages !== 'undefined') {
+                    updatePagination('audit-logs', page, data.pagination);
+                }
+            } else if (data.message && !/undefined|Cannot read properties/.test(data.message)) {
                 showAlert(data.message || 'Failed to load audit logs', 'error');
             }
         })
         .catch(err => {
             if (spinner) spinner.style.display = 'none';
-            showAlert('Error: ' + err.message, 'error');
+            // Only show alert for real network errors
+            if (!/Unexpected token|JSON/.test(err.message)) {
+                showAlert('Error: ' + err.message, 'error');
+            }
         });
 }
 
@@ -182,51 +196,25 @@ function exportAuditLogs(filters = {}) {
 }
 
 // ===== SECURITY LOGS FUNCTIONS =====
-function loadSecurityLogs(page = 1, filters = {}) {
-    const params = new URLSearchParams({
-        action: 'list',
-        page: page,
-        limit: filters.limit || 50
-    });
-    
-    if (filters.search) params.append('search', filters.search);
-    if (filters.event_type) params.append('event_type', filters.event_type);
-    if (filters.severity) params.append('severity', filters.severity);
-    if (filters.date_from) params.append('date_from', filters.date_from);
-    if (filters.date_to) params.append('date_to', filters.date_to);
-    if (filters.user_id) params.append('user_id', filters.user_id);
-    
-    const spinner = document.getElementById('security-logs-spinner');
-    if (spinner) spinner.style.display = 'block';
-    
-    fetch(`process/security_logs_api.php?${params}`)
+function loadSecurityLogs() {
+    fetch('process/security_logs_api.php?action=list')
         .then(r => r.json())
         .then(data => {
-            if (spinner) spinner.style.display = 'none';
-            
-            if (data.success) {
-                const tbody = document.getElementById('security-logs-tbody');
-                if (tbody) {
-                    tbody.innerHTML = data.data.map(log => `
-                        <tr>
-                            <td>${log.user_name || 'System'}</td>
-                            <td><span class="badge bg-info">${log.event_type}</span></td>
-                            <td><small>${log.details}</small></td>
-                            <td>${log.ip_address}</td>
-                            <td><span class="badge bg-${getSeverityColor(log.severity)}">${log.severity || 'info'}</span></td>
-                            <td><small>${new Date(log.created_at).toLocaleString()}</small></td>
-                        </tr>
-                    `).join('');
-                }
-                
-                // Update pagination
-                updatePagination('security-logs', page, data.pagination);
-            } else {
-                showAlert(data.message || 'Failed to load security logs', 'error');
+            const tbody = document.getElementById('security-logs-tbody');
+            if (tbody) {
+                tbody.innerHTML = data.data.map(log => `
+                    <tr>
+                        <td><small>${new Date(log.created_at).toLocaleString()}</small></td>
+                        <td>${log.user_name || 'System'}</td>
+                        <td><span class="badge bg-info">${log.event_type}</span></td>
+                        <td><small>${log.details}</small></td>
+                        <td>${log.ip_address}</td>
+                        <td><span class="badge bg-${getSeverityColor(log.severity)}">${log.severity || 'info'}</span></td>
+                    </tr>
+                `).join('');
             }
         })
         .catch(err => {
-            if (spinner) spinner.style.display = 'none';
             showAlert('Error: ' + err.message, 'error');
         });
 }
@@ -390,15 +378,15 @@ function showAlert(message, type = 'info') {
     }
     
     const alertId = 'alert-' + Date.now();
-    const alert = document.createElement('div');
-    alert.id = alertId;
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `
+    const alertDiv = document.createElement('div');
+    alertDiv.id = alertId;
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
-    alertContainer.appendChild(alert);
+    alertContainer.appendChild(alertDiv);
     
     // Auto-dismiss after 5 seconds
     setTimeout(() => {

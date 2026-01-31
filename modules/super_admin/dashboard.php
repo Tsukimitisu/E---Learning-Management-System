@@ -112,7 +112,6 @@ include '../../includes/sidebar.php';
                 <p>Locked Accounts</p>
                 <h3 id="locked-accounts" style="color: #ffc107;">0</h3>
             </div>
-        </div>
     </div>
     
     <!-- Maintenance Mode Badge -->
@@ -130,11 +129,7 @@ include '../../includes/sidebar.php';
                 <i class="bi bi-people-fill"></i> Users
             </a>
         </div>
-        <div class="col-6 col-md-3 animate__animated animate__fadeInUp delay-2">
-            <a href="system_settings.php" class="quick-action-btn shadow-sm">
-                <i class="bi bi-sliders"></i> Settings
-            </a>
-        </div>
+        <!-- Removed duplicate system_settings.php quick-action button -->
         <div class="col-6 col-md-3 animate__animated animate__fadeInUp delay-3">
             <a href="security.php" class="quick-action-btn shadow-sm">
                 <i class="bi bi-shield-lock-fill"></i> Security
@@ -155,7 +150,8 @@ include '../../includes/sidebar.php';
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-4" style="color: var(--blue);">Recent Audit Logs</h6>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <div style="max-height: 320px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr class="small text-uppercase"><th>User</th><th>Action</th><th>Timestamp</th></tr>
                             </thead>
@@ -163,6 +159,7 @@ include '../../includes/sidebar.php';
                                 <!-- Populated by JavaScript -->
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -174,15 +171,15 @@ include '../../includes/sidebar.php';
                 <h6 class="fw-bold mb-4"><i class="bi bi-broadcast me-2"></i>Live Services</h6>
                 <div class="d-flex justify-content-between mb-3 small">
                     <span class="opacity-75">Database Status</span> 
-                    <span class="text-success fw-bold">● Active</span>
+                    <span id="db-status" class="fw-bold">● ...</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3 small">
                     <span class="opacity-75">API Gateway</span> 
-                    <span class="text-success fw-bold">● Online</span>
+                    <span id="api-gateway-status" class="fw-bold">● ...</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3 small">
                     <span class="opacity-75">Server Load</span> 
-                    <span class="text-warning fw-bold">24%</span>
+                    <span id="server-load-status" class="fw-bold">...</span>
                 </div>
                 <hr class="border-white opacity-25">
                 <a href="security.php" class="btn btn-outline-light btn-sm w-100 mt-2 rounded-pill fw-bold">
@@ -205,6 +202,63 @@ include '../../includes/sidebar.php';
         // Refresh every 30 seconds
         setInterval(loadDashboardStats, 30000);
     });
+
+    // Patch loadDashboardStats to update live services
+    const origLoadDashboardStats = window.loadDashboardStats;
+    window.loadDashboardStats = function() {
+        fetch('process/dashboard_stats_api.php')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Stat cards
+                    document.getElementById('total-users').textContent = formatNumber(data.stats.total_users);
+                    document.getElementById('total-branches').textContent = formatNumber(data.stats.total_branches);
+                    document.getElementById('failed-logins').textContent = formatNumber(data.stats.failed_logins_today);
+                    document.getElementById('locked-accounts').textContent = formatNumber(data.stats.locked_accounts);
+                    // Maintenance badge
+                    const modeEl = document.getElementById('maintenance-mode-badge');
+                    if (modeEl) {
+                        if (data.stats.is_maintenance) {
+                            modeEl.className = 'badge bg-warning';
+                            modeEl.textContent = 'MAINTENANCE MODE';
+                        } else {
+                            modeEl.className = 'badge bg-success';
+                            modeEl.textContent = 'NORMAL';
+                        }
+                    }
+                    // Recent logs
+                    const logsTable = document.getElementById('recent-logs-tbody');
+                    if (logsTable) {
+                        logsTable.innerHTML = data.recent_logs.map(log => `
+                            <tr>
+                                <td><small>${log.user_name || 'System'}</small></td>
+                                <td><small>${log.action}</small></td>
+                                <td><small>${new Date(log.created_at).toLocaleString()}</small></td>
+                            </tr>
+                        `).join('');
+                    }
+                    // Live services
+                    const dbStatus = document.getElementById('db-status');
+                    if (dbStatus) {
+                        dbStatus.textContent = `● ${data.stats.db_status}`;
+                        dbStatus.className = 'fw-bold ' + (data.stats.db_status === 'Active' ? 'text-success' : 'text-danger');
+                    }
+                    const apiStatus = document.getElementById('api-gateway-status');
+                    if (apiStatus) {
+                        apiStatus.textContent = `● ${data.stats.api_gateway}`;
+                        apiStatus.className = 'fw-bold ' + (data.stats.api_gateway === 'Online' ? 'text-success' : 'text-danger');
+                    }
+                    const serverLoad = document.getElementById('server-load-status');
+                    if (serverLoad) {
+                        serverLoad.textContent = data.stats.server_load;
+                        serverLoad.className = 'fw-bold text-warning';
+                    }
+                } else {
+                    showAlert('Failed to load dashboard stats', 'error');
+                }
+            })
+            .catch(err => showAlert('Error: ' + err.message, 'error'));
+    };
 </script>
 </body>
 </html>

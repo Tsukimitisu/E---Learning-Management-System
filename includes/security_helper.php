@@ -12,13 +12,37 @@ require_once __DIR__ . '/email_helper.php';
  */
 function record_login_attempt($email, $success = false) {
     global $conn;
-    
     $ip_address = get_client_ip();
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    
     $stmt = $conn->prepare("INSERT INTO login_attempts (email, ip_address, user_agent, success, attempted_at) VALUES (?, ?, ?, ?, NOW())");
     $stmt->bind_param("sssi", $email, $ip_address, $user_agent, $success);
     $stmt->execute();
+
+    // Always log to security_logs for dashboard and audit
+    $event_type = $success ? 'login_success' : 'login_failed';
+    $severity = $success ? 'info' : 'medium';
+    $details = $success ? 'User login successful' : 'User login failed';
+    $user_id = null;
+    $get_id = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $get_id->bind_param("s", $email);
+    $get_id->execute();
+    $res = $get_id->get_result();
+    if ($row = $res->fetch_assoc()) {
+        $user_id = $row['id'];
+    }
+    $sec_stmt = $conn->prepare("INSERT INTO security_logs (user_id, event_type, details, ip_address, user_agent, severity, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+    $sec_stmt->bind_param("isssss", $user_id, $event_type, $details, $ip_address, $user_agent, $severity);
+    $sec_stmt->execute();
+
+    // Also log to audit_logs for failed logins and account locks
+    if (!$success) {
+        $action = 'Failed login attempt';
+        if ($user_id) {
+            $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
+            $audit->bind_param("iss", $user_id, $action, $ip_address);
+            $audit->execute();
+        }
+    }
 }
 
 // Note: get_client_ip() is defined in config/db.php
@@ -49,7 +73,7 @@ function is_account_locked($email) {
         $update = $conn->prepare("UPDATE users SET status = 'inactive' WHERE email = ?");
         $update->bind_param("s", $email);
         $update->execute();
-        // Optionally, log to audit_logs
+        // Log to audit_logs and security_logs
         $user_id = null;
         $get_id = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $get_id->bind_param("s", $email);
@@ -58,12 +82,17 @@ function is_account_locked($email) {
         if ($row = $res->fetch_assoc()) {
             $user_id = $row['id'];
         }
+        $ip = get_client_ip();
+        $action = 'Account locked due to failed login attempts';
         if ($user_id) {
-            $ip = get_client_ip();
-            $action = 'Account locked due to failed login attempts';
+            // Always log to audit_logs
             $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
             $audit->bind_param("iss", $user_id, $action, $ip);
             $audit->execute();
+            // Always log to security_logs
+            $sec_stmt = $conn->prepare("INSERT INTO security_logs (user_id, event_type, details, ip_address, user_agent, severity, created_at) VALUES (?, 'account_locked', ?, ?, ?, 'high', NOW())");
+            $sec_stmt->bind_param("isss", $user_id, $action, $ip, $user_agent);
+            $sec_stmt->execute();
         }
         return true;
     }

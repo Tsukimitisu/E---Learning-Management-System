@@ -26,101 +26,58 @@ $user_id = (int)($_GET['user_id'] ?? 0);
 
 try {
     if ($action === 'list') {
-        // Build query with filters
-        $query = "SELECT al.id, al.user_id, al.action, al.ip_address, al.created_at,
-                         CONCAT(COALESCE(up.first_name, ''), ' ', COALESCE(up.last_name, '')) as user_name
-                  FROM audit_logs al
-                  LEFT JOIN user_profiles up ON al.user_id = up.user_id
-                  WHERE 1=1";
-        
-        $params = [];
-        $types = '';
-        
-        if (!empty($search)) {
-            $search_term = "%$search%";
-            $query .= " AND (al.action LIKE ? OR CONCAT(up.first_name, ' ', up.last_name) LIKE ?)";
-            $params[] = $search_term;
-            $params[] = $search_term;
-            $types .= 'ss';
+        // List all audit logs for all users, with pagination and created_at
+        $count_query = "SELECT COUNT(*) as total FROM audit_logs";
+        $count_result = $conn->query($count_query);
+        if (!$count_result) {
+            echo json_encode(['success' => false, 'message' => 'SQL Error: ' . $conn->error]);
+            exit();
         }
-        
-        if (!empty($date_from)) {
-            $query .= " AND DATE(al.created_at) >= ?";
-            $params[] = $date_from;
-            $types .= 's';
+        $total_logs = $count_result->fetch_assoc()['total'];
+        $pages = ceil($total_logs / $limit);
+        $query = "SELECT al.id, al.user_id, al.action, al.ip_address, al.timestamp,
+                    CONCAT(COALESCE(up.first_name, ''), ' ', COALESCE(up.last_name, '')) as user_name
+                FROM audit_logs al
+                LEFT JOIN user_profiles up ON al.user_id = up.user_id
+                ORDER BY al.timestamp DESC
+                LIMIT $limit OFFSET $offset";
+        $result = $conn->query($query);
+        if (!$result) {
+            echo json_encode(['success' => false, 'message' => 'SQL Error: ' . $conn->error]);
+            exit();
         }
-        
-        if (!empty($date_to)) {
-            $query .= " AND DATE(al.created_at) <= ?";
-            $params[] = $date_to;
-            $types .= 's';
-        }
-        
-        if ($user_id > 0) {
-            $query .= " AND al.user_id = ?";
-            $params[] = $user_id;
-            $types .= 'i';
-        }
-        
-        // Count total
-        $count_query = str_replace('SELECT al.id, al.user_id, al.action, al.ip_address, al.created_at, CONCAT(COALESCE(up.first_name, \'\'), \' \', COALESCE(up.last_name, \'\')) as user_name',
-                                   'SELECT COUNT(*) as total',
-                                   $query);
-        
-        $count_stmt = $conn->prepare($count_query);
-        if (!empty($params)) {
-            $count_stmt->bind_param($types, ...$params);
-        }
-        $count_stmt->execute();
-        $count_result = $count_stmt->get_result()->fetch_assoc();
-        $total = $count_result['total'];
-        
-        // Get paginated results
-        $query .= " ORDER BY al.created_at DESC LIMIT ? OFFSET ?";
-        $params[] = $limit;
-        $params[] = $offset;
-        $types .= 'ii';
-        
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
         $logs = [];
         while ($row = $result->fetch_assoc()) {
             $logs[] = $row;
         }
-        
         echo json_encode([
             'success' => true,
             'data' => $logs,
             'pagination' => [
                 'page' => $page,
-                'limit' => $limit,
-                'total' => $total,
-                'pages' => ceil($total / $limit)
+                'pages' => $pages,
+                'total' => $total_logs
             ]
         ]);
-        
     } elseif ($action === 'export') {
         // Export as CSV
-        $query = "SELECT al.id, al.user_id, al.action, al.ip_address, al.created_at,
-                         CONCAT(COALESCE(up.first_name, ''), ' ', COALESCE(up.last_name, '')) as user_name
-                  FROM audit_logs al
-                  LEFT JOIN user_profiles up ON al.user_id = up.user_id
-                  WHERE 1=1";
+         $query = "SELECT al.id, al.user_id, al.action, al.ip_address, al.timestamp,
+                    CONCAT(COALESCE(up.first_name, ''), ' ', COALESCE(up.last_name, '')) as user_name
+                FROM audit_logs al
+                LEFT JOIN user_profiles up ON al.user_id = up.user_id
+                WHERE 1=1";
         
         $params = [];
         $types = '';
         
         if (!empty($date_from)) {
-            $query .= " AND DATE(al.created_at) >= ?";
+            $query .= " AND DATE(al.timestamp) >= ?";
             $params[] = $date_from;
             $types .= 's';
         }
         
         if (!empty($date_to)) {
-            $query .= " AND DATE(al.created_at) <= ?";
+            $query .= " AND DATE(al.timestamp) <= ?";
             $params[] = $date_to;
             $types .= 's';
         }
@@ -131,7 +88,7 @@ try {
             $types .= 'i';
         }
         
-        $query .= " ORDER BY al.created_at DESC LIMIT 10000";
+        $query .= " ORDER BY al.timestamp DESC LIMIT 10000";
         
         $stmt = $conn->prepare($query);
         if (!empty($params)) {
@@ -155,7 +112,7 @@ try {
                 $row['user_name'],
                 $row['action'],
                 $row['ip_address'],
-                $row['created_at']
+                $row['timestamp']
             ]);
         }
         fclose($output);

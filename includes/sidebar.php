@@ -43,7 +43,7 @@
         if ($_SESSION['role_id'] == ROLE_SUPER_ADMIN) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>"><i class="bi bi-people-fill"></i> <span>Users</span></a></li>
-            <li><a href="system_settings.php" class="<?php echo ($current_page == 'system_settings.php') ? 'active' : ''; ?>"><i class="bi bi-gear-wide-connected"></i> <span>Settings</span></a></li>
+            <!-- Removed duplicate system_settings.php link -->
             <li><a href="security_settings.php" class="<?php echo ($current_page == 'security_settings.php') ? 'active' : ''; ?>"><i class="bi bi-shield-lock-fill"></i> <span>Security & Email</span></a></li>
             <li><a href="security.php" class="<?php echo ($current_page == 'security.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-data"></i> <span>Audit Logs</span></a></li>
             <li><a href="maintenance.php" class="<?php echo ($current_page == 'maintenance.php') ? 'active' : ''; ?>"><i class="bi bi-tools"></i> <span>Maintenance</span></a></li>
