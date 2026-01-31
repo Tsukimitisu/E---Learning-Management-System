@@ -73,7 +73,6 @@ include '../../includes/header.php';
 </style>
 
 <div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
 
     <div id="content">
         <div class="navbar-custom d-flex justify-content-between align-items-center mb-4">

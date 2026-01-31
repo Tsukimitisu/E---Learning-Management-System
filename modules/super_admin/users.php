@@ -21,158 +21,147 @@ $users_query = "
 $users_result = $conn->query($users_query);
 $roles_result = $conn->query("SELECT id, name FROM roles ORDER BY id");
 
+// Include Header (This opens the layout)
 include '../../includes/header.php';
 ?>
 
 <style>
-    /* --- SCROLLBAR CONTROL --- */
-    html, body {
-        height: 100%;
-        margin: 0;
-        overflow: hidden; 
-    }
-
-    .wrapper {
-        display: flex;
-        height: 100vh; 
-        width: 100vw;
-    }
-
-    #content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden; 
-        background-color: #f4f7f6;
-    }
-
-    /* Scrollable Container for the Table */
-    .table-scroll-container {
-        flex: 1;
-        overflow-y: auto; 
-        padding: 0 30px 30px 30px;
-    }
-
-    /* --- MODERN STYLING --- */
+    /* --- PAGE SPECIFIC STYLES --- */
     :root { --elms-maroon: #800000; }
-    
-    .content-header { 
-        background: white; 
-        padding: 20px 30px; 
-        border-bottom: 1px solid #eee; 
-        margin-bottom: 20px; 
-    }
     
     .main-card { 
         background: white; 
         border: none; 
-        border-radius: 15px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-        height: 100%; /* Take up available space */
+        border-radius: 12px; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        padding: 20px;
+        margin-bottom: 30px;
     }
     
     .table thead th { 
-        position: sticky; 
-        top: 0;
-        background-color: #fcfcfc; 
-        z-index: 10;
+        background-color: #f8f9fa; 
         text-transform: uppercase; 
         font-size: 0.75rem; 
         letter-spacing: 1px; 
         font-weight: 700; 
         color: #777; 
-        border-bottom: 2px solid #f1f1f1;
-        padding: 15px 20px;
+        border-bottom: 2px solid #eee;
+        padding: 15px;
+        white-space: nowrap;
     }
 
-    .table tbody td { padding: 15px 20px; vertical-align: middle; }
+    .table tbody td { 
+        padding: 15px; 
+        vertical-align: middle; 
+    }
     
+    /* Badge Styles */
     .badge-status { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
     .badge-active { background: #e6fcf5; color: #0ca678; }
     .badge-inactive { background: #fff5f5; color: #fa5252; }
     .badge-role { background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; }
 
-    .btn-maroon { background: var(--elms-maroon); color: white; border-radius: 8px; font-weight: 600; border: none; transition: 0.3s; }
-    .btn-maroon:hover { background: #600000; color: white; transform: translateY(-2px); }
+    /* Button Styles */
+    .btn-maroon { 
+        background: var(--elms-maroon); 
+        color: white; 
+        border-radius: 8px; 
+        font-weight: 600; 
+        border: none; 
+        transition: 0.3s; 
+    }
+    .btn-maroon:hover { 
+        background: #600000; 
+        color: white; 
+        transform: translateY(-2px); 
+    }
     
-    .action-btn { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: 0.2s; border: none; background: #f8f9fa; }
+    .action-btn { 
+        width: 35px; 
+        height: 35px; 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 8px; 
+        transition: 0.2s; 
+        border: none; 
+        background: #f8f9fa; 
+    }
     .action-btn:hover { background: #eee; }
 </style>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
-
-    <div id="content">
-        <!-- Static Header (No Scroll) -->
-        <div class="content-header d-flex justify-content-between align-items-center animate__animated animate__fadeInDown">
-            <div>
-                <h4 style="color: #003366; font-weight: 700; margin:0;"><i class="bi bi-people-fill me-2"></i> User Management</h4>
-                <p class="text-muted small mb-0">System access control</p>
-            </div>
-            <button class="btn btn-maroon py-2 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="bi bi-person-plus me-2"></i> Add New User
-            </button>
+<!-- Main Content Container -->
+<div class="container-fluid p-0 animate__animated animate__fadeIn">
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 animate__animated animate__fadeInDown">
+        <div>
+            <h4 class="fw-bold mb-1" style="color: var(--blue);"><i class="bi bi-people-fill me-2"></i> User Management</h4>
+            <p class="text-muted small mb-0">System access control and administration</p>
         </div>
+        <button class="btn btn-maroon py-2 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-person-plus me-2"></i> Add New User
+        </button>
+    </div>
 
-        <!-- Scrollable Body Area -->
-        <div class="table-scroll-container animate__animated animate__fadeInUp">
-            
-            <div id="alertContainer"></div>
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
 
-            <div class="main-card">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="usersTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name / Email</th>
-                                <th>Role</th>
-                                <th>Contact</th>
-                                <th>Status</th>
-                                <th>Date Created</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($user = $users_result->fetch_assoc()): ?>
-                            <tr>
-                                <td class="fw-bold text-muted">#<?php echo $user['id']; ?></td>
-                                <td>
-                                    <div class="fw-bold text-dark"><?php echo htmlspecialchars($user['full_name'] ?? 'N/A'); ?></div>
-                                    <div class="small text-muted"><?php echo htmlspecialchars($user['email']); ?></div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-status badge-role"><?php echo htmlspecialchars($user['role_name'] ?? 'No Role'); ?></span>
-                                </td>
-                                <td class="text-muted"><?php echo htmlspecialchars($user['contact_no'] ?? 'N/A'); ?></td>
-                                <td>
-                                    <?php if ($user['status'] == 'active'): ?>
-                                        <span class="badge badge-status badge-active">Active</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-status badge-inactive">Inactive</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-muted small"><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
-                                <td class="text-end">
-                                    <button class="btn action-btn me-1" onclick="editUser(<?php echo $user['id']; ?>)" title="Edit">
-                                        <i class="bi bi-pencil-square text-warning"></i>
-                                    </button>
-                                    <button class="btn action-btn" onclick="deleteUser(<?php echo $user['id']; ?>)" title="Delete">
-                                        <i class="bi bi-trash3 text-danger"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- Data Table Card -->
+    <div class="main-card animate__animated animate__fadeInUp">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name / Email</th>
+                        <th>Role</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Date Created</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($user = $users_result->fetch_assoc()): ?>
+                    <tr>
+                        <td class="fw-bold text-muted">#<?php echo $user['id']; ?></td>
+                        <td>
+                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($user['full_name'] ?? 'N/A'); ?></div>
+                            <div class="small text-muted"><?php echo htmlspecialchars($user['email']); ?></div>
+                        </td>
+                        <td>
+                            <span class="badge badge-status badge-role"><?php echo htmlspecialchars($user['role_name'] ?? 'No Role'); ?></span>
+                        </td>
+                        <td class="text-muted small"><?php echo htmlspecialchars($user['contact_no'] ?? 'N/A'); ?></td>
+                        <td>
+                            <?php if ($user['status'] == 'active'): ?>
+                                <span class="badge badge-status badge-active">Active</span>
+                            <?php else: ?>
+                                <span class="badge badge-status badge-inactive">Inactive</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-muted small"><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
+                        <td class="text-end">
+                            <button class="btn action-btn me-1" onclick="editUser(<?php echo $user['id']; ?>)" title="Edit">
+                                <i class="bi bi-pencil-square text-warning"></i>
+                            </button>
+                            <button class="btn action-btn" onclick="deleteUser(<?php echo $user['id']; ?>)" title="Delete">
+                                <i class="bi bi-trash3 text-danger"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
 
-<!-- Modal -->
+</div> <!-- End Container -->
+
+<!-- ================= MODALS ================= -->
+
+<!-- Add User Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
@@ -329,8 +318,7 @@ include '../../includes/header.php';
 
 <?php include '../../includes/footer.php'; ?>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Scripts -->
 <script>
 // Add User Form Submit
 document.getElementById('addUserForm').addEventListener('submit', async function(e) {
@@ -450,5 +438,3 @@ async function confirmDelete() {
     }
 }
 </script>
-</body>
-</html>

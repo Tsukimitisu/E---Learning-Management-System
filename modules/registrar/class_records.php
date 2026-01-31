@@ -18,7 +18,7 @@ $class_list = $conn->query("SELECT cl.id, cl.section_name, cs.subject_code, cs.s
 ");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // This opens the .wrapper and starts #content
+
 ?>
 
 <style>

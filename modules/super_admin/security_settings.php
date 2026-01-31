@@ -73,7 +73,6 @@ $login_stats = get_login_stats(7);
 $email_logs = $conn->query("SELECT * FROM email_logs ORDER BY sent_at DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

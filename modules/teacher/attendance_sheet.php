@@ -86,8 +86,7 @@ $students_query->execute();
 $students = $students_query->get_result();
 
 $page_title = "Attendance Sheet";
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>

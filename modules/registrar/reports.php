@@ -42,8 +42,7 @@ $class_list = $conn->query("SELECT cl.id, cl.section_name, cs.subject_code, cs.s
     ORDER BY cs.subject_code, cl.section_name
 ");
 
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>
@@ -172,7 +171,7 @@ include '../../includes/sidebar.php';
                             <?php $program_counts->data_seek(0); while ($row = $program_counts->fetch_assoc()): ?>
                                 <tr>
                                     <td class="ps-4 fw-bold text-dark"><?php echo htmlspecialchars($row['course_code']); ?></td>
-                                    <td class="text-center"><span class="badge bg-light text-blue border border-blue px-3"><?php echo number_format($row['count']); ?> Students</span></td>
+                                    <td class="text-center"><span class="badge bg-light text-dark border border-blue px-3"><?php echo number_format($row['count']); ?> Students</span></td>
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>

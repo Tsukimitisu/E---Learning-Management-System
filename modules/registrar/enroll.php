@@ -61,7 +61,6 @@ $sections_query = "
 $sections_result = $conn->query($sections_query);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

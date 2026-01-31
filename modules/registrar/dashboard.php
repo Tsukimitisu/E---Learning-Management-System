@@ -47,7 +47,6 @@ $recent_enrollments = $conn->query("SELECT s.student_no, CONCAT(up.first_name, '
 $recent_payments = $conn->query("SELECT s.student_no, CONCAT(up.first_name, ' ', up.last_name) as student_name, p.amount, p.status, p.or_number, p.created_at FROM payments p INNER JOIN students s ON p.student_id = s.user_id INNER JOIN user_profiles up ON s.user_id = up.user_id WHERE p.branch_id = $branch_id ORDER BY p.created_at DESC LIMIT 5");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

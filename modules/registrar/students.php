@@ -92,7 +92,6 @@ while ($row = $shs_grade_levels_result->fetch_assoc()) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

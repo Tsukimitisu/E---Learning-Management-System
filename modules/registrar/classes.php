@@ -44,7 +44,6 @@ $teachers_result = $conn->query("
 ");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // Opens wrapper and starts #content
 ?>
 
 <style>

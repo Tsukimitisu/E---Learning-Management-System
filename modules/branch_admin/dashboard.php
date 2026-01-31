@@ -46,7 +46,6 @@ if ($row = $result->fetch_assoc()) { $stats['today_attendance'] = $row['count'];
 
 // Header and Sidebar include (These contain the <html>, <head>, and Opening Wrapper)
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

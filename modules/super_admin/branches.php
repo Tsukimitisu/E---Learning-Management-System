@@ -27,7 +27,6 @@ $branches_query = "
 $branches_result = $conn->query($branches_query);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
