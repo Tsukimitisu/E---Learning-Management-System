@@ -310,7 +310,8 @@
                                 <select class="form-select" name="shs_grade_level_id">
                                     <option value="">-- Select Grade Level --</option>
                                     <?php 
-                                    $grades_result = $conn->query("SELECT id, grade_name FROM shs_grade_levels WHERE is_active = 1 ORDER BY grade_level");
+                                    // Only show Grade 11 and Grade 12 for SHS grade level selection
+                                    $grades_result = $conn->query("SELECT id, grade_name FROM shs_grade_levels WHERE is_active = 1 AND grade_level IN (11,12) ORDER BY grade_level");
                                     while ($grade = $grades_result->fetch_assoc()): 
                                     ?>
                                     <option value="<?php echo $grade['id']; ?>"><?php echo htmlspecialchars($grade['grade_name']); ?></option>
@@ -837,7 +838,8 @@
                             <?php
                             $schools_result = $conn->query("SELECT id, name FROM schools ORDER BY name");
                             while ($school = $schools_result->fetch_assoc()) {
-                                echo "<option value='{$school['id']}'>{$school['name']}</option>";
+                                $selected = (strcasecmp(trim($school['name']), 'DATAMEX COLLEGE OF SAINT ADELINE') === 0) ? ' selected' : '';
+                                echo "<option value='" . $school['id'] . "'" . $selected . ">" . htmlspecialchars($school['name']) . "</option>";
                             }
                             ?>
                         </select>

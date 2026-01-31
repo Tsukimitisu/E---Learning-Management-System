@@ -92,27 +92,34 @@ include '../../includes/sidebar.php';
         <div class="col-md-3 animate__animated animate__zoomIn delay-1">
             <div class="stat-card">
                 <p>Total Active Users</p>
-                <h3><?php echo number_format($stats['total_users']); ?></h3>
+                <h3 id="total-users"><?php echo number_format($stats['total_users']); ?></h3>
             </div>
         </div>
         <div class="col-md-3 animate__animated animate__zoomIn delay-2">
             <div class="stat-card" style="border-left-color: var(--blue);">
-                <p>Registered Schools</p>
-                <h3><?php echo number_format($stats['total_schools']); ?></h3>
+                <p>Total Branches</p>
+                <h3 id="total-branches"><?php echo number_format($stats['total_schools']); ?></h3>
             </div>
         </div>
         <div class="col-md-3 animate__animated animate__zoomIn delay-3">
-            <div class="stat-card" style="border-left-color: #28a745;">
-                <p>System Health</p>
-                <h3 class="text-success"><?php echo $stats['system_health']; ?></h3>
+            <div class="stat-card" style="border-left-color: #dc3545;">
+                <p>Failed Logins Today</p>
+                <h3 id="failed-logins" class="text-danger">0</h3>
             </div>
         </div>
         <div class="col-md-3 animate__animated animate__zoomIn delay-4">
             <div class="stat-card" style="border-left-color: #ffc107;">
-                <p>Platform Uptime</p>
-                <h3>99.9%</h3>
+                <p>Locked Accounts</p>
+                <h3 id="locked-accounts" style="color: #ffc107;">0</h3>
             </div>
         </div>
+    </div>
+    
+    <!-- Maintenance Mode Badge -->
+    <div class="text-end mb-3">
+        <span class="badge" id="maintenance-mode-badge" style="background-color: #28a745; font-size: 1rem; padding: 8px 15px;">
+            <i class="bi bi-check-circle me-2"></i>NORMAL
+        </span>
     </div>
 
     <!-- Quick Navigation (Fade In Up) -->
@@ -152,16 +159,8 @@ include '../../includes/sidebar.php';
                             <thead class="table-light">
                                 <tr class="small text-uppercase"><th>User</th><th>Action</th><th>Timestamp</th></tr>
                             </thead>
-                            <tbody>
-                                <?php
-                                $logs = $conn->query("SELECT al.action, al.timestamp, CONCAT(up.first_name, ' ', up.last_name) as user_name FROM audit_logs al LEFT JOIN user_profiles up ON al.user_id = up.user_id ORDER BY al.timestamp DESC LIMIT 6");
-                                while ($log = $logs->fetch_assoc()): ?>
-                                <tr>
-                                    <td class="small fw-bold text-dark"><?php echo htmlspecialchars($log['user_name'] ?? 'System'); ?></td>
-                                    <td class="small text-muted"><?php echo htmlspecialchars($log['action']); ?></td>
-                                    <td class="small text-muted"><?php echo date('M d, h:i A', strtotime($log['timestamp'])); ?></td>
-                                </tr>
-                                <?php endwhile; ?>
+                            <tbody id="recent-logs-tbody">
+                                <!-- Populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -195,3 +194,17 @@ include '../../includes/sidebar.php';
 </div>
 
 <?php include '../../includes/footer.php'; ?>
+
+<!-- Admin Dashboard Library -->
+<script src="../../assets/js/admin_dashboard.js"></script>
+
+<script>
+    // Auto-load dashboard stats when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardStats();
+        // Refresh every 30 seconds
+        setInterval(loadDashboardStats, 30000);
+    });
+</script>
+</body>
+</html>

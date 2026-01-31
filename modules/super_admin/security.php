@@ -118,8 +118,11 @@ include '../../includes/sidebar.php';
         <p class="text-muted small mb-0">Monitor system integrity and administrative logs</p>
     </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-dark btn-sm px-4" onclick="exportLogs()">
-            <i class="bi bi-download me-2"></i>Export Logs
+        <button class="btn btn-primary btn-sm px-4" onclick="exportAuditLogs({})">
+            <i class="bi bi-download me-2"></i>Export Audit Logs
+        </button>
+        <button class="btn btn-info btn-sm px-4" onclick="exportSecurityLogs({})">
+            <i class="bi bi-download me-2"></i>Export Security Logs
         </button>
         <a href="dashboard.php" class="btn btn-outline-secondary btn-sm px-3">
             <i class="bi bi-arrow-left"></i>
@@ -178,6 +181,25 @@ include '../../includes/sidebar.php';
             
             <!-- Tab 1: Security Logs  -->
             <div class="tab-pane fade show active" id="sec-logs" role="tabpanel">
+                <div class="mb-3">
+                    <input type="text" id="security-search" class="form-control" placeholder="Search security logs...">
+                    <select id="event-type-filter" class="form-select mt-2">
+                        <option value="">All Event Types</option>
+                        <option value="login_failed">Login Failed</option>
+                        <option value="login_success">Login Success</option>
+                        <option value="force_logout">Force Logout</option>
+                        <option value="suspicious_activity">Suspicious Activity</option>
+                    </select>
+                    <select id="severity-filter" class="form-select mt-2">
+                        <option value="">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                        <option value="info">Info</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadSecurityLogs(1, {search: document.getElementById('security-search').value, event_type: document.getElementById('event-type-filter').value, severity: document.getElementById('severity-filter').value})">Search</button>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
@@ -189,26 +211,20 @@ include '../../includes/sidebar.php';
                                 <th>Severity</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php while ($log = $security_logs->fetch_assoc()): 
-                                $sev = $log['severity'];
-                                $badge = ($sev == 'critical' || $sev == 'high') ? 'danger' : (($sev == 'medium') ? 'warning' : 'secondary');
-                            ?>
-                            <tr>
-                                <td><small class="text-muted"><?php echo date('M d, h:i A', strtotime($log['created_at'])); ?></small></td>
-                                <td class="fw-bold"><?php echo htmlspecialchars($log['user_name'] ?? 'Unknown'); ?></td>
-                                <td><span class="badge bg-<?php echo ($log['event_type'] == 'login_failed') ? 'danger' : 'success'; ?>"><?php echo str_replace('_', ' ', $log['event_type']); ?></span></td>
-                                <td><code><?php echo htmlspecialchars($log['ip_address']); ?></code></td>
-                                <td><span class="badge bg-<?php echo $badge; ?>"><?php echo strtoupper($sev); ?></span></td>
-                            </tr>
-                            <?php endwhile; ?>
+                        <tbody id="security-logs-tbody">
+                            <!-- Populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
+                <div id="security-logs-pagination" class="mt-3"></div>
             </div>
 
             <!-- Tab 2: Audit Trail  -->
             <div class="tab-pane fade" id="audit-trail" role="tabpanel">
+                <div class="mb-3">
+                    <input type="text" id="audit-search" class="form-control" placeholder="Search audit logs...">
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadAuditLogs(1, {search: document.getElementById('audit-search').value})">Search</button>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
@@ -219,26 +235,21 @@ include '../../includes/sidebar.php';
                                 <th>Source IP</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php while ($log = $audit_logs->fetch_assoc()): ?>
-                            <tr>
-                                <td><small class="text-muted"><?php echo date('M d, h:i A', strtotime($log['timestamp'])); ?></small></td>
-                                <td class="fw-bold"><?php echo htmlspecialchars($log['user_name'] ?? 'System'); ?></td>
-                                <td><i class="bi bi-caret-right-fill text-maroon me-2"></i><?php echo htmlspecialchars($log['action']); ?></td>
-                                <td><code><?php echo htmlspecialchars($log['ip_address']); ?></code></td>
-                            </tr>
-                            <?php endwhile; ?>
+                        <tbody id="audit-logs-tbody">
+                            <!-- Populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
+                <div id="audit-logs-pagination" class="mt-3"></div>
             </div>
 
             <!-- Tab 3: Sessions -->
-            <div class="tab-pane fade text-center py-5" id="session-mgt" role="tabpanel">
-                <i class="bi bi-info-circle display-4 text-muted mb-3"></i>
-                <h5>Session Monitoring</h5>
-                <p class="text-muted">Detailed session management tools are currently under maintenance.</p>
-                <button class="btn btn-outline-danger btn-sm" onclick="alert('Action restricted')">Force Logout All</button>
+            <div class="tab-pane fade" id="session-mgt" role="tabpanel">
+                <div class="mb-3">
+                    <input type="text" id="user-search" class="form-control" placeholder="Search users by name or ID...">
+                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="searchUsersForLogout()">Search Users</button>
+                </div>
+                <div id="users-list-container"></div>
             </div>
 
         </div>
@@ -247,10 +258,26 @@ include '../../includes/sidebar.php';
 
 <?php include '../../includes/footer.php'; ?>
 
+<!-- Admin Dashboard Library -->
+<script src="../../assets/js/admin_dashboard.js"></script>
+
 <script>
-function exportLogs() {
-    window.location.href = 'process/export_logs.php';
-}
+    // Load logs when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSecurityLogs(1, {});
+        loadAuditLogs(1, {});
+    });
+
+    // Search function for force logout
+    function searchUsersForLogout() {
+        const searchTerm = document.getElementById('user-search').value;
+        if (!searchTerm.trim()) {
+            alert('Please enter a user name or ID');
+            return;
+        }
+        // This would require an API to search users - placeholder for now
+        alert('Search API not yet implemented. Use force logout from user management.');
+    }
 </script>
 </body>
 </html>

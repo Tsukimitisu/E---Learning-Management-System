@@ -6,6 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
     exit();
 }
 
+
 $page_title = "Monitoring & Compliance";
 $branch_id = get_user_branch_id();
 if ($branch_id === null) {
@@ -14,42 +15,72 @@ if ($branch_id === null) {
 }
 require_branch_assignment();
 
+// Fetch all programs (no branch filter due to missing branch_id column)
+$programs_result = $conn->query("SELECT id, program_name FROM programs ORDER BY program_name");
+if (!$programs_result) {
+    echo "<div style='color:red;font-weight:bold'>Error fetching programs: " . $conn->error . "</div>";
+    exit();
+}
+$programs = [];
+while ($row = $programs_result->fetch_assoc()) {
+    $programs[] = $row;
+}
+
+// Get selected program from GET or default to first
+$selected_program_id = isset($_GET['program_id']) ? intval($_GET['program_id']) : (count($programs) > 0 ? $programs[0]['id'] : null);
+if (!$selected_program_id) {
+    echo "No programs found for this branch.";
+    exit();
+}
+
 /** 
  * BACKEND LOGIC - UNTOUCHED 
  */
 $end_date = date('Y-m-d');
 $start_date = date('Y-m-d', strtotime('-30 days'));
 
-// Low Attendance Classes (Logic preserved)
+// Low Attendance Classes (filtered by program via subjects.program_id)
 $low_attendance_classes = $conn->query("
-    SELECT cl.id, cl.section_name, s.subject_code, s.subject_title, COUNT(DISTINCT e.student_id) as total_enrolled, COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) as total_present, ROUND((COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) * 100.0) / NULLIF(COUNT(DISTINCT e.student_id), 0), 2) as attendance_rate, CONCAT(up.first_name, ' ', up.last_name) as teacher_name
+    SELECT cl.id, cl.section_name, s.subject_code, s.subject_title,
+        COUNT(DISTINCT e.student_id) as total_enrolled,
+        COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) as total_present,
+        ROUND((COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) * 100.0) / NULLIF(COUNT(DISTINCT e.student_id), 0), 2) as attendance_rate,
+        CONCAT(up.first_name, ' ', up.last_name) as teacher_name
     FROM classes cl
     LEFT JOIN subjects s ON cl.subject_id = s.id
     LEFT JOIN enrollments e ON cl.id = e.class_id AND e.status = 'approved'
     LEFT JOIN attendance a ON cl.id = a.class_id AND a.attendance_date BETWEEN '$start_date' AND '$end_date'
     LEFT JOIN users u ON cl.teacher_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
-    WHERE cl.branch_id = $branch_id
+    WHERE cl.branch_id = $branch_id AND s.program_id = $selected_program_id
     GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title, up.first_name, up.last_name
-    HAVING attendance_rate < 70 OR attendance_rate IS NULL
-    ORDER BY attendance_rate ASC
+    ORDER BY attendance_rate ASC, cl.section_name
 ");
+if ($low_attendance_classes === false) {
+    echo "<div style='color:red;font-weight:bold'>Low Attendance Query Error: " . $conn->error . "</div>";
+}
 
-// Students with Poor Attendance (Logic preserved)
+// Students with Poor Attendance (filtered by program via subjects.program_id)
 $poor_attendance_students = $conn->query("
-    SELECT u.id as student_id, CONCAT(up.first_name, ' ', up.last_name) as student_name, cl.section_name, s.subject_code, s.subject_title, COUNT(a.attendance_date) as total_sessions, COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count, ROUND((COUNT(CASE WHEN a.status = 'present' THEN 1 END) * 100.0) / NULLIF(COUNT(a.attendance_date), 0), 2) as attendance_rate
+    SELECT u.id as student_id, CONCAT(up.first_name, ' ', up.last_name) as student_name, cl.section_name, s.subject_code, s.subject_title,
+        COUNT(a.attendance_date) as total_sessions,
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
+        ROUND((COUNT(CASE WHEN a.status = 'present' THEN 1 END) * 100.0) / NULLIF(COUNT(a.attendance_date), 0), 2) as attendance_rate
     FROM users u
     INNER JOIN user_profiles up ON u.id = up.user_id
     INNER JOIN enrollments e ON u.id = e.student_id AND e.status = 'approved'
     INNER JOIN classes cl ON e.class_id = cl.id AND cl.branch_id = $branch_id
     LEFT JOIN subjects s ON cl.subject_id = s.id
     LEFT JOIN attendance a ON cl.id = a.class_id AND a.attendance_date BETWEEN '$start_date' AND '$end_date'
+    WHERE s.program_id = $selected_program_id
     GROUP BY u.id, up.first_name, up.last_name, cl.id, cl.section_name, s.subject_code, s.subject_title
-    HAVING attendance_rate < 70
-    ORDER BY attendance_rate ASC
+    ORDER BY attendance_rate ASC, cl.section_name
 ");
+if ($poor_attendance_students === false) {
+    echo "<div style='color:red;font-weight:bold'>Poor Attendance Query Error: " . $conn->error . "</div>";
+}
 
-// Failing Students (Logic preserved)
+// Failing Students (filtered by program via subjects.program_id)
 $failing_students = $conn->query("
     SELECT u.id as student_id, CONCAT(up.first_name, ' ', up.last_name) as student_name, cl.section_name, s.subject_code, s.subject_title, g.final_grade, g.remarks, CONCAT(tup.first_name, ' ', tup.last_name) as teacher_name
     FROM users u
@@ -60,11 +91,14 @@ $failing_students = $conn->query("
     LEFT JOIN grades g ON u.id = g.student_id AND cl.id = g.class_id
     LEFT JOIN users tu ON cl.teacher_id = tu.id
     LEFT JOIN user_profiles tup ON tu.id = tup.user_id
-    WHERE (g.final_grade < 75 AND g.final_grade IS NOT NULL) OR g.final_grade IS NULL
-    ORDER BY g.final_grade ASC, up.last_name, up.first_name
+    WHERE ((g.final_grade < 75 AND g.final_grade IS NOT NULL) OR g.final_grade IS NULL) AND s.program_id = $selected_program_id
+    ORDER BY g.final_grade ASC, cl.section_name, up.last_name, up.first_name
 ");
+if ($failing_students === false) {
+    echo "<div style='color:red;font-weight:bold'>Failing Students Query Error: " . $conn->error . "</div>";
+}
 
-// Classes without grades (Logic preserved)
+// Classes without grades (filtered by program via subjects.program_id)
 $classes_without_grades = $conn->query("
     SELECT cl.id, cl.section_name, s.subject_code, s.subject_title, COUNT(DISTINCT e.student_id) as enrolled_count, COUNT(g.student_id) as graded_count, CONCAT(up.first_name, ' ', up.last_name) as teacher_name
     FROM classes cl
@@ -73,13 +107,15 @@ $classes_without_grades = $conn->query("
     LEFT JOIN grades g ON cl.id = g.class_id
     LEFT JOIN users u ON cl.teacher_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
-    WHERE cl.branch_id = $branch_id
+    WHERE cl.branch_id = $branch_id AND s.program_id = $selected_program_id
     GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title, up.first_name, up.last_name
-    HAVING graded_count = 0 AND enrolled_count > 0
-    ORDER BY enrolled_count DESC
+    ORDER BY enrolled_count DESC, cl.section_name
 ");
+if ($classes_without_grades === false) {
+    echo "<div style='color:red;font-weight:bold'>Classes Without Grades Query Error: " . $conn->error . "</div>";
+}
 
-// Grade Lock Status (Logic preserved)
+// Grade Lock Status (filtered by program via subjects.program_id)
 $grade_lock_classes = $conn->query("
     SELECT cl.id, cl.section_name, s.subject_code, s.subject_title, CONCAT(up.first_name, ' ', up.last_name) as teacher_name, MAX(CASE WHEN gl.grading_period = 'prelim' THEN gl.is_locked END) as prelim_locked, MAX(CASE WHEN gl.grading_period = 'midterm' THEN gl.is_locked END) as midterm_locked, MAX(CASE WHEN gl.grading_period = 'final' THEN gl.is_locked END) as final_locked, MAX(CASE WHEN gl.grading_period = 'quarterly' THEN gl.is_locked END) as quarterly_locked
     FROM classes cl
@@ -87,10 +123,13 @@ $grade_lock_classes = $conn->query("
     LEFT JOIN users u ON cl.teacher_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
     LEFT JOIN grade_locks gl ON cl.id = gl.class_id
-    WHERE cl.branch_id = $branch_id
+    WHERE cl.branch_id = $branch_id AND s.program_id = $selected_program_id
     GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title, up.first_name, up.last_name
     ORDER BY s.subject_code, cl.section_name
 ");
+if ($grade_lock_classes === false) {
+    echo "<div style='color:red;font-weight:bold'>Grade Lock Classes Query Error: " . $conn->error . "</div>";
+}
 
 include '../../includes/header.php';
 include '../../includes/sidebar.php'; 
@@ -136,6 +175,7 @@ include '../../includes/sidebar.php';
 
 <div class="main-content-body animate__animated animate__fadeIn">
     
+
     <!-- 1. PAGE HEADER -->
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center animate__animated animate__fadeInDown">
         <div class="mb-2 mb-md-0">
@@ -144,7 +184,16 @@ include '../../includes/sidebar.php';
             </h4>
             <p class="text-muted small mb-0">Track branch attendance, grading status, and academic risk metrics.</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <form id="programFilterForm" method="get" class="me-2">
+                <select name="program_id" id="program_id" class="form-select form-select-sm" style="min-width: 200px;" onchange="document.getElementById('programFilterForm').submit();">
+                    <?php foreach ($programs as $prog): ?>
+                        <option value="<?php echo $prog['id']; ?>" <?php if ($prog['id'] == $selected_program_id) echo 'selected'; ?>><?php echo htmlspecialchars($prog['program_name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <input type="hidden" name="start_date" value="<?php echo $start_date; ?>">
+                <input type="hidden" name="end_date" value="<?php echo $end_date; ?>">
+            </form>
             <div class="date-filter-group">
                 <i class="bi bi-calendar-range text-muted"></i>
                 <input type="date" id="start_date" value="<?php echo $start_date; ?>">
@@ -207,12 +256,12 @@ include '../../includes/sidebar.php';
                 <tbody>
                     <?php while ($class = $low_attendance_classes->fetch_assoc()): ?>
                     <tr>
-                        <td class="fw-bold text-dark"><?php echo htmlspecialchars($class['section_name'] ?? 'N/A'); ?></td>
+                        <td class="fw-bold text-dark"><?php echo htmlspecialchars($class['section_name'] ?? 'N/A' ?: 'N/A'); ?></td>
                         <td>
-                            <div class="fw-bold"><?php echo htmlspecialchars($class['subject_code']); ?></div>
-                            <small class="text-muted"><?php echo htmlspecialchars($class['subject_title']); ?></small>
+                            <div class="fw-bold"><?php echo htmlspecialchars($class['subject_code'] ?? ''); ?></div>
+                            <small class="text-muted"><?php echo htmlspecialchars($class['subject_title'] ?? ''); ?></small>
                         </td>
-                        <td><small class="fw-bold text-muted"><?php echo htmlspecialchars($class['teacher_name'] ?? 'TBA'); ?></small></td>
+                        <td><small class="fw-bold text-muted"><?php echo htmlspecialchars($class['teacher_name'] ?? 'TBA' ?: 'TBA'); ?></small></td>
                         <td class="text-center"><?php echo $class['total_enrolled']; ?> Students</td>
                         <td class="text-center">
                             <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 fw-bold">
@@ -257,13 +306,13 @@ include '../../includes/sidebar.php';
                             <div class="fw-bold small"><?php echo htmlspecialchars($student['subject_code']); ?></div>
                             <small class="text-muted"><?php echo htmlspecialchars($student['section_name']); ?></small>
                         </td>
-                        <td><small><?php echo htmlspecialchars($student['teacher_name']); ?></small></td>
+                        <td><small><?php echo htmlspecialchars((string)($student['teacher_name'] ?? 'TBA')); ?></small></td>
                         <td class="text-center">
                             <span class="badge <?php echo ($student['final_grade'] < 75) ? 'bg-danger' : 'bg-secondary'; ?>">
                                 <?php echo $student['final_grade'] ? number_format($student['final_grade'], 2) : 'N/A'; ?>
                             </span>
                         </td>
-                        <td><small class="text-muted italic"><?php echo htmlspecialchars($student['remarks'] ?? 'No comments'); ?></small></td>
+                        <td><small class="text-muted italic"><?php echo htmlspecialchars($student['remarks'] ?? 'No comments' ?: 'No comments'); ?></small></td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-white border text-warning px-3" onclick="sendReminder(<?php echo $student['student_id']; ?>, 'academic')">
                                 <i class="bi bi-bell-fill"></i>
@@ -362,9 +411,10 @@ include '../../includes/sidebar.php';
 function updateMonitoring() {
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
-    if (startDate && endDate) {
-        window.location.href = `monitoring.php?start_date=${startDate}&end_date=${endDate}`;
-    }
+    const programId = document.getElementById('program_id') ? document.getElementById('program_id').value : '';
+    let url = `monitoring.php?start_date=${startDate}&end_date=${endDate}`;
+    if (programId) url += `&program_id=${programId}`;
+    window.location.href = url;
 }
 
 function toggleGradeLock(classId, period, action) {

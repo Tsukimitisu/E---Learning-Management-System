@@ -48,14 +48,13 @@
             <li><a href="security.php" class="<?php echo ($current_page == 'security.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-data"></i> <span>Audit Logs</span></a></li>
             <li><a href="maintenance.php" class="<?php echo ($current_page == 'maintenance.php') ? 'active' : ''; ?>"><i class="bi bi-tools"></i> <span>Maintenance</span></a></li>
             <li><a href="api_management.php" class="<?php echo ($current_page == 'api_management.php') ? 'active' : ''; ?>"><i class="bi bi-cpu-fill"></i> <span>API Management</span></a></li>
-            <li><a href="branches.php" class="<?php echo ($current_page == 'branches.php') ? 'active' : ''; ?>"><i class="bi bi-building-fill"></i> <span>Branches</span></a></li>
         <?php }
 
         // --- 2. SCHOOL ADMIN MENU ---
         if ($_SESSION['role_id'] == ROLE_SCHOOL_ADMIN) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="administrative_control.php" class="<?php echo ($current_page == 'administrative_control.php') ? 'active' : ''; ?>"><i class="bi bi-shield-check"></i> <span>Admin Control</span></a></li>
-            <li><a href="academic_years.php" class="<?php echo ($current_page == 'academic_years.php') ? 'active' : ''; ?>"><i class="bi bi-calendar-range"></i> <span>Academic Years</span></a></li>
+            <li><a href="branches.php" class="<?php echo ($current_page == 'branches.php') ? 'active' : ''; ?>"><i class="bi bi-building-fill"></i> <span>Branches</span></a></li>
             <li><a href="programs.php" class="<?php echo ($current_page == 'programs.php') ? 'active' : ''; ?>"><i class="bi bi-mortarboard-fill"></i> <span>Programs</span></a></li>
             <li><a href="curriculum.php" class="<?php echo ($current_page == 'curriculum.php') ? 'active' : ''; ?>"><i class="bi bi-book-half"></i> <span>Subject Catalog</span></a></li>
             <li><a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>"><i class="bi bi-megaphone-fill"></i> <span>Announcements</span></a></li>

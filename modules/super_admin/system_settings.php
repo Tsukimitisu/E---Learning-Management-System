@@ -159,40 +159,56 @@ include '../../includes/sidebar.php';
 
 <?php include '../../includes/footer.php'; ?>
 
+<!-- Admin Dashboard Library -->
+<script src="../../assets/js/admin_dashboard.js"></script>
+
 <script>
-async function saveSetting(key, form) {
-    const formData = new FormData(form);
-    const value = formData.get(key);
-    
-    try {
-        const response = await fetch('process/update_setting.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `setting_key=${key}&setting_value=${encodeURIComponent(value)}`
-        });
+    // Override saveSetting to use the new API
+    async function saveSetting(key, form) {
+        const formData = new FormData(form);
+        const value = formData.get(key);
+        const button = form.querySelector('.btn-save-setting');
+        const originalText = button.innerHTML;
         
-        const data = await response.json();
+        // Disable button to prevent double submit
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Saving...';
         
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-        } else {
-            showAlert(data.message, 'danger');
+        try {
+            const response = await fetch('process/update_global_setting.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `setting_key=${key}&setting_value=${encodeURIComponent(value)}`
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showAlert('Setting updated successfully!', 'success');
+                // Broadcast to other tabs
+                broadcastSettingChange(key, value);
+            } else {
+                showAlert(data.message || 'Failed to update setting', 'danger');
+            }
+        } catch (error) {
+            showAlert('Failed to update setting: ' + error.message, 'danger');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalText;
         }
-    } catch (error) {
-        showAlert('Failed to update setting', 'danger');
     }
-}
 
-function showAlert(message, type) {
-    const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm animate__animated animate__shakeX" role="alert">
-            <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    document.getElementById('alertContainer').innerHTML = alertHtml;
-
-    document.querySelector('.scrollable-settings-body').scrollTo({ top: 0, behavior: 'smooth' });
-}
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm animate__animated animate__shakeX" role="alert">
+                <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        document.getElementById('alertContainer').innerHTML = alertHtml;
+        document.querySelector('.scrollable-settings-body').scrollTo({ top: 0, behavior: 'smooth' });
+    }
 </script>
+</body>
+</html>

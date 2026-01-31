@@ -23,13 +23,11 @@ if (empty($full_name) || empty($email) || empty($password) || $branch_id == 0) {
     exit();
 }
 
-// Validate email exists (MX record check) if sending email
-if ($send_email) {
-    $email_validation = validate_email_exists($email);
-    if (!$email_validation['valid']) {
-        echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
-        exit();
-    }
+// Validate email exists (MX record check) before creating account
+$email_validation = validate_email_exists($email);
+if (!$email_validation['valid']) {
+    echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
+    exit();
 }
 
 // Validate password using security settings

@@ -37,13 +37,11 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
-// Validate email exists (MX record check) if we're going to send email
-if ($send_email) {
-    $email_validation = validate_email_exists($email);
-    if (!$email_validation['valid']) {
-        echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
-        exit();
-    }
+// Validate email exists (MX record check) before creating account
+$email_validation = validate_email_exists($email);
+if (!$email_validation['valid']) {
+    echo json_encode(['status' => 'error', 'message' => $email_validation['message']]);
+    exit();
 }
 
 // Validate password using security settings

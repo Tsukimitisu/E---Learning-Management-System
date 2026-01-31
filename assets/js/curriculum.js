@@ -39,12 +39,14 @@ function initializeFormHandlers() {
     $('#editGradeForm').on('submit', function(e) { e.preventDefault(); updateGradeLevel(); });
 
     // Subject forms
-    $('#addSubjectForm').on('submit', function(e) { e.preventDefault(); addSubject(); });
-    $('#editSubjectForm').on('submit', function(e) { e.preventDefault(); updateSubject(); });
-    $('#assignSubjectForm').on('submit', function(e) { e.preventDefault(); submitAssignSubject(); });
+    // NOTE: SHS subject forms are handled inline in shs_curriculum.php to avoid conflicts.
+    // $('#addSubjectForm').on('submit', function(e) { e.preventDefault(); addSubject(); });
+    // $('#editSubjectForm').on('submit', function(e) { e.preventDefault(); updateSubject(); });
+    // $('#assignSubjectForm').on('submit', function(e) { e.preventDefault(); submitAssignSubject(); });
 
     // College subject forms
     $('#addCollegeSubjectForm').on('submit', function(e) { e.preventDefault(); addCollegeSubject(); });
+    $('#editCollegeSubjectForm').on('submit', function(e) { e.preventDefault(); updateCollegeSubject(); });
     $('#assignCollegeSubjectForm').on('submit', function(e) { e.preventDefault(); assignCollegeSubjectSubmit(); });
 
     // Program forms
@@ -356,12 +358,10 @@ function editProgram(programId) {
     const program = programs.find(p => p.id == programId);
     if (program) {
         document.getElementById('editProgramId').value = program.id;
-        document.getElementById('editProgramCode').value = program.program_code;
-        document.getElementById('editProgramName').value = program.program_name;
-        document.getElementById('editProgramLevel').value = program.degree_level;
-        document.getElementById('editProgramDuration').value = program.duration_years || 4;
-        document.getElementById('editProgramUnits').value = program.total_units || '';
-        document.getElementById('editProgramDescription').value = program.description || '';
+        document.getElementById('editProgramCode').value = program.code || program.program_code || '';
+        document.getElementById('editProgramName').value = program.name || program.program_name || '';
+        document.getElementById('editProgramDegree').value = program.degree_level || '';
+        document.getElementById('editProgramSchool').value = program.school_id || '';
         document.getElementById('editProgramStatus').value = program.is_active ? '1' : '0';
         new bootstrap.Modal(document.getElementById('editProgramModal')).show();
     }
@@ -385,7 +385,7 @@ function updateProgram() {
 
 function deleteProgram(programId) {
     if (confirm('Are you sure you want to delete this program? This will also delete all associated year levels.')) {
-        fetch('modules/school_admin/process/delete_college_program.php', {
+        fetch(BASE_URL + 'modules/school_admin/process/delete_college_program.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ program_id: programId })
@@ -508,9 +508,20 @@ function editCollegeYear(yearId) {
 }
 
 function updateYearLevel() {
-    const formData = new FormData(document.getElementById('editCollegeYearForm'));
+    const form = document.getElementById('editCollegeYearForm');
+    const formData = new FormData(form);
+    // Map frontend field names to backend expected names
+    const payload = {
+        year_id: formData.get('year_id'),
+        year_name: formData.get('year_name'),
+        year_number: formData.get('year_level'),
+        semesters: formData.get('semesters_count'),
+        is_active: formData.get('is_active')
+    };
     fetch(BASE_URL + 'modules/school_admin/process/update_college_year_level.php', {
-        method: 'POST', body: formData
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload).toString()
     })
     .then(response => response.json())
     .then(data => {
@@ -646,29 +657,83 @@ function editCollegeSubject(subjectId) {
                 document.getElementById('editCollegeSubjectLabHours').value = subject.lab_hours || 0;
                 document.getElementById('editCollegeSubjectSemester').value = subject.semester || 1;
                 document.getElementById('editCollegeSubjectProgram').value = subject.program_id || '';
-                document.getElementById('editCollegeSubjectYearLevel').value = subject.year_level_id || '';
+                // Dynamically filter year levels for the selected program
+                filterEditYearLevelsByProgram(subject.program_id, subject.year_level_id);
                 document.getElementById('editCollegeSubjectPrerequisites').value = subject.prerequisites || '';
                 document.getElementById('editCollegeSubjectStatus').value = subject.is_active ? '1' : '0';
                 new bootstrap.Modal(document.getElementById('editCollegeSubjectModal')).show();
             } else showAlert('Failed to load subject data', 'danger');
         })
         .catch(error => showAlert('Error loading subject', 'danger'));
+// Helper: filter year levels for edit modal based on selected program
+function filterEditYearLevelsByProgram(programId, selectedYearLevelId) {
+    const yearLevelSelect = document.getElementById('editCollegeSubjectYearLevel');
+    yearLevelSelect.innerHTML = '<option value="">-- Select Year Level --</option>';
+    if (!programId) {
+        yearLevelSelect.innerHTML = '<option value="">-- Select Program First --</option>';
+        return;
+    }
+    const filtered = window.collegeYearLevels.filter(yl => yl.program_id == programId);
+    if (filtered.length === 0) {
+        yearLevelSelect.innerHTML = '<option value="">-- No Year Levels Found --</option>';
+        return;
+    }
+    filtered.forEach(yl => {
+        const option = document.createElement('option');
+        option.value = yl.id;
+        option.textContent = yl.year_name;
+        if (selectedYearLevelId && yl.id == selectedYearLevelId) option.selected = true;
+        yearLevelSelect.appendChild(option);
+    });
+}
+// When program changes in edit modal, update year levels
+document.addEventListener('DOMContentLoaded', function() {
+    const editProgramSelect = document.getElementById('editCollegeSubjectProgram');
+    if (editProgramSelect) {
+        editProgramSelect.addEventListener('change', function() {
+            filterEditYearLevelsByProgram(this.value, null);
+        });
+    }
+});
 }
 
 function updateCollegeSubject() {
-    const formData = new FormData(document.getElementById('editCollegeSubjectForm'));
+    const form = document.getElementById('editCollegeSubjectForm');
+    const formData = new FormData(form);
+    // Ensure all required fields are sent and mapped correctly
+    const payload = {
+        subject_id: formData.get('subject_id') || '',
+        subject_code: formData.get('subject_code') || '',
+        subject_title: formData.get('subject_title') || '',
+        units: formData.get('units') || '',
+        lecture_hours: formData.get('college_lecture_hours') || formData.get('lecture_hours') || '',
+        lab_hours: formData.get('college_lab_hours') || formData.get('lab_hours') || '',
+        subject_type: 'college',
+        prerequisites: formData.get('prerequisites') || '',
+        is_active: formData.get('is_active') || '1',
+        program_id: formData.get('program_id') || formData.get('editCollegeSubjectProgram') || '',
+        year_level_id: formData.get('year_level_id') || formData.get('editCollegeSubjectYearLevel') || '',
+        semester: formData.get('college_semester') || formData.get('editCollegeSubjectSemester') || formData.get('semester') || ''
+    };
     fetch(BASE_URL + 'modules/school_admin/process/update_subject.php', {
-        method: 'POST', body: formData
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload).toString()
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Update Subject Response:', data); // DEBUG
         if (data.status === 'success') {
             showAlert('Subject updated successfully!', 'success');
             $('#editCollegeSubjectModal').modal('hide');
-            setTimeout(() => location.reload(), 1500);
-        } else showAlert(data.message, 'danger');
+            // Reload only the subject table content via AJAX, keep tab
+            reloadCollegeSubjectsTable(true);
+        } else showAlert(data.message + (data.sql_error ? ' (SQL: ' + data.sql_error + ')' : '') + (data.debug_post ? '\nDebug: ' + JSON.stringify(data.debug_post) : ''), 'danger');
     })
-    .catch(error => showAlert('Error updating subject', 'danger'));
+    .catch(error => {
+        console.error('Update Subject AJAX Error:', error);
+        showAlert('Error updating subject', 'danger');
+    });
 }
 
 function deleteCollegeSubject(subjectId, subjectCode) {
@@ -682,11 +747,35 @@ function deleteCollegeSubject(subjectId, subjectCode) {
         .then(data => {
             if (data.status === 'success') {
                 showAlert('Subject deleted successfully!', 'success');
-                setTimeout(() => location.reload(), 1500);
+                reloadCollegeSubjectsTable();
             } else showAlert(data.message, 'danger');
         })
         .catch(error => showAlert('Error deleting subject', 'danger'));
     }
+
+// Helper: reload only the subject table content via AJAX
+function reloadCollegeSubjectsTable(keepTab) {
+    fetch(BASE_URL + 'modules/school_admin/college_curriculum.php?ajax=subjects')
+        .then(res => res.text())
+        .then(html => {
+            // Extract the subject table from the returned HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTable = doc.querySelector('#college-subjects .main-card-modern');
+            if (newTable) {
+                document.querySelector('#college-subjects .main-card-modern').innerHTML = newTable.innerHTML;
+                if (keepTab) {
+                    // Ensure the subject tab stays active
+                    const tabTrigger = document.querySelector('#college-subjects-tab');
+                    if (tabTrigger) {
+                        new bootstrap.Tab(tabTrigger).show();
+                    }
+                }
+            } else {
+                location.reload();
+            }
+        });
+}
 }
 
 function deleteCollegeProgram(programId, programCode) {
@@ -712,7 +801,7 @@ function deleteCollegeYear(yearLevelId, yearLevelName) {
         fetch(BASE_URL + 'modules/school_admin/process/delete_college_year_level.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ year_level_id: yearLevelId })
+            body: JSON.stringify({ year_id: yearLevelId })
         })
         .then(response => response.json())
         .then(data => {

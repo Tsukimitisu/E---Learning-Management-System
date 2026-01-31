@@ -13,12 +13,13 @@ try {
     $subject_code = clean_input($_POST['subject_code']);
     $subject_title = clean_input($_POST['subject_title']);
     $units = (float)($_POST['units'] ?? 0);
-    $lecture_hours = (int)($_POST['lecture_hours'] ?? ($_POST['hours'] ?? 0));
-    $lab_hours = (int)($_POST['lab_hours'] ?? 0);
+    // Accept both modal field names (shs_*) and generic names
+    $lecture_hours = (int)($_POST['lecture_hours'] ?? $_POST['shs_lecture_hours'] ?? ($_POST['hours'] ?? 0));
+    $lab_hours = (int)($_POST['lab_hours'] ?? $_POST['shs_lab_hours'] ?? 0);
     $prerequisites = clean_input($_POST['prerequisites'] ?? '');
     $shs_strand_id = (int)($_POST['shs_strand_id'] ?? 0) ?: null;
     $shs_grade_level_id = (int)($_POST['shs_grade_level_id'] ?? 0) ?: null;
-    $semester = (int)($_POST['semester'] ?? 1);
+    $semester = (int)($_POST['semester'] ?? $_POST['shs_semester'] ?? 1);
     $created_by = (int)$_SESSION['user_id'];
 
     // Check for duplicate subject code

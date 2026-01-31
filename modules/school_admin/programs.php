@@ -101,7 +101,7 @@ include '../../includes/sidebar.php'; // This opens the .wrapper and starts #con
                     <tr>
                         <th class="ps-4" style="width: 80px;">ID</th>
                         <th>Program Details</th>
-                        <th>Academic School</th>
+                        <!-- <th>Academic School</th> -->
                         <th class="text-center">Degree Level</th>
                         <th class="text-center">Subjects</th>
                         <th class="text-center">Status</th>
@@ -118,9 +118,7 @@ include '../../includes/sidebar.php'; // This opens the .wrapper and starts #con
                             <div class="fw-bold text-dark"><?php echo htmlspecialchars($program['program_code']); ?></div>
                             <small class="text-muted text-truncate d-block" style="max-width: 250px;"><?php echo htmlspecialchars($program['program_name']); ?></small>
                         </td>
-                        <td>
-                            <div class="small fw-bold text-blue"><i class="bi bi-building me-1"></i><?php echo htmlspecialchars($program['school_name']); ?></div>
-                        </td>
+                        <!-- School column removed, always Datamex -->
                         <td class="text-center small fw-bold text-muted"><?php echo htmlspecialchars($program['degree_level']); ?></td>
                         <td class="text-center">
                             <span class="badge bg-light text-primary border border-primary px-3 rounded-pill"><?php echo $program['subject_count']; ?></span>
@@ -138,6 +136,9 @@ include '../../includes/sidebar.php'; // This opens the .wrapper and starts #con
                                 <button class="action-btn-circle text-<?php echo $program['is_active'] ? 'secondary' : 'success'; ?>" 
                                         onclick="toggleStatus(<?php echo $program['id']; ?>, <?php echo $program['is_active']; ?>)" title="Toggle Status">
                                     <i class="bi bi-<?php echo $program['is_active'] ? 'slash-circle' : 'check-circle-fill'; ?>"></i>
+                                </button>
+                                <button class="action-btn-circle text-danger" onclick="deleteProgram(<?php echo $program['id']; ?>)" title="Delete">
+                                    <i class="bi bi-trash-fill"></i>
                                 </button>
                             </div>
                         </td>
@@ -175,6 +176,8 @@ function goBack() {
 document.getElementById('addProgramForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
+    // Always assign to Datamex College of Saint Adeline
+    formData.set('school_id', '1'); // Assuming Datamex is ID 1
     try {
         const response = await fetch('process/add_program.php', { method: 'POST', body: formData });
         const data = await response.json();
@@ -186,21 +189,24 @@ document.getElementById('addProgramForm').addEventListener('submit', async funct
     } catch (error) { showAlert('System communication error', 'danger'); }
 });
 
-/** 2. AJAX: TOGGLE STATUS */
-function toggleStatus(id, currentStatus) {
-    const action = currentStatus ? 'deactivate' : 'activate';
-    if (!confirm(`Are you sure you want to ${action} this program?`)) return;
-    
-    fetch('process/toggle_program_status.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ program_id: id, is_active: currentStatus ? 0 : 1 })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1200); } 
-        else { showAlert(data.message, 'danger'); }
-    });
+/** AJAX: TOGGLE PROGRAM STATUS (Activate/Deactivate) */
+async function toggleStatus(id, currentStatus) {
+    try {
+        const formData = new FormData();
+        formData.append('program_id', id);
+        formData.append('is_active', currentStatus ? 0 : 1);
+        formData.append('action', 'toggle_status');
+        const response = await fetch('process/update_program.php', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.status === 'success') {
+            showAlert(data.message || (currentStatus ? 'Program deactivated!' : 'Program activated!'), 'success');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showAlert(data.message || 'Failed to update program status', 'danger');
+        }
+    } catch (err) {
+        showAlert('Error: ' + err.message, 'danger');
+    }
 }
 
 /** 3. AJAX: EDIT PROGRAM */
@@ -212,15 +218,7 @@ function editProgram(id) {
         document.getElementById('editProgramName').value = program.program_name;
         document.getElementById('editProgramDegree').value = program.degree_level;
         document.getElementById('editProgramStatus').value = program.is_active;
-        
-        fetch('process/get_program.php?id=' + id)
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('editProgramSchool').value = data.program.school_id;
-                }
-            });
-        
+        // School is always Datamex, no dropdown
         new bootstrap.Modal(document.getElementById('editProgramModal')).show();
     }
 }
@@ -229,6 +227,8 @@ function editProgram(id) {
 document.getElementById('editProgramForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
+    // Always assign to Datamex College of Saint Adeline
+    formData.set('school_id', '1'); // Always Datamex
     try {
         const response = await fetch('process/update_program.php', { method: 'POST', body: formData });
         const data = await response.json();
@@ -240,10 +240,34 @@ document.getElementById('editProgramForm').addEventListener('submit', async func
     } catch (error) { showAlert('Error processing update', 'danger'); }
 });
 
+/** AJAX: DELETE PROGRAM */
+async function deleteProgram(id) {
+    if (!confirm('Are you sure you want to delete this program? This action cannot be undone.')) return;
+    try {
+        const formData = new FormData();
+        formData.append('program_id', id);
+        formData.append('action', 'delete');
+        const response = await fetch('process/update_program.php', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.status === 'success') {
+            showAlert(data.message || 'Program deleted!', 'success');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showAlert(data.message || 'Failed to delete program', 'danger');
+        }
+    } catch (err) {
+        showAlert('Error: ' + err.message, 'danger');
+    }
+}
+
 function showAlert(message, type) {
     const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm animate__animated animate__shakeX" role="alert"><i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     document.getElementById('alertContainer').innerHTML = alertHtml;
     document.querySelector('.body-scroll-part').scrollTo({ top: 0, behavior: 'smooth' });
+    // If success, reload after short delay to update UI
+    if (type === 'success') {
+        setTimeout(() => location.reload(), 1200);
+    }
 }
 </script>
 </body>

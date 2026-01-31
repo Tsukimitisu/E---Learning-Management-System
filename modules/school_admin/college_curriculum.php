@@ -167,7 +167,7 @@ include '../../includes/sidebar.php';
                             </div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-outline-warning w-100 fw-bold" onclick="editProgram(<?php echo $program['id']; ?>)">EDIT</button>
-                                <button class="btn btn-sm btn-outline-danger w-100 fw-bold" onclick="deleteCollegeProgram(<?php echo $program['id']; ?>, '<?php echo htmlspecialchars($program['code']); ?>')">DELETE</button>
+                                <button class="btn btn-sm btn-outline-danger w-100 fw-bold" onclick="deleteProgram(<?php echo $program['id']; ?>)">DELETE</button>
                             </div>
                         </div>
                     </div>
@@ -187,13 +187,13 @@ include '../../includes/sidebar.php';
             <div class="row g-4">
                 <?php 
                 $grouped_year_levels = [];
-                foreach ($programs as $p) { $grouped_year_levels[$p['id']] = ['name' => $p['name'], 'levels' => []]; }
+                foreach ($programs as $p) { $grouped_year_levels[$p['id']] = ['program_name' => ($p['program_name'] ?? $p['name'] ?? ''), 'levels' => []]; }
                 foreach ($year_levels as $y) { if (isset($grouped_year_levels[$y['program_id']])) $grouped_year_levels[$y['program_id']]['levels'][] = $y; }
                 
                 foreach ($grouped_year_levels as $pid => $group): ?>
                 <div class="col-md-6 animate__animated animate__fadeIn">
                     <div class="main-card-modern h-100">
-                        <div class="card-header-modern bg-light border-bottom">
+                            <div class="card-header-modern bg-light border-bottom">
                             <i class="bi bi-mortarboard me-2"></i> <?php echo htmlspecialchars($group['program_name']); ?>
                         </div>
                         <div class="p-4">
@@ -281,22 +281,22 @@ include '../../includes/sidebar.php';
 
 <?php include '../../includes/footer.php'; ?>
 
-<!-- --- JAVASCRIPT LOGIC - UNTOUCHED & RE-WIRED --- -->
+<!-- --- JAVASCRIPT LOGIC - CONCURRENT & RE-WIRED --- -->
+<script src="../../assets/js/curriculum.js"></script>
 <script>
-const collegePrograms = <?php echo json_encode($programs); ?>;
-const collegeYearLevels = <?php echo json_encode($year_levels); ?>;
-
+window.collegePrograms = <?php echo json_encode($programs); ?>;
+window.collegeYearLevels = <?php echo json_encode($year_levels); ?>;
 function goBack() {
     if (document.referrer && document.referrer.includes('/elms_system/')) { window.history.back(); } 
     else { window.location.href = 'curriculum.php'; }
 }
-
 function filterYearLevelsByProgram() {
-    const programId = document.getElementById('collegeSubjectProgram').value;
+    const programId = document.getElementById('collegeSubjectProgram')?.value;
     const yearLevelSelect = document.getElementById('collegeSubjectYearLevel');
+    if (!yearLevelSelect) return;
     yearLevelSelect.innerHTML = '<option value="">-- Select Year Level --</option>';
     if (!programId) { yearLevelSelect.innerHTML = '<option value="">-- Select Program First --</option>'; return; }
-    const filtered = collegeYearLevels.filter(yl => yl.program_id == programId);
+    const filtered = window.collegeYearLevels.filter(yl => yl.program_id == programId);
     if (filtered.length === 0) { yearLevelSelect.innerHTML = '<option value="">-- No Year Levels Found --</option>'; return; }
     filtered.forEach(yl => {
         const option = document.createElement('option');

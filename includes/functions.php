@@ -161,13 +161,13 @@ if (!function_exists('log_audit')) {
         }
 
         if ($has_details) {
-            $sql = "INSERT INTO audit_logs (user_id, action, details, ip_address, created_at) 
-                    VALUES (?, ?, ?, ?, NOW())";
+            $sql = "INSERT INTO audit_logs (user_id, action, details, ip_address, timestamp) 
+                VALUES (?, ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("isss", $user_id, $action, $details, $ip_address);
         } else {
             $sql = "INSERT INTO audit_logs (user_id, action, ip_address, timestamp) 
-                    VALUES (?, ?, ?, NOW())";
+                VALUES (?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iss", $user_id, $action, $ip_address);
         }

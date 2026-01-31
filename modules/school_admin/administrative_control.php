@@ -160,7 +160,7 @@ include '../../includes/sidebar.php';
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#branch-admins" type="button"><i class="bi bi-people-fill me-2"></i>Branch Admins</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#announcements" type="button"><i class="bi bi-megaphone me-2"></i>Announcements</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#performance" type="button"><i class="bi bi-bar-chart me-2"></i>Performance</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#policies" type="button"><i class="bi bi-file-earmark-text me-2"></i>Policies</button></li>
+        <!-- Policies tab removed per admin request -->
         <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#monitoring" type="button"><i class="bi bi-eye me-2"></i>Monitoring</button></li>
     </ul>
 
@@ -292,54 +292,7 @@ include '../../includes/sidebar.php';
             </div>
         </div>
 
-        <!-- TAB 4: ACADEMIC POLICIES -->
-        <div class="tab-pane fade" id="policies" role="tabpanel">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h6 class="fw-bold text-blue mb-0">Institutional Policy Framework</h6>
-                <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addPolicyModal" style="background-color: var(--blue);">
-                    <i class="bi bi-plus-lg"></i> New Policy
-                </button>
-            </div>
-            <div class="row g-4">
-                <!-- SHS Policies -->
-                <div class="col-lg-6">
-                    <div class="policy-card shadow-sm">
-                        <div class="policy-header-shs"><h6 class="mb-0 fw-bold">SHS ACADEMIC POLICIES</h6></div>
-                        <div class="p-4">
-                            <ul class="list-group list-group-flush small">
-                                <li class="list-group-item d-flex justify-content-between"><span>Minimum GPA Requirement</span><strong>1.50</strong></li>
-                                <li class="list-group-item d-flex justify-content-between"><span>Semester Unit Load</span><strong>12 - 18</strong></li>
-                                <li class="list-group-item d-flex justify-content-between"><span>Attendance Threshold</span><strong>85%</strong></li>
-                                <li class="list-group-item d-flex justify-content-between"><span>Probation Threshold</span><strong>2 Consecutive Terms</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <!-- College Policies -->
-                <div class="col-lg-6">
-                    <div class="policy-card shadow-sm">
-                        <div class="policy-header-college"><h6 class="mb-0 fw-bold">COLLEGE ACADEMIC POLICIES</h6></div>
-                        <div class="p-4">
-                            <ul class="list-group list-group-flush small">
-                                <li class="list-group-item d-flex justify-content-between"><span>Graduation Min GPA</span><strong>2.00</strong></li>
-                                <li class="list-group-item d-flex justify-content-between"><span>Semester Unit Load</span><strong>9 - 18</strong></li>
-                                <li class="list-group-item d-flex justify-content-between"><span>Attendance Threshold</span><strong>80%</strong></li>
-                                <li class="list-group-item d-flex justify-content-between"><span>Dean's List GPA</span><strong>1.25</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Policy Settings -->
-            <div class="main-card-modern mt-4 p-4">
-                <h6 class="fw-bold text-blue mb-3">Enforcement Settings</h6>
-                <div class="row g-3">
-                    <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" checked><label class="form-check-label small fw-bold">Enforce minimum GPA checks</label></div></div>
-                    <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" checked><label class="form-check-label small fw-bold">Validate prerequisites on enrollment</label></div></div>
-                    <div class="col-md-12 mt-4"><button class="btn btn-maroon-save shadow-sm" style="background-color: var(--maroon); color:white; border:none; border-radius:10px; padding: 10px 30px;"><i class="bi bi-save me-2"></i>Save Policy Configuration</button></div>
-                </div>
-            </div>
-        </div>
+        <!-- Policies tab removed per admin request -->
 
         <!-- TAB 5: ACTIVITY MONITORING -->
         <div class="tab-pane fade" id="monitoring" role="tabpanel">

@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="/assets/image/datamexlogo.png" sizes="64x64">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?php echo $page_title ?? 'Dashboard'; ?> - <?php echo SITE_NAME; ?></title>

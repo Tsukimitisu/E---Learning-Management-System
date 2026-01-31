@@ -32,7 +32,7 @@ if ($strands_result) {
 }
 
 $grade_levels = [];
-$grade_levels_result = $conn->query("SELECT id, grade_name as name, grade_level, semesters_count as semesters, is_active FROM shs_grade_levels ORDER BY grade_level");
+$grade_levels_result = $conn->query("SELECT id, grade_name as name, grade_level, semesters_count as semesters, is_active FROM shs_grade_levels WHERE grade_level IN (11,12) ORDER BY grade_level");
 if ($grade_levels_result) {
     while ($row = $grade_levels_result->fetch_assoc()) { $grade_levels[] = $row; }
 }
@@ -135,11 +135,6 @@ include '../../includes/sidebar.php';
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="shs-grades-tab" data-bs-toggle="pill" data-bs-target="#shs-grades" type="button">
-                <i class="bi bi-calendar-range me-2"></i>Grade Levels
-            </button>
-        </li>
-        <li class="nav-item">
             <button class="nav-link" id="shs-subjects-tab" data-bs-toggle="pill" data-bs-target="#shs-subjects" type="button">
                 <i class="bi bi-book-half me-2"></i>Curriculum Subjects
             </button>
@@ -183,51 +178,6 @@ include '../../includes/sidebar.php';
             </div>
         </div>
 
-        <!-- TAB 2: GRADE LEVELS -->
-        <div class="tab-pane fade" id="shs-grades" role="tabpanel">
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addGradeModal">
-                    <i class="bi bi-plus-circle me-1"></i> Add Grade Level
-                </button>
-            </div>
-            <div class="main-card-modern animate__animated animate__fadeInUp">
-                <div class="table-responsive">
-                    <table class="table table-hover table-modern align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Grade Identity</th>
-                                <th class="text-center">Sequence Level</th>
-                                <th class="text-center">Academic Terms</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-end pe-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($grade_levels as $grade): ?>
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="fw-bold text-dark"><?php echo htmlspecialchars($grade['name']); ?></div>
-                                    <small class="text-muted">Standard SHS Level</small>
-                                </td>
-                                <td class="text-center fw-bold text-blue"><?php echo $grade['grade_level']; ?></td>
-                                <td class="text-center"><span class="badge bg-light text-primary border border-primary px-3 rounded-pill"><?php echo $grade['semesters']; ?> Semesters</span></td>
-                                <td class="text-center">
-                                    <span class="badge rounded-pill bg-<?php echo $grade['is_active'] ? 'success' : 'secondary'; ?> px-3">
-                                        <?php echo $grade['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
-                                    </span>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <button class="action-btn-circle text-warning border shadow-sm" onclick="editGradeLevel(<?php echo $grade['id']; ?>)">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
 
         <!-- TAB 3: SUBJECTS -->
         <div class="tab-pane fade" id="shs-subjects" role="tabpanel">
@@ -302,6 +252,142 @@ const gradeLevelsData = <?php echo json_encode($grade_levels); ?>;
 function goBack() {
     if (document.referrer && document.referrer.includes('/elms_system/')) { window.history.back(); } 
     else { window.location.href = 'curriculum.php'; }
+}
+
+// --- SHS STRAND AJAX LOGIC ---
+async function addStrand(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    try {
+        const res = await fetch('process/add_strand.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        if (data.status === 'success') {
+            form.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addStrandModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        }
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+}
+document.getElementById('addStrandForm').addEventListener('submit', addStrand);
+
+async function editStrand(id) {
+    const strand = strandsData.find(s => s.id == id);
+    if (!strand) return showAlert('Strand not found', 'danger');
+    document.getElementById('editStrandId').value = strand.id;
+    document.getElementById('editStrandTrack').value = strand.track_id;
+    document.getElementById('editStrandName').value = strand.name;
+    document.getElementById('editStrandDescription').value = strand.description;
+    document.getElementById('editStrandStatus').value = strand.is_active;
+    new bootstrap.Modal(document.getElementById('editStrandModal')).show();
+}
+window.editStrand = editStrand;
+
+document.getElementById('editStrandForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('process/update_strand.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        if (data.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('editStrandModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        }
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+});
+
+async function deleteStrand(id) {
+    if (!confirm('Are you sure you want to delete this strand?')) return;
+    try {
+        const res = await fetch('process/delete_strand.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ strand_id: id })
+        });
+        const data = await res.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        if (data.status === 'success') setTimeout(() => location.reload(), 1000);
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+}
+window.deleteStrand = deleteStrand;
+
+// --- SHS SUBJECT AJAX LOGIC ---
+async function addSubject(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    try {
+        const res = await fetch('process/add_shs_subject.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        if (data.status === 'success') {
+            form.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addSubjectModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        }
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+}
+document.getElementById('addSubjectForm').addEventListener('submit', addSubject);
+
+async function editSubject(id) {
+    try {
+        const res = await fetch('process/get_subject.php?id=' + id);
+        const data = await res.json();
+        if (data.status !== 'success') return showAlert(data.message, 'danger');
+        const subj = data.subject;
+        document.querySelector('#editSubjectForm [name=subject_id]').value = subj.id;
+        document.querySelector('#editSubjectForm [name=subject_code]').value = subj.subject_code;
+        document.querySelector('#editSubjectForm [name=subject_title]').value = subj.subject_title;
+        document.querySelector('#editSubjectForm [name=units]').value = subj.units;
+        document.querySelector('#editSubjectForm [name=lecture_hours]').value = subj.lecture_hours;
+        document.querySelector('#editSubjectForm [name=lab_hours]').value = subj.lab_hours;
+        document.querySelector('#editSubjectForm [name=subject_type]').value = subj.subject_type;
+        document.querySelector('#editSubjectForm [name=prerequisites]').value = subj.prerequisites;
+        document.querySelector('#editSubjectForm [name=is_active]').value = subj.is_active;
+        // Set strand and grade if present
+        if (subj.shs_strand_id) document.querySelector('#editSubjectForm [name=shs_strand_id]').value = subj.shs_strand_id;
+        if (subj.shs_grade_level_id) document.querySelector('#editSubjectForm [name=shs_grade_level_id]').value = subj.shs_grade_level_id;
+        if (subj.semester) document.querySelector('#editSubjectForm [name=semester]').value = subj.semester;
+        new bootstrap.Modal(document.getElementById('editSubjectModal')).show();
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+}
+window.editSubject = editSubject;
+
+document.getElementById('editSubjectForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch('process/update_subject.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        if (data.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('editSubjectModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        }
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+});
+
+async function deleteSubject(id) {
+    if (!confirm('Are you sure you want to delete this subject?')) return;
+    try {
+        const res = await fetch('process/delete_subject.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject_id: id })
+        });
+        const data = await res.json();
+        showAlert(data.message, data.status === 'success' ? 'success' : 'danger');
+        if (data.status === 'success') setTimeout(() => location.reload(), 1000);
+    } catch (err) { showAlert('Error: ' + err.message, 'danger'); }
+}
+window.deleteSubject = deleteSubject;
+
+function showAlert(msg, type = 'info') {
+    const html = `<div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm animate__animated animate__shakeX" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    document.getElementById('alertContainer').innerHTML = html;
+    document.querySelector('.body-scroll-part').scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </body>

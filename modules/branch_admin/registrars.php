@@ -30,12 +30,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
     if (empty($email) || empty($password) || empty($first_name) || empty($last_name)) {
         $error = "All required fields must be filled.";
     } else {
-        $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $check->bind_param("s", $email);
-        $check->execute();
-        if ($check->get_result()->num_rows > 0) {
-            $error = "Email already exists.";
+        // Validate email format and domain existence before creating account
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = "Invalid email format.";
         } else {
+            $email_validation = validate_email_exists($email);
+            if (!$email_validation['valid']) {
+                $error = $email_validation['message'];
+            }
+        }
+
+        if (empty($error)) {
+            $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            $check->bind_param("s", $email);
+            $check->execute();
+            if ($check->get_result()->num_rows > 0) {
+                $error = "Email already exists.";
+            } else {
             $conn->begin_transaction();
             try {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -94,6 +105,8 @@ $registrars = $conn->query("
     WHERE ur.role_id = " . ROLE_REGISTRAR . " AND up.branch_id = $branch_id
     ORDER BY up.last_name, up.first_name
 ");
+
+}
 
 include '../../includes/header.php';
 include '../../includes/sidebar.php'; 
