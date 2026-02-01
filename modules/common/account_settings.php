@@ -1,10 +1,12 @@
 <?php
+// Fix: Use relative paths for includes to match file structure (modules/common/account_settings.php)
 require_once __DIR__ . '/../../config/init.php';
 require_once __DIR__ . '/../../includes/email_helper.php';
 require_once __DIR__ . '/../../includes/security_helper.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /elms_system/index.php');
+    // Fix: Relative redirect to root index
+    header('Location: ../../index.php');
     exit;
 }
 
@@ -12,7 +14,9 @@ $user_id = $_SESSION['user_id'];
 $role_id = $_SESSION['role_id'] ?? $_SESSION['role'] ?? 0;
 
 /** 
+ * =========================================================
  * BACKEND LOGIC - UNTOUCHED 
+ * =========================================================
  */
 $stmt = $pdo->prepare("SELECT u.*, 
     COALESCE(
@@ -26,7 +30,7 @@ $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
-    header('Location: /elms_system/index.php');
+    header('Location: ../../index.php');
     exit;
 }
 
@@ -87,21 +91,60 @@ try {
 } catch (Exception $e) {}
 
 $google_oauth_url = ($password_settings['enable_google_login'] && !$user['google_email']) ? get_google_oauth_url() : '';
-$dashboard_paths = [1 => '/elms_system/modules/super_admin/dashboard.php', 2 => '/elms_system/modules/school_admin/dashboard.php', 3 => '/elms_system/modules/branch_admin/dashboard.php', 4 => '/elms_system/modules/registrar/dashboard.php', 5 => '/elms_system/modules/teacher/dashboard.php', 6 => '/elms_system/modules/student/dashboard.php'];
-$back_url = $dashboard_paths[$role_id] ?? '/elms_system/dashboard.php';
+
+// --- FIX: PATH LOGIC CHANGED TO RELATIVE PATHS ---
+// Since we are in modules/common/, we go up one level (../) to modules/, then into the specific role folder.
+$dashboard_paths = [
+    1 => '../super_admin/dashboard.php',
+    2 => '../school_admin/dashboard.php',
+    3 => '../branch_admin/dashboard.php',
+    4 => '../registrar/dashboard.php',
+    5 => '../teacher/dashboard.php',
+    6 => '../student/dashboard.php'
+];
+
+// Fallback to root index if role ID is invalid
+$back_url = $dashboard_paths[$role_id] ?? '../../index.php';
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+    /* --- FORCE HIDE SIDEBAR & FIX LAYOUT --- */
+    #sidebar, .sidebar, .sidebar-wrapper { display: none !important; }
+    
+    html, body { height: 100%; margin: 0; overflow: hidden; background-color: #f8f9fa; }
+    
+    /* Ensure content takes full width since sidebar is gone */
+    .wrapper { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; }
+    #content { 
+        height: 100vh; 
+        width: 100vw !important; 
+        margin: 0 !important; 
+        display: flex; 
+        flex-direction: column; 
+        overflow: hidden; 
+    }
 
-    /* --- FANTASTIC UI COMPONENTS --- */
+    .header-fixed-part { 
+        flex: 0 0 auto; 
+        background: white; 
+        padding: 15px 40px; 
+        border-bottom: 1px solid #eee; 
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .body-scroll-part { 
+        flex: 1 1 auto; 
+        overflow-y: auto; 
+        padding: 30px 40px 100px 40px; 
+        background-color: #f8f9fa; 
+    }
+
+    /* --- UI COMPONENTS --- */
     .settings-hero-card {
         background: white; border-radius: 20px; border: none;
         box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
@@ -123,174 +166,187 @@ include '../../includes/sidebar.php';
 
     .google-link-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 15px; display: flex; align-items: center; justify-content: space-between; }
     
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } }
+    @media (max-width: 768px) { 
+        .header-fixed-part { flex-direction: column; gap: 15px; text-align: center; } 
+        .body-scroll-part { padding: 20px; }
+    }
 </style>
 
-<!-- Part 1: Fixed Header -->
+<!-- Part 1: Fixed Header with Back Button -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center bg-light rounded-circle border text-maroon" style="width: 50px; height: 50px; font-size: 1.5rem;">
+            <i class="bi bi-person-gear"></i>
+        </div>
         <div>
-            <h4 class="fw-bold mb-0" style="color: var(--blue);"><i class="bi bi-person-gear me-2 text-maroon"></i>Account Security</h4>
+            <h4 class="fw-bold mb-0 text-dark">Account Security</h4>
             <p class="text-muted small mb-0">Manage password, login history and linked accounts</p>
         </div>
-       
     </div>
+    
+    <!-- BACK TO DASHBOARD BUTTON (Dynamic Link) -->
+    <a href="<?php echo htmlspecialchars($back_url); ?>" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-bold shadow-sm transition-hover">
+        <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+    </a>
 </div>
 
 <!-- Part 2: Scrollable Body -->
 <div class="body-scroll-part">
     
-    <?php if ($success_message): ?>
-        <div class="alert alert-success border-0 shadow-sm mb-4 animate__animated animate__headShake">
-            <i class="bi bi-check-circle-fill me-2"></i><?php echo $success_message; ?>
-        </div>
-    <?php endif; ?>
-    <?php if ($error_message): ?>
-        <div class="alert alert-danger border-0 shadow-sm mb-4 animate__animated animate__shakeX">
-            <i class="bi bi-exclamation-circle-fill me-2"></i><?php echo $error_message; ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="row g-4">
-        <!-- Profile Column -->
-        <div class="col-lg-4 animate__animated animate__fadeInLeft">
-            <div class="settings-hero-card mb-4">
-                <div class="settings-banner"></div>
-                <div class="card-body p-4 text-center">
-                    <div class="settings-avatar-wrapper">
-                        <div class="avatar-circle mx-auto border-4 border-white shadow" style="width: 90px; height: 90px; font-size: 2.5rem;">
-                            <?php echo strtoupper(substr($user['full_name'] ?? 'U', 0, 1)); ?>
-                        </div>
-                    </div>
-                    <h5 class="fw-bold mt-3 mb-1 text-dark"><?php echo htmlspecialchars($user['full_name']); ?></h5>
-                    <span class="badge bg-blue rounded-pill px-3 mb-4"><?php echo strtoupper($role_name); ?></span>
-                    
-                    <div class="text-start border-top pt-4">
-                        <div class="mb-3">
-                            <label class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Registered Email</label>
-                            <div class="fw-bold text-dark small text-truncate"><?php echo htmlspecialchars($user['email']); ?></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Account Status</label>
-                            <div><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3"><?php echo ucfirst($user['status']); ?></span></div>
-                        </div>
-                        <div class="mb-0">
-                            <label class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Member Since</label>
-                            <div class="small text-muted"><i class="bi bi-calendar3 me-2"></i><?php echo date('M d, Y', strtotime($user['created_at'])); ?></div>
-                        </div>
-                    </div>
-                </div>
+    <div class="container-fluid" style="max-width: 1400px; margin: 0 auto;">
+        
+        <?php if ($success_message): ?>
+            <div class="alert alert-success border-0 shadow-sm mb-4 animate__animated animate__headShake">
+                <i class="bi bi-check-circle-fill me-2"></i><?php echo $success_message; ?>
             </div>
+        <?php endif; ?>
+        <?php if ($error_message): ?>
+            <div class="alert alert-danger border-0 shadow-sm mb-4 animate__animated animate__shakeX">
+                <i class="bi bi-exclamation-circle-fill me-2"></i><?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
 
-            <!-- Google OAuth Card -->
-            <?php if ($password_settings['enable_google_login']): ?>
-            <div class="card-modern">
-                <div class="card-header-modern bg-white"><i class="bi bi-google me-2"></i>Connected Services</div>
-                <div class="card-body p-4">
-                    <?php if ($user['google_email']): ?>
-                        <div class="google-link-card mb-3">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-google text-primary fs-4 me-3"></i>
-                                <div>
-                                    <div class="fw-bold small">Google Account</div>
-                                    <small class="text-muted"><?php echo htmlspecialchars($user['google_email']); ?></small>
-                                </div>
+        <div class="row g-4">
+            <!-- Profile Column -->
+            <div class="col-lg-4 animate__animated animate__fadeInLeft">
+                <div class="settings-hero-card mb-4">
+                    <div class="settings-banner"></div>
+                    <div class="card-body p-4 text-center">
+                        <div class="settings-avatar-wrapper">
+                            <div class="avatar-circle mx-auto border-4 border-white shadow" style="width: 90px; height: 90px; font-size: 2.5rem; background: var(--maroon); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                <?php echo strtoupper(substr($user['full_name'] ?? 'U', 0, 1)); ?>
                             </div>
-                            <form method="post" onsubmit="return confirm('Are you sure you want to unlink Google?');">
-                                <input type="hidden" name="action" value="unlink_google">
-                                <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle fs-5"></i></button>
-                            </form>
                         </div>
-                    <?php elseif ($google_oauth_url): ?>
-                        <a href="<?php echo htmlspecialchars($google_oauth_url); ?>" class="btn btn-light border w-100 fw-bold py-2 shadow-sm">
-                            <i class="bi bi-google me-2"></i> Link Google Account
-                        </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Security Forms Column -->
-        <div class="col-lg-8 animate__animated animate__fadeInRight">
-            <div class="card-modern mb-4">
-                <div class="card-header-modern"><i class="bi bi-key-fill me-2"></i>Update Password</div>
-                <div class="card-body p-4">
-                    <form method="post" id="passwordForm">
-                        <input type="hidden" name="action" value="change_password">
+                        <h5 class="fw-bold mt-3 mb-1 text-dark"><?php echo htmlspecialchars($user['full_name']); ?></h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 mb-4"><?php echo strtoupper($role_name); ?></span>
                         
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Current Password</label>
-                                <div class="input-group shadow-sm">
-                                    <input type="password" class="form-control border-light" id="current_password" name="current_password" required>
-                                    <button class="btn btn-outline-secondary border-light toggle-password" type="button" data-target="current_password"><i class="bi bi-eye"></i></button>
-                                </div>
+                        <div class="text-start border-top pt-4">
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Registered Email</label>
+                                <div class="fw-bold text-dark small text-truncate"><?php echo htmlspecialchars($user['email']); ?></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Account Status</label>
+                                <div><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3"><?php echo ucfirst($user['status']); ?></span></div>
+                            </div>
+                            <div class="mb-0">
+                                <label class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Member Since</label>
+                                <div class="small text-muted"><i class="bi bi-calendar3 me-2"></i><?php echo date('M d, Y', strtotime($user['created_at'])); ?></div>
                             </div>
                         </div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">New Password</label>
-                                <div class="input-group shadow-sm">
-                                    <input type="password" class="form-control border-light" id="new_password" name="new_password" required>
-                                    <button class="btn btn-outline-secondary border-light toggle-password" type="button" data-target="new_password"><i class="bi bi-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Confirm New Password</label>
-                                <div class="input-group shadow-sm">
-                                    <input type="password" class="form-control border-light" id="confirm_password" name="confirm_password" required>
-                                    <button class="btn btn-outline-secondary border-light toggle-password" type="button" data-target="confirm_password"><i class="bi bi-eye"></i></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Requirements Checklist -->
-                        <div class="p-3 rounded-3 bg-light border mb-4">
-                            <p class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Password Requirements</p>
-                            <ul class="list-unstyled mb-0 password-requirements" id="passwordRequirements">
-                                <li id="req-length"><i class="bi bi-circle"></i> Minimum <?php echo $password_settings['password_min_length']; ?> characters</li>
-                                <?php if ($password_settings['password_require_uppercase']): ?><li id="req-upper"><i class="bi bi-circle"></i> One uppercase letter</li><?php endif; ?>
-                                <?php if ($password_settings['password_require_lowercase']): ?><li id="req-lower"><i class="bi bi-circle"></i> One lowercase letter</li><?php endif; ?>
-                                <?php if ($password_settings['password_require_number']): ?><li id="req-number"><i class="bi bi-circle"></i> One numeric digit</li><?php endif; ?>
-                                <?php if ($password_settings['password_require_special']): ?><li id="req-special"><i class="bi bi-circle"></i> One special character</li><?php endif; ?>
-                                <li id="req-match"><i class="bi bi-circle"></i> Password confirmation match</li>
-                            </ul>
-                        </div>
-
-                        <button type="submit" class="btn btn-maroon-save shadow-sm" id="changePasswordBtn" disabled>
-                            <i class="bi bi-shield-check me-2"></i> Update Password
-                        </button>
-                    </form>
+                    </div>
                 </div>
+
+                <!-- Google OAuth Card -->
+                <?php if ($password_settings['enable_google_login']): ?>
+                <div class="card-modern">
+                    <div class="card-header-modern bg-white"><i class="bi bi-google me-2"></i>Connected Services</div>
+                    <div class="card-body p-4">
+                        <?php if ($user['google_email']): ?>
+                            <div class="google-link-card mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-google text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <div class="fw-bold small">Google Account</div>
+                                        <small class="text-muted"><?php echo htmlspecialchars($user['google_email']); ?></small>
+                                    </div>
+                                </div>
+                                <form method="post" onsubmit="return confirm('Are you sure you want to unlink Google?');">
+                                    <input type="hidden" name="action" value="unlink_google">
+                                    <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle fs-5"></i></button>
+                                </form>
+                            </div>
+                        <?php elseif ($google_oauth_url): ?>
+                            <a href="<?php echo htmlspecialchars($google_oauth_url); ?>" class="btn btn-light border w-100 fw-bold py-2 shadow-sm">
+                                <i class="bi bi-google me-2"></i> Link Google Account
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
-            <!-- Login History Card -->
-            <div class="card-modern">
-                <div class="card-header-modern bg-white d-flex justify-content-between">
-                    <span><i class="bi bi-clock-history me-2"></i>Recent Sign-ins</span>
-                    <span class="badge bg-light text-muted border"><?php echo $login_stats['total_logins']; ?> Total Sessions</span>
+            <!-- Security Forms Column -->
+            <div class="col-lg-8 animate__animated animate__fadeInRight">
+                <div class="card-modern mb-4">
+                    <div class="card-header-modern"><i class="bi bi-key-fill me-2"></i>Update Password</div>
+                    <div class="card-body p-4">
+                        <form method="post" id="passwordForm">
+                            <input type="hidden" name="action" value="change_password">
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Current Password</label>
+                                    <div class="input-group shadow-sm">
+                                        <input type="password" class="form-control border-light" id="current_password" name="current_password" required>
+                                        <button class="btn btn-outline-secondary border-light toggle-password" type="button" data-target="current_password"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">New Password</label>
+                                    <div class="input-group shadow-sm">
+                                        <input type="password" class="form-control border-light" id="new_password" name="new_password" required>
+                                        <button class="btn btn-outline-secondary border-light toggle-password" type="button" data-target="new_password"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Confirm New Password</label>
+                                    <div class="input-group shadow-sm">
+                                        <input type="password" class="form-control border-light" id="confirm_password" name="confirm_password" required>
+                                        <button class="btn btn-outline-secondary border-light toggle-password" type="button" data-target="confirm_password"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Requirements Checklist -->
+                            <div class="p-3 rounded-3 bg-light border mb-4">
+                                <p class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Password Requirements</p>
+                                <ul class="list-unstyled mb-0 password-requirements" id="passwordRequirements">
+                                    <li id="req-length"><i class="bi bi-circle"></i> Minimum <?php echo $password_settings['password_min_length']; ?> characters</li>
+                                    <?php if ($password_settings['password_require_uppercase']): ?><li id="req-upper"><i class="bi bi-circle"></i> One uppercase letter</li><?php endif; ?>
+                                    <?php if ($password_settings['password_require_lowercase']): ?><li id="req-lower"><i class="bi bi-circle"></i> One lowercase letter</li><?php endif; ?>
+                                    <?php if ($password_settings['password_require_number']): ?><li id="req-number"><i class="bi bi-circle"></i> One numeric digit</li><?php endif; ?>
+                                    <?php if ($password_settings['password_require_special']): ?><li id="req-special"><i class="bi bi-circle"></i> One special character</li><?php endif; ?>
+                                    <li id="req-match"><i class="bi bi-circle"></i> Password confirmation match</li>
+                                </ul>
+                            </div>
+
+                            <button type="submit" class="btn btn-maroon-save shadow-sm" id="changePasswordBtn" disabled>
+                                <i class="bi bi-shield-check me-2"></i> Update Password
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light"><tr><th class="ps-4">Timestamp</th><th>IP Address</th><th class="text-center">Status</th></tr></thead>
-                        <tbody>
-                            <?php if (empty($login_history)): ?>
-                                <tr><td colspan="3" class="text-center py-4 text-muted small">No activity found.</td></tr>
-                            <?php else: foreach ($login_history as $attempt): ?>
-                                <tr>
-                                    <td class="ps-4 small fw-bold text-dark"><?php echo date('M d, Y • H:i:s', strtotime($attempt['attempted_at'])); ?></td>
-                                    <td><code class="text-maroon"><?php echo htmlspecialchars($attempt['ip_address'] ?? '0.0.0.0'); ?></code></td>
-                                    <td class="text-center">
-                                        <span class="badge rounded-pill bg-<?php echo !empty($attempt['success']) ? 'success' : 'danger'; ?> px-3">
-                                            <?php echo !empty($attempt['success']) ? 'AUTHORIZED' : 'FAILED'; ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; endif; ?>
-                        </tbody>
-                    </table>
+
+                <!-- Login History Card -->
+                <div class="card-modern">
+                    <div class="card-header-modern bg-white d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-clock-history me-2"></i>Recent Sign-ins</span>
+                        <span class="badge bg-light text-muted border"><?php echo $login_stats['total_logins']; ?> Total Sessions</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light"><tr><th class="ps-4">Timestamp</th><th>IP Address</th><th class="text-center">Status</th></tr></thead>
+                            <tbody>
+                                <?php if (empty($login_history)): ?>
+                                    <tr><td colspan="3" class="text-center py-4 text-muted small">No activity found.</td></tr>
+                                <?php else: foreach ($login_history as $attempt): ?>
+                                    <tr>
+                                        <td class="ps-4 small fw-bold text-dark"><?php echo date('M d, Y • H:i:s', strtotime($attempt['attempted_at'])); ?></td>
+                                        <td><code class="text-maroon"><?php echo htmlspecialchars($attempt['ip_address'] ?? '0.0.0.0'); ?></code></td>
+                                        <td class="text-center">
+                                            <span class="badge rounded-pill bg-<?php echo !empty($attempt['success']) ? 'success' : 'danger'; ?> px-3">
+                                                <?php echo !empty($attempt['success']) ? 'AUTHORIZED' : 'FAILED'; ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

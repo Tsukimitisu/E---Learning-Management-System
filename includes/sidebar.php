@@ -1,8 +1,5 @@
-<!-- Sidebar Overlay for Mobile -->
-<div class="overlay animate__animated animate__fadeIn" id="sidebarOverlay"></div>
-
 <nav id="sidebar">
-    <!-- Top Branding Section (Maroon) -->
+    <!-- Top Branding Section -->
     <div class="sidebar-header shadow-sm">
         <img src="../../assets/image/datamexlogo.png" alt="ELMS Logo" class="sidebar-logo">
         <div class="brand-text text-center">
@@ -11,20 +8,23 @@
         </div>
     </div>
 
-    <!-- Branch Admin Context (Backend logic preserved) -->
+    <!-- Branch Admin Context -->
     <?php if (($_SESSION['role_id'] ?? null) == ROLE_BRANCH_ADMIN): ?>
         <?php
             $branch_label = 'Unassigned';
             $sidebar_branch_id = get_user_branch_id();
             if (!empty($sidebar_branch_id)) {
-                $branch_stmt = $conn->prepare("SELECT name FROM branches WHERE id = ?");
-                $branch_stmt->bind_param("i", $sidebar_branch_id);
-                $branch_stmt->execute();
-                $branch_result = $branch_stmt->get_result();
-                if ($branch_row = $branch_result->fetch_assoc()) {
-                    $branch_label = $branch_row['name'] ?? $branch_label;
+                // Assuming $conn is available from connection.php included before header
+                if(isset($conn)){
+                    $branch_stmt = $conn->prepare("SELECT name FROM branches WHERE id = ?");
+                    $branch_stmt->bind_param("i", $sidebar_branch_id);
+                    $branch_stmt->execute();
+                    $branch_result = $branch_stmt->get_result();
+                    if ($branch_row = $branch_result->fetch_assoc()) {
+                        $branch_label = $branch_row['name'] ?? $branch_label;
+                    }
+                    $branch_stmt->close();
                 }
-                $branch_stmt->close();
             }
         ?>
         <div class="px-3 py-2 text-center" style="background: rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -34,7 +34,7 @@
         </div>
     <?php endif; ?>
 
-    <!-- Scrollable Navigation Menu (Blue) -->
+    <!-- Scrollable Navigation Menu -->
     <ul class="list-unstyled components">
         <?php
         $current_page = basename($_SERVER['PHP_SELF']);
@@ -43,7 +43,6 @@
         if ($_SESSION['role_id'] == ROLE_SUPER_ADMIN) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>"><i class="bi bi-people-fill"></i> <span>Users</span></a></li>
-            <!-- Removed duplicate system_settings.php link -->
             <li><a href="security_settings.php" class="<?php echo ($current_page == 'security_settings.php') ? 'active' : ''; ?>"><i class="bi bi-shield-lock-fill"></i> <span>Security & Email</span></a></li>
             <li><a href="security.php" class="<?php echo ($current_page == 'security.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-data"></i> <span>Audit Logs</span></a></li>
             <li><a href="maintenance.php" class="<?php echo ($current_page == 'maintenance.php') ? 'active' : ''; ?>"><i class="bi bi-tools"></i> <span>Maintenance</span></a></li>
@@ -54,9 +53,10 @@
         if ($_SESSION['role_id'] == ROLE_SCHOOL_ADMIN) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="administrative_control.php" class="<?php echo ($current_page == 'administrative_control.php') ? 'active' : ''; ?>"><i class="bi bi-shield-check"></i> <span>Admin Control</span></a></li>
-            <li><a href="branches.php" class="<?php echo ($current_page == 'branches.php') ? 'active' : ''; ?>"><i class="bi bi-building-fill"></i> <span>Branches</span></a></li>
+            <li><a href="academic_years.php" class="<?php echo ($current_page == 'academic_years.php') ? 'active' : ''; ?>"><i class="bi bi-calendar-range"></i> <span>Academic Years</span></a></li>
             <li><a href="programs.php" class="<?php echo ($current_page == 'programs.php') ? 'active' : ''; ?>"><i class="bi bi-mortarboard-fill"></i> <span>Programs</span></a></li>
-            <li><a href="curriculum.php" class="<?php echo ($current_page == 'curriculum.php') ? 'active' : ''; ?>"><i class="bi bi-book-half"></i> <span>Subject Catalog</span></a></li>
+            <li><a href="curriculum.php" class="<?php echo (in_array($current_page, ['curriculum.php', 'shs_curriculum.php', 'college_curriculum.php'])) ? 'active' : ''; ?>"><i class="bi bi-book-half"></i> <span>Subject Catalog</span></a></li>
+            <li><a href="branches.php" class="<?php echo ($current_page == 'branches.php') ? 'active' : ''; ?>"><i class="bi bi-building-fill"></i> <span>Branches</span></a></li>
             <li><a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>"><i class="bi bi-megaphone-fill"></i> <span>Announcements</span></a></li>
         <?php }
 
@@ -93,14 +93,14 @@
         if ($_SESSION['role_id'] == ROLE_TEACHER) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php', 'classroom.php'])) ? 'active' : ''; ?>"><i class="bi bi-journal-bookmark"></i> <span>My Classes</span></a></li>
-            <li><a href="grading.php" class="<?php echo (in_array($current_page, ['grading.php', 'gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-calculator-fill"></i> <span>Grades</span></a></li>
-            <li><a href="attendance.php" class="<?php echo (in_array($current_page, ['attendance.php', 'attendance_sheet.php'])) ? 'active' : ''; ?>"><i class="bi bi-calendar-check-fill"></i> <span>Attendance</span></a></li>
+            <li><a href="grading.php" class="<?php echo (in_array($current_page, ['grading.php','grading_sections.php', 'gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-calculator-fill"></i> <span>Grades</span></a></li>
+            <li><a href="attendance.php" class="<?php echo (in_array($current_page, ['attendance.php','attendance_sections.php', 'attendance_sheet.php'])) ? 'active' : ''; ?>"><i class="bi bi-calendar-check-fill"></i> <span>Attendance</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-check-fill"></i> <span>Assessments</span></a></li>
-            <li><a href="materials.php" class="<?php echo (in_array($current_page, ['materials.php', 'materials_list.php'])) ? 'active' : ''; ?>"><i class="bi bi-file-earmark-pdf-fill"></i> <span>Materials</span></a></li>
+            <li><a href="materials.php" class="<?php echo (in_array($current_page, ['materials.php','materials_sections.php', 'materials_list.php'])) ? 'active' : ''; ?>"><i class="bi bi-file-earmark-pdf-fill"></i> <span>Materials</span></a></li>
             <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-text"></i> <span>Reports</span></a></li>
         <?php }
 
-        // --- 6. STUDENT MENU (RESTORED ALL MISSING ITEMS) ---
+        // --- 6. STUDENT MENU ---
         if ($_SESSION['role_id'] == ROLE_STUDENT) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="my_classes.php" class="<?php echo (in_array($current_page, ['my_classes.php', 'subject_view.php'])) ? 'active' : ''; ?>"><i class="bi bi-book-fill"></i> <span>My Classes</span></a></li>
@@ -115,46 +115,4 @@
             <li><a href="profile.php" class="<?php echo ($current_page == 'profile.php') ? 'active' : ''; ?>"><i class="bi bi-person-fill"></i> <span>My Profile</span></a></li>
         <?php } ?>
     </ul>
-
-  <!-- Bottom Pinned Footer Section -->
-    <div class="sidebar-footer">
-        <a href="../../modules/common/account_settings.php" class="footer-link <?php echo ($current_page == 'account_settings.php') ? 'active' : ''; ?>">
-            <i class="bi bi-person-gear"></i> 
-            <span>Account Settings</span>
-        </a>
-        <a href="javascript:void(0);" class="footer-link logout-link" id="logoutTrigger">
-            <i class="bi bi-box-arrow-right"></i> 
-            <span>Logout Account</span>
-        </a>
-    </div>
 </nav>
-<div id="content">
-    <!-- Navbar with Profile Alignment & Notification -->
-    <nav class="navbar-custom animate__animated animate__fadeInDown">
-        <div class="d-flex align-items-center">
-            <!-- NO BORDER BURGER -->
-            <button type="button" id="sidebarCollapse" class="burger-btn me-3">
-                <i class="bi bi-list"></i>
-            </button>
-            
-            <div class="position-relative ms-2" style="cursor:pointer;">
-                <i class="bi bi-bell fs-5 text-muted"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none; font-size: 0.5rem;">
-                    <span id="notificationCount">0</span>
-                </span>
-            </div>
-        </div>
-        
-        <div class="user-profile">
-            <div class="user-info-text d-none d-sm-block">
-                <!-- Name on top (Bold), Role below (Uppercase Blue) -->
-                <span class="role" style="color: var(--blue); font-weight: 800; font-size: 0.8rem;">USER <?php echo strtoupper(htmlspecialchars($_SESSION['role'])); ?></span>
-                <span class="name" style="color: #666; font-size: 0.75rem; display: block;"><?php echo htmlspecialchars($_SESSION['name'] ?? 'User Account'); ?></span>
-            </div>
-            <div class="avatar-circle">
-                <?php echo strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)); ?>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="main-content-body">

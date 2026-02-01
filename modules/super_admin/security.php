@@ -40,8 +40,7 @@ $audit_logs = $conn->query("
     LIMIT 100
 ");
 
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>

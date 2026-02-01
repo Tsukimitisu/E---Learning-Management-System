@@ -59,8 +59,7 @@ $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $payments_result = $stmt->get_result();
 
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>

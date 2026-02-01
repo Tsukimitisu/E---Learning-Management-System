@@ -15,7 +15,6 @@ $students = $conn->query("SELECT s.user_id, s.student_no, CONCAT(up.first_name, 
 $academic_years = $conn->query("SELECT id, year_name FROM academic_years ORDER BY year_name DESC");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // This opens the .wrapper and starts #content
 ?>
 
 <style>

@@ -86,7 +86,6 @@ include '../../includes/header.php';
 ?>
 
 <div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
     
     <div class="main-content">
         <!-- Back Button and Header -->

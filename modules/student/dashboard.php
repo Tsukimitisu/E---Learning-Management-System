@@ -78,8 +78,7 @@ $stats['pending_assessments'] = $pending['count'] ?? 0;
 
 $announcements = $conn->query("SELECT a.*, CONCAT(up.first_name, ' ', up.last_name) as author_name FROM announcements a LEFT JOIN user_profiles up ON a.created_by = up.user_id WHERE a.is_active = 1 AND (a.target_audience = 'all' OR a.target_audience = 'students') AND (a.expires_at IS NULL OR a.expires_at > NOW()) ORDER BY a.priority DESC, a.created_at DESC LIMIT 5");
 
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>

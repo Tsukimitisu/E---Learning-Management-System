@@ -45,7 +45,6 @@ if ($college_subjects_result) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
@@ -156,7 +155,7 @@ include '../../includes/sidebar.php';
                     <div class="prog-card">
                         <div class="prog-header d-flex justify-content-between">
                             <h6 class="mb-0 fw-bold"><?php echo htmlspecialchars($program['code']); ?></h6>
-                            <span class="badge bg-white text-blue rounded-pill small"><?php echo htmlspecialchars($program['degree_level']); ?></span>
+                            <span class="badge bg-white text-dark rounded-pill small"><?php echo htmlspecialchars($program['degree_level']); ?></span>
                         </div>
                         <div class="p-4">
                             <h6 class="fw-bold text-dark mb-3"><?php echo htmlspecialchars($program['name']); ?></h6>

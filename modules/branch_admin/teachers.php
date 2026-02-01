@@ -50,7 +50,6 @@ $teachers_query = "
 $teachers = $conn->query($teachers_query);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

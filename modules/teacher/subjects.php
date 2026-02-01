@@ -123,7 +123,6 @@ while ($class = $classes_result->fetch_assoc()) {
 $semesters = ['1st', '2nd', 'summer'];
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

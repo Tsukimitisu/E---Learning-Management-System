@@ -112,7 +112,6 @@ if ($current_ay) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

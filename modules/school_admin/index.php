@@ -28,7 +28,6 @@ $branch_admins = $conn->query("
 ")->fetch_assoc()['count'];
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // This opens the .wrapper and starts #content
 ?>
 
 <style>

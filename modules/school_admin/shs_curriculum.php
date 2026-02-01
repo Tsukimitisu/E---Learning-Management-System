@@ -51,7 +51,6 @@ if ($shs_subjects_result) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
