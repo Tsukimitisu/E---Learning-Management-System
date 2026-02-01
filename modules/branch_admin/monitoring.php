@@ -132,7 +132,6 @@ if ($grade_lock_classes === false) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

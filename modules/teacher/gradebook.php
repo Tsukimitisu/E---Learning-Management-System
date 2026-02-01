@@ -122,7 +122,6 @@ $export_password = strtoupper(substr(md5($subject_info['subject_code'] . $sectio
 
 $page_title = "Gradebook - " . $class_info['subject_code'];
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

@@ -62,7 +62,6 @@ $courses = $conn->query("SELECT id, course_code, title FROM courses ORDER BY cou
 $academic_years = $conn->query("SELECT id, year_name FROM academic_years ORDER BY year_name DESC");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

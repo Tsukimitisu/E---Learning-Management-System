@@ -18,7 +18,6 @@ $scheduled = $conn->query("
 ");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

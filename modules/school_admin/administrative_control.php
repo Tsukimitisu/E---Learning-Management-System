@@ -78,7 +78,6 @@ $audit_logs_query = "
 $audit_logs_result = $conn->query($audit_logs_query);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

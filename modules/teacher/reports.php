@@ -84,7 +84,6 @@ foreach ($teacher_subjects as $subject) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // Opens wrapper and starts #content
 ?>
 
 <style>

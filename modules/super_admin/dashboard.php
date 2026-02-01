@@ -19,7 +19,6 @@ $maintenance = $conn->query("SELECT setting_value FROM system_settings WHERE set
 $is_maintenance = ($maintenance['setting_value'] ?? '0') == '1';
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

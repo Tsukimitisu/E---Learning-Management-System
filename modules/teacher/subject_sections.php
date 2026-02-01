@@ -90,7 +90,6 @@ $sections_query->execute();
 $sections_result = $sections_query->get_result();
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

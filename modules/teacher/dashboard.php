@@ -140,7 +140,6 @@ if (!empty($teacher_subjects)) {
 $stats['grading_progress'] = $grading_progress;
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php';
 ?>
 
 <style>

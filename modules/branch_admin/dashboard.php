@@ -44,9 +44,7 @@ $today = date('Y-m-d');
 $result = $conn->query("SELECT COUNT(DISTINCT student_id) as count FROM attendance a INNER JOIN classes cl ON a.class_id = cl.id WHERE cl.branch_id = $branch_id AND a.attendance_date = '$today' AND a.status = 'present'");
 if ($row = $result->fetch_assoc()) { $stats['today_attendance'] = $row['count']; }
 
-// Header and Sidebar include (These contain the <html>, <head>, and Opening Wrapper)
-include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
+include '../../includes/header.php'; 
 ?>
 
 <style>

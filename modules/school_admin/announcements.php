@@ -33,7 +33,6 @@ $announcements_result = $conn->query($announcements_query);
 $schools_result = $conn->query("SELECT id, name FROM schools ORDER BY name");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

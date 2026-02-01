@@ -8,6 +8,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_SCHOOL_ADMIN) {
 
 $page_title = "Curriculum Management";
 
+// ==========================================
+// BACKEND LOGIC - UNTOUCHED
+// ==========================================
+
 // Fetch data for stats
 $track_count = $conn->query("SELECT COUNT(*) as count FROM shs_tracks WHERE is_active = 1")->fetch_assoc()['count'];
 $program_count = $conn->query("SELECT COUNT(*) as count FROM programs WHERE is_active = 1")->fetch_assoc()['count'];
@@ -17,639 +21,464 @@ $college_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_
 // Fetch actual data arrays for display and JavaScript
 $tracks = [];
 $tracks_result = $conn->query("SELECT id, track_name AS name, track_code, description, is_active FROM shs_tracks ORDER BY track_name");
-if ($tracks_result) {
-    while ($row = $tracks_result->fetch_assoc()) {
-        $tracks[] = $row;
-    }
-}
+if ($tracks_result) { while ($row = $tracks_result->fetch_assoc()) { $tracks[] = $row; } }
 
 $strands = [];
-$strands_result = $conn->query("
-    SELECT st.id, st.strand_name AS name, st.strand_code, st.description, st.is_active, st.track_id,
-           t.track_name AS track_name
-    FROM shs_strands st
-    LEFT JOIN shs_tracks t ON st.track_id = t.id
-    ORDER BY st.strand_name
-");
-if ($strands_result) {
-    while ($row = $strands_result->fetch_assoc()) {
-        $strands[] = $row;
-    }
-}
+$strands_result = $conn->query("SELECT st.id, st.strand_name AS name, st.strand_code, st.description, st.is_active, st.track_id, t.track_name AS track_name FROM shs_strands st LEFT JOIN shs_tracks t ON st.track_id = t.id ORDER BY st.strand_name");
+if ($strands_result) { while ($row = $strands_result->fetch_assoc()) { $strands[] = $row; } }
 
 $grade_levels = [];
 $grade_levels_result = $conn->query("SELECT id, grade_name AS name, semesters_count AS semesters, is_active FROM shs_grade_levels ORDER BY grade_name");
-if ($grade_levels_result) {
-    while ($row = $grade_levels_result->fetch_assoc()) {
-        $grade_levels[] = $row;
-    }
-}
+if ($grade_levels_result) { while ($row = $grade_levels_result->fetch_assoc()) { $grade_levels[] = $row; } }
 
 $college_programs = [];
-$college_programs_result = $conn->query("
-    SELECT id, program_code AS code, program_name AS name, degree_level, school_id, is_active
-    FROM programs
-    ORDER BY program_code
-");
-if ($college_programs_result) {
-    while ($row = $college_programs_result->fetch_assoc()) {
-        $college_programs[] = $row;
-    }
-}
+$college_programs_result = $conn->query("SELECT id, program_code AS code, program_name AS name, degree_level, school_id, is_active FROM programs ORDER BY program_code");
+if ($college_programs_result) { while ($row = $college_programs_result->fetch_assoc()) { $college_programs[] = $row; } }
 
 $college_year_levels = [];
-$college_year_levels_result = $conn->query("
-    SELECT id, program_id, year_level as year_number, year_name as name, semesters_count as semesters, is_active
-    FROM program_year_levels
-    ORDER BY program_id, year_level
-");
-if ($college_year_levels_result) {
-    while ($row = $college_year_levels_result->fetch_assoc()) {
-        $college_year_levels[] = $row;
-    }
-}
+$college_year_levels_result = $conn->query("SELECT id, program_id, year_level as year_number, year_name as name, semesters_count as semesters, is_active FROM program_year_levels ORDER BY program_id, year_level");
+if ($college_year_levels_result) { while ($row = $college_year_levels_result->fetch_assoc()) { $college_year_levels[] = $row; } }
 
 include '../../includes/header.php';
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+<style>
+    /* --- MATCHING DASHBOARD STYLES --- */
+    :root {
+        --maroon: #800000;
+        --blue: #003366;
+    }
 
-    <div id="content">
-        <div class="navbar-custom d-flex justify-content-between align-items-center">
-            <div>
-                <a href="javascript:void(0)" onclick="goBack()" class="btn btn-sm btn-outline-secondary me-3">
-                    <i class="bi bi-arrow-left"></i> Back
+    .welcome-card {
+        background: white;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        border-left: 6px solid var(--maroon);
+        margin-bottom: 30px;
+    }
+
+    .admin-stat-card {
+        border-radius: 15px; padding: 25px; border: none; color: white;
+        transition: 0.3s; height: 100%; display: flex; align-items: center; gap: 20px;
+        cursor: default;
+    }
+    .admin-stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    
+    .stat-icon-bg {
+        width: 55px; height: 55px; border-radius: 12px; background: rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    }
+
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; height: 100%;
+    }
+    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+    /* Navigation/Action Cards specific to Curriculum */
+    .nav-action-card {
+        background: white; border-radius: 20px; border: 1px solid #eee; padding: 30px;
+        transition: 0.3s; text-decoration: none; color: #333; height: 100%;
+        display: flex; flex-direction: column; justify-content: center;
+        position: relative; overflow: hidden;
+    }
+    .nav-action-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--blue); }
+    .nav-action-card h5 { color: var(--blue); font-weight: 700; margin-bottom: 10px; }
+    .nav-action-card .icon-wrapper {
+        font-size: 2.5rem; margin-bottom: 15px; color: var(--maroon);
+    }
+    .nav-action-card .btn-indicator {
+        margin-top: 20px; font-weight: 600; font-size: 0.9rem; color: var(--blue);
+        display: flex; align-items: center;
+    }
+    
+    .table-modern tbody td { padding: 15px 25px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+
+    /* Staggered Delays */
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+</style>
+
+<div class="animate__animated animate__fadeIn">
+
+    <!-- Header Summary -->
+    <div class="welcome-card p-4 animate__animated animate__fadeInDown">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <a href="javascript:void(0)" onclick="goBack()" class="btn btn-light rounded-circle shadow-sm me-3 border" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-arrow-left text-maroon"></i>
                 </a>
-                <span style="display: inline-block;">
-                    <h4 class="mb-0 d-inline-block" style="color: #003366;">
-                        <i class="bi bi-book"></i> Curriculum Management
-                    </h4>
-                    <br><small class="text-muted">Select SHS or College to manage subjects</small>
-                </span>
-            </div>
-        </div>
-
-        <div id="alertContainer" class="mt-3"></div>
-
-        <div class="row mt-4">
-            <!-- SHS Curriculum Card -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 border-primary">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-mortarboard"></i> Senior High School (SHS) Curriculum
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Manage SHS strands, grade levels, and subject assignments.</p>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle text-success"></i> Specialized Strands</li>
-                            <li><i class="bi bi-check-circle text-success"></i> Grade 11 & 12 Levels</li>
-                            <li><i class="bi bi-check-circle text-success"></i> Subject Assignments</li>
-                        </ul>
-                    </div>
-                    <div class="card-footer">
-                        <a href="shs_curriculum.php" class="btn btn-primary btn-sm">
-                            <i class="bi bi-arrow-right"></i> Manage SHS Curriculum
-                        </a>
-                    </div>
+                <div>
+                    <h4 class="fw-bold mb-0 text-blue">Curriculum Management</h4>
+                    <p class="text-muted small mb-0">Manage SHS Tracks, College Programs, and Subject Catalogs</p>
                 </div>
             </div>
+            <div id="alertContainer"></div>
+        </div>
+    </div>
 
-            <!-- College Curriculum Card -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 border-info">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-building"></i> College Curriculum
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Manage college programs, year levels, subjects, and course assignments.</p>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle text-success"></i> Degree Programs (BSIT, BSCS, etc.)</li>
-                            <li><i class="bi bi-check-circle text-success"></i> Year Level Structure</li>
-                            <li><i class="bi bi-check-circle text-success"></i> Subject Prerequisites</li>
-                            <li><i class="bi bi-check-circle text-success"></i> Course Assignments</li>
-                        </ul>
-                    </div>
-                    <div class="card-footer">
-                        <a href="college_curriculum.php" class="btn btn-info btn-sm">
-                            <i class="bi bi-arrow-right"></i> Manage College Curriculum
-                        </a>
-                    </div>
+    <!-- Main Navigation Cards (SHS vs College) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 animate__animated animate__fadeInLeft delay-1">
+            <a href="shs_curriculum.php" class="nav-action-card">
+                <div class="icon-wrapper"><i class="bi bi-mortarboard"></i></div>
+                <h5>Senior High School (SHS)</h5>
+                <p class="text-muted small mb-0">Manage Tracks, Strands, Grade Levels (11-12), and Subject assignments.</p>
+                <div class="btn-indicator">Manage SHS <i class="bi bi-arrow-right ms-2"></i></div>
+            </a>
+        </div>
+        <div class="col-md-6 animate__animated animate__fadeInRight delay-1">
+            <a href="college_curriculum.php" class="nav-action-card">
+                <div class="icon-wrapper text-primary"><i class="bi bi-building"></i></div>
+                <h5 class="text-primary">College Department</h5>
+                <p class="text-muted small mb-0">Manage Degree Programs, Prospectus, Year Levels, and Course assignments.</p>
+                <div class="btn-indicator text-primary">Manage College <i class="bi bi-arrow-right ms-2"></i></div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row (Gradient Cards) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 animate__animated animate__zoomIn delay-1">
+            <div class="admin-stat-card shadow-sm" style="background: linear-gradient(135deg, var(--blue) 0%, #001a33 100%);">
+                <div class="stat-icon-bg"><i class="bi bi-diagram-3"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0"><?php echo number_format($track_count); ?></h3>
+                    <small class="text-uppercase fw-bold opacity-75" style="font-size:0.6rem;">SHS Tracks</small>
                 </div>
             </div>
         </div>
-
-        <!-- Quick Stats -->
-        <div class="row">
-            <div class="col-md-3 mb-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-primary">
-                            <?php
-                            $track_count = $conn->query("SELECT COUNT(*) as count FROM shs_tracks WHERE is_active = 1")->fetch_assoc()['count'];
-                            echo $track_count;
-                            ?>
-                        </h3>
-                        <p class="text-muted mb-0">SHS Tracks</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-success">
-                            <?php
-                            $program_count = $conn->query("SELECT COUNT(*) as count FROM programs WHERE is_active = 1")->fetch_assoc()['count'];
-                            echo $program_count;
-                            ?>
-                        </h3>
-                        <p class="text-muted mb-0">College Programs</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-warning">
-                            <?php
-                            $shs_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type IN ('shs_core', 'shs_applied', 'shs_specialized') AND is_active = 1")->fetch_assoc()['count'];
-                            echo $shs_subject_count;
-                            ?>
-                        </h3>
-                        <p class="text-muted mb-0">SHS Subjects</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-danger">
-                            <?php
-                            $college_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_subjects WHERE subject_type = 'college' AND is_active = 1")->fetch_assoc()['count'];
-                            echo $college_subject_count;
-                            ?>
-                        </h3>
-                        <p class="text-muted mb-0">College Subjects</p>
-                    </div>
+        <div class="col-md-3 animate__animated animate__zoomIn delay-2">
+            <div class="admin-stat-card shadow-sm" style="background: linear-gradient(135deg, var(--maroon) 0%, #4a0000 100%);">
+                <div class="stat-icon-bg"><i class="bi bi-bank"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0"><?php echo number_format($program_count); ?></h3>
+                    <small class="text-uppercase fw-bold opacity-75" style="font-size:0.6rem;">College Programs</small>
                 </div>
             </div>
         </div>
-
-        <!-- Recent Activity -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-activity"></i> Recent Curriculum Activity</h6>
+        <div class="col-md-3 animate__animated animate__zoomIn delay-3">
+            <div class="admin-stat-card shadow-sm" style="background: linear-gradient(135deg, #17a2b8 0%, #0b5e6b 100%);">
+                <div class="stat-icon-bg"><i class="bi bi-journal-bookmark"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0"><?php echo number_format($shs_subject_count); ?></h3>
+                    <small class="text-uppercase fw-bold opacity-75" style="font-size:0.6rem;">SHS Subjects</small>
+                </div>
             </div>
-            <div class="card-body">
-                <?php
-                $recent_activity = $conn->query("
-                    SELECT al.action,
-                           al.timestamp AS created_at,
-                           COALESCE(up.first_name, '') AS first_name,
-                           COALESCE(up.last_name, '') AS last_name,
-                           u.email
-                    FROM audit_logs al
-                    LEFT JOIN users u ON al.user_id = u.id
-                    LEFT JOIN user_profiles up ON up.user_id = u.id
-                    WHERE al.action LIKE '%curriculum%' OR al.action LIKE '%subject%' OR al.action LIKE '%program%' OR al.action LIKE '%track%'
-                    ORDER BY al.timestamp DESC
-                    LIMIT 5
-                ");
-
-                if ($recent_activity->num_rows > 0) {
-                    echo '<div class="list-group list-group-flush">';
-                    while ($activity = $recent_activity->fetch_assoc()) {
-                        echo '<div class="list-group-item px-0">';
-                        echo '<small class="text-muted">' . date('M d, Y H:i', strtotime($activity['created_at'])) . '</small><br>';
-                        echo '<span>' . htmlspecialchars($activity['action']) . '</span>';
-                        echo '</div>';
-                    }
-                    echo '</div>';
-                } else {
-                    echo '<p class="text-muted mb-0">No recent curriculum activity</p>';
-                }
-                ?>
+        </div>
+        <div class="col-md-3 animate__animated animate__zoomIn delay-4">
+            <div class="admin-stat-card shadow-sm" style="background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%); color: #333;">
+                <div class="stat-icon-bg" style="background: rgba(0,0,0,0.1);"><i class="bi bi-journal-text"></i></div>
+                <div>
+                    <h3 class="fw-bold mb-0"><?php echo number_format($college_subject_count); ?></h3>
+                    <small class="text-uppercase fw-bold opacity-75" style="font-size:0.6rem;">College Courses</small>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Recent Activity -->
+    <div class="row animate__animated animate__fadeInUp delay-3">
+        <div class="col-12">
+            <div class="main-card-modern">
+                <div class="card-header-modern"><i class="bi bi-activity me-2"></i>Recent Curriculum Changes</div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-modern mb-0">
+                        <tbody>
+                            <?php
+                            $recent_activity = $conn->query("
+                                SELECT al.action,
+                                       al.timestamp AS created_at,
+                                       COALESCE(up.first_name, '') AS first_name,
+                                       COALESCE(up.last_name, '') AS last_name,
+                                       u.email
+                                FROM audit_logs al
+                                LEFT JOIN users u ON al.user_id = u.id
+                                LEFT JOIN user_profiles up ON up.user_id = u.id
+                                WHERE al.action LIKE '%curriculum%' OR al.action LIKE '%subject%' OR al.action LIKE '%program%' OR al.action LIKE '%track%'
+                                ORDER BY al.timestamp DESC
+                                LIMIT 5
+                            ");
+
+                            if ($recent_activity->num_rows > 0) {
+                                while ($activity = $recent_activity->fetch_assoc()) {
+                                    ?>
+                                    <tr>
+                                        <td width="5%">
+                                            <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center fw-bold border" style="width:35px; height:35px;">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark small"><?php echo htmlspecialchars($activity['action']); ?></div>
+                                            <div class="text-muted small" style="font-size: 0.75rem;">
+                                                by <?php echo htmlspecialchars($activity['first_name'] . ' ' . $activity['last_name']); ?>
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-muted small">
+                                            <i class="bi bi-clock me-1"></i><?php echo date('M d, h:i A', strtotime($activity['created_at'])); ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                            } else {
+                                echo '<tr><td colspan="3" class="text-center text-muted py-4">No recent curriculum activity found.</td></tr>';
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-    
+<!-- Include Modals & Scripts -->
 <?php include 'curriculum_modals.php'; ?>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php include '../../includes/footer.php'; ?>
+
+<!-- Custom Scripts -->
 <script>
 // Track data for JavaScript
 const tracksData = <?php echo json_encode($tracks); ?>;
 const strandsData = <?php echo json_encode($strands); ?>;
 
-// Form handlers
+// --- UTILITY FUNCTIONS ---
+function goBack() {
+    if (document.referrer && document.referrer.includes('/elms_system/')) {
+        window.history.back();
+    } else {
+        window.location.href = 'index.php';
+    }
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.getElementById('alertContainer').innerHTML = alertHtml;
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+        const alertNode = document.querySelector('.alert');
+        if(alertNode) {
+            const alert = bootstrap.Alert.getInstance(alertNode) || new bootstrap.Alert(alertNode);
+            alert.close();
+        }
+    }, 3000);
+}
+
+// --- FORM SUBMISSION HANDLERS (Untouched Logic) ---
+
 document.getElementById('addTrackForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_track.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_track.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); } 
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('addStrandForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_strand.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_strand.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('addGradeForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_grade_level.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_grade_level.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('addSubjectForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_shs_subject.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_shs_subject.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('assignSubjectForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('/elms_system/modules/school_admin/process/assign_shs_subject.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('/elms_system/modules/school_admin/process/assign_shs_subject.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('addProgramForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_college_program.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_college_program.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('addCollegeCourseForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_college_course.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_college_course.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editCollegeSubjectForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('/elms_system/modules/school_admin/process/update_subject.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('/elms_system/modules/school_admin/process/update_subject.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert('Subject updated successfully!', 'success');
-            $('#editCollegeSubjectModal').modal('hide');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert('Subject updated successfully!', 'success'); $('#editCollegeSubjectModal').modal('hide'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('addCollegeYearForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/add_college_year_level.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/add_college_year_level.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('assignCollegeCourseForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('/elms_system/modules/school_admin/process/assign_college_course.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('/elms_system/modules/school_admin/process/assign_college_course.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editTrackForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_track.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_track.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editStrandForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_strand.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_strand.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editGradeForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_grade_level.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_grade_level.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editSubjectForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_subject.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_subject.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editProgramForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_college_program.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_college_program.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editCollegeCourseForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_college_course.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_college_course.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('editCollegeYearForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_college_year_level.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_college_year_level.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
 document.getElementById('gradingRulesForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-
     try {
-        const response = await fetch('process/update_grading_rules.php', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('process/update_grading_rules.php', { method: 'POST', body: formData });
         const data = await response.json();
-
-        if (data.status === 'success') {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert(data.message, 'danger');
-        }
-    } catch (error) {
-        showAlert('An error occurred', 'danger');
-    }
+        if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+        else { showAlert(data.message, 'danger'); }
+    } catch (error) { showAlert('An error occurred', 'danger'); }
 });
 
-// Utility functions
+// --- EDIT/DELETE MODAL POPULATION FUNCTIONS ---
+
 function loadStrands(trackId) {
     const strandSelect = document.getElementById('strandSelect');
     strandSelect.innerHTML = '<option value="">-- Select Strand --</option>';
-
     if (trackId) {
         const trackStrands = strandsData.filter(strand => strand.track_id == trackId);
         trackStrands.forEach(strand => {
@@ -662,8 +491,6 @@ function loadStrands(trackId) {
 }
 
 function editTrack(id) {
-    // Find track data and populate edit modal
-    const tracksData = <?php echo json_encode($tracks); ?>;
     const track = tracksData.find(t => t.id == id);
     if (track) {
         document.getElementById('editTrackId').value = track.id;
@@ -683,19 +510,13 @@ function deleteTrack(id) {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                showAlert(data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showAlert(data.message, 'danger');
-            }
-        })
-        .catch(error => showAlert('An error occurred', 'danger'));
+            if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+            else { showAlert(data.message, 'danger'); }
+        }).catch(error => showAlert('An error occurred', 'danger'));
     }
 }
 
 function editStrand(id) {
-    const strandsData = <?php echo json_encode($strands); ?>;
     const strand = strandsData.find(s => s.id == id);
     if (strand) {
         document.getElementById('editStrandId').value = strand.id;
@@ -716,14 +537,9 @@ function deleteStrand(id) {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                showAlert(data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showAlert(data.message, 'danger');
-            }
-        })
-        .catch(error => showAlert('An error occurred', 'danger'));
+            if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+            else { showAlert(data.message, 'danger'); }
+        }).catch(error => showAlert('An error occurred', 'danger'));
     }
 }
 
@@ -748,19 +564,13 @@ function deleteGrade(id) {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                showAlert(data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showAlert(data.message, 'danger');
-            }
-        })
-        .catch(error => showAlert('An error occurred', 'danger'));
+            if (data.status === 'success') { showAlert(data.message, 'success'); setTimeout(() => location.reload(), 1500); }
+            else { showAlert(data.message, 'danger'); }
+        }).catch(error => showAlert('An error occurred', 'danger'));
     }
 }
 
 function editSubject(id) {
-    // Fetch subject data and populate edit modal
     fetch(`process/get_subject.php?id=${id}`)
         .then(response => response.json())
         .then(data => {
@@ -775,11 +585,8 @@ function editSubject(id) {
                 document.getElementById('editSubjectPrerequisites').value = subject.prerequisites || '';
                 document.getElementById('editSubjectStatus').value = subject.is_active ? '1' : '0';
                 new bootstrap.Modal(document.getElementById('editSubjectModal')).show();
-            } else {
-                showAlert('Failed to load subject data', 'danger');
-            }
-        })
-        .catch(error => showAlert('An error occurred', 'danger'));
+            } else { showAlert('Failed to load subject data', 'danger'); }
+        }).catch(error => showAlert('An error occurred', 'danger'));
 }
 
 function editProgram(id) {
@@ -799,12 +606,10 @@ function editProgram(id) {
 }
 
 function viewProgramCurriculum(id) {
-    // Redirect to program-specific curriculum view
     window.location.href = `program_curriculum.php?program_id=${id}`;
 }
 
 function editCollegeCourse(code) {
-    // Fetch course data and populate edit modal
     fetch(`process/get_college_course.php?code=${code}`)
         .then(response => response.json())
         .then(data => {
@@ -821,15 +626,11 @@ function editCollegeCourse(code) {
                 document.getElementById('editCourseDescription').value = course.description || '';
                 document.getElementById('editCourseStatus').value = course.active ? '1' : '0';
                 new bootstrap.Modal(document.getElementById('editCollegeCourseModal')).show();
-            } else {
-                showAlert('Failed to load course data', 'danger');
-            }
-        })
-        .catch(error => showAlert('An error occurred', 'danger'));
+            } else { showAlert('Failed to load course data', 'danger'); }
+        }).catch(error => showAlert('An error occurred', 'danger'));
 }
 
 function assignCollegeCourse(code) {
-   
     document.querySelector('select[name="course_id"]').value = code;
     new bootstrap.Modal(document.getElementById('assignCollegeCourseModal')).show();
 }
@@ -852,26 +653,6 @@ function assignSubject(id) {
     if (target) target.value = id;
     new bootstrap.Modal(document.getElementById('assignSubjectModal')).show();
 }
-
-function goBack() {
-    if (document.referrer && document.referrer.includes('/elms_system/')) {
-        window.history.back();
-    } else {
-        window.location.href = 'index.php';
-    }
-}
-
-function showAlert(message, type) {
-    const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    document.getElementById('alertContainer').innerHTML = alertHtml;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 </script>
-
 </body>
 </html>

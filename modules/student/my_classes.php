@@ -79,7 +79,6 @@ if ($section_id > 0) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

@@ -88,7 +88,6 @@ while ($subject = $subjects_result->fetch_assoc()) {
 }
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php';
 ?>
 
 <style>

@@ -31,7 +31,6 @@ $programs_result = $conn->query($programs_query);
 $schools_result = $conn->query("SELECT id, name FROM schools ORDER BY name");
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; // This opens the .wrapper and starts #content
 ?>
 
 <style>

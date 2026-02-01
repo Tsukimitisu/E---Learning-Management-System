@@ -83,7 +83,6 @@ foreach ($grades_list as $g) { if (($g['final_grade'] ?? 0) > 0) { $total_grade 
 $gpa = $grade_count > 0 ? round($total_grade / $grade_count, 2) : 0;
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>

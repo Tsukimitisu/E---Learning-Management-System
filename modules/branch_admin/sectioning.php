@@ -139,374 +139,418 @@ while ($row = $strand_grade_levels_result->fetch_assoc()) {
 include '../../includes/header.php';
 ?>
 
-<div class="wrapper">
-    <?php include '../../includes/sidebar.php'; ?>
+<style>
+    /* --- PAGE LEVEL STYLES --- */
+    :root {
+        --maroon: #800000;
+        --blue: #003366;
+    }
 
-    <div id="content">
-        <div class="navbar-custom d-flex justify-content-between align-items-center">
-            <h4 class="mb-0" style="color: #003366;">
-                <i class="bi bi-diagram-3"></i> Section Management & Enrollment
+    /* Container to ensure full height within the dashboard body */
+    .section-management-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Fixed Header Section */
+    .content-header { 
+        background: white; 
+        padding: 20px 30px; 
+        border-bottom: 1px solid #eee; 
+        margin-bottom: 20px; 
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    /* Scrollable Content Area */
+    .scrollable-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 30px;
+        scrollbar-width: thin;
+    }
+
+    /* Modern Card Styling */
+    .main-card-modern {
+        background: white; border-radius: 15px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px;
+    }
+    .card-header-modern { 
+        padding: 15px 25px; border-bottom: 1px solid #eee; 
+        font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .card-header-blue { background: var(--blue); color: white; }
+    .card-header-cyan { background: #17a2b8; color: white; }
+    .card-header-purple { background: #6f42c1; color: white; }
+
+    /* Modern Table Styling */
+    .table-modern thead th { 
+        background: #f8f9fa; color: #444; font-size: 0.75rem; 
+        text-transform: uppercase; padding: 15px 20px; font-weight: 700;
+        border-bottom: 2px solid #eee;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+    .table-modern tr:hover { background-color: #fcfcfc; }
+
+    /* Custom Badges & Buttons */
+    .badge-modern { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    
+    .btn-action-group .btn { margin-right: 5px; border-radius: 6px; }
+    .btn-pill-modern { border-radius: 50px; padding: 6px 20px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; }
+    .btn-pill-modern:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+</style>
+
+<!-- Main Container -->
+<div class="section-management-container animate__animated animate__fadeIn">
+
+    <!-- Static Header -->
+    <div class="content-header d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-0 fw-bold" style="color: #003366;">
+                <i class="bi bi-diagram-3 me-2"></i> Section Management
             </h4>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm text-white" style="background-color: #800000;" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                    <i class="bi bi-plus-circle"></i> Add Section
-                </button>
-                <button class="btn btn-sm text-white" style="background-color: #17a2b8;" data-bs-toggle="modal" data-bs-target="#bulkAssignTeacherModal">
-                    <i class="bi bi-person-check"></i> Assign Teacher
-                </button>
-                <button class="btn btn-sm text-white" style="background-color: #003366;" onclick="refreshSections()">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                </button>
-            </div>
+            <p class="text-muted small mb-0">Manage classes, teacher assignments, and enrollment</p>
         </div>
-
-        <div id="alertContainer"></div>
-
-        <!-- Programs & Strands Overview -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #003366; color: white;">
-                        <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Programs & Strands (Approved Curriculum)</h5>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="mb-3 text-primary"><i class="bi bi-mortarboard"></i> College Programs</h6>
-                        <div class="row">
-                            <?php while ($program = $programs->fetch_assoc()): ?>
-                                <div class="col-md-4">
-                                    <div class="card border-primary mb-3">
-                                        <div class="card-body">
-                                            <h6 class="mb-1">
-                                                <?php echo htmlspecialchars($program['program_code']); ?>
-                                            </h6>
-                                            <div class="text-muted mb-2">
-                                                <?php echo htmlspecialchars($program['program_name']); ?>
-                                            </div>
-                                            <div class="mb-2">
-                                                <span class="badge bg-secondary"><?php echo htmlspecialchars($program['degree_level']); ?></span>
-                                                <span class="badge bg-info">Subjects: <?php echo $program['subject_count']; ?></span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <?php if (!empty($program_year_levels[$program['id']])): ?>
-                                                    <?php foreach ($program_year_levels[$program['id']] as $yl): ?>
-                                                        <span class="badge bg-light text-dark border">
-                                                            <?php echo htmlspecialchars($yl['year_name']); ?>
-                                                        </span>
-                                                    <?php endforeach; ?>
-                                                <?php else: ?>
-                                                    <span class="text-muted">No year levels</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-primary"
-                                                    onclick="openAddSectionForProgram(<?php echo $program['id']; ?>)">
-                                                <i class="bi bi-plus-circle"></i> Add Section
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h6 class="mb-3 text-success"><i class="bi bi-grid"></i> SHS Strands</h6>
-                        <div class="row">
-                            <?php while ($strand = $strands->fetch_assoc()): ?>
-                                <div class="col-md-4">
-                                    <div class="card border-success mb-3">
-                                        <div class="card-body">
-                                            <h6 class="mb-1">
-                                                <?php echo htmlspecialchars($strand['strand_code']); ?>
-                                            </h6>
-                                            <div class="text-muted mb-2">
-                                                <?php echo htmlspecialchars($strand['strand_name']); ?>
-                                            </div>
-                                            <div class="mb-2">
-                                                <span class="badge bg-success">Subjects: <?php echo $strand['subject_count']; ?></span>
-                                            </div>
-                                            <div class="mb-2">
-                                                <?php if (!empty($strand_grade_levels[$strand['id']])): ?>
-                                                    <?php foreach ($strand_grade_levels[$strand['id']] as $gl): ?>
-                                                        <span class="badge bg-light text-dark border">
-                                                            <?php echo htmlspecialchars($gl['grade_name']); ?>
-                                                        </span>
-                                                    <?php endforeach; ?>
-                                                <?php else: ?>
-                                                    <span class="text-muted">No grade levels</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-success"
-                                                    onclick="openAddSectionForStrand(<?php echo $strand['id']; ?>)">
-                                                <i class="bi bi-plus-circle"></i> Add Section
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Teacher Workload Overview -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #17a2b8; color: white;">
-                        <h5 class="mb-0"><i class="bi bi-person-badge"></i> Teacher Workload & Section Assignments</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead style="background-color: #f8f9fa;">
-                                    <tr>
-                                        <th>Teacher</th>
-                                        <th>Assigned Sections</th>
-                                        <th>Subjects Teaching</th>
-                                        <th>Total Students</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $teacher_workload = $conn->query("
-                                        SELECT
-                                            u.id as teacher_id,
-                                            CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
-                                            COUNT(DISTINCT cl.id) as section_count,
-                                            GROUP_CONCAT(DISTINCT CONCAT(
-                                                cs.subject_code, ' - ',
-                                                COALESCE(p.program_code, ss.strand_code, 'GEN'), ' ',
-                                                COALESCE(pyl.year_name, sgl.grade_name, ''),
-                                                ' (', cl.section_name, ')'
-                                            ) SEPARATOR '<br>') as subjects,
-                                            SUM(cl.current_enrolled) as total_students
-                                        FROM users u
-                                        INNER JOIN user_profiles up ON u.id = up.user_id
-                                        INNER JOIN user_roles ur ON u.id = ur.user_id
-                                        LEFT JOIN classes cl ON cl.teacher_id = u.id AND cl.branch_id = $branch_id
-                                        LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
-                                        LEFT JOIN programs p ON cs.program_id = p.id
-                                        LEFT JOIN shs_strands ss ON cs.shs_strand_id = ss.id
-                                        LEFT JOIN program_year_levels pyl ON cs.year_level_id = pyl.id
-                                        LEFT JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
-                                        WHERE ur.role_id = " . ROLE_TEACHER . " AND u.status = 'active'
-                                        GROUP BY u.id, up.first_name, up.last_name
-                                        ORDER BY up.last_name, up.first_name
-                                    ");
-
-                                    while ($workload = $teacher_workload->fetch_assoc()):
-                                    ?>
-                                    <tr>
-                                        <td>
-                                            <strong><?php echo htmlspecialchars($workload['teacher_name']); ?></strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary"><?php echo $workload['section_count']; ?> sections</span>
-                                        </td>
-                                        <td>
-                                            <small><?php echo $workload['subjects'] ?: 'No sections assigned'; ?></small>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info"><?php echo $workload['total_students'] ?? 0; ?> students</span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewTeacherSections(<?php echo $workload['teacher_id']; ?>)">
-                                                <i class="bi bi-eye"></i> View Sections
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section Overview -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #003366; color: white;">
-                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Class Sections Overview</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="sectionsTable">
-                                <thead style="background-color: #f8f9fa;">
-                                    <tr>
-                                        <th>Section</th>
-                                        <th>Subject & Curriculum</th>
-                                        <th>Teacher Assignment</th>
-                                        <th>Schedule & Room</th>
-                                        <th>Enrollment</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $sections->data_seek(0);
-                                    while ($section = $sections->fetch_assoc()):
-                                        $enrolled = $section['approved_enrollments'] ?? 0;
-                                        $capacity = $section['max_capacity'];
-                                        $percentage = $capacity > 0 ? ($enrolled / $capacity) * 100 : 0;
-
-                                        $curriculum_label = $section['program_name'] ?? $section['strand_name'] ?? 'General';
-                                        $year_label = $section['program_year_name'] ?? $section['shs_grade_name'] ?? 'N/A';
-
-                                        if ($percentage >= 100) {
-                                            $status_class = 'bg-danger';
-                                            $status_text = 'FULL';
-                                        } elseif ($percentage >= 80) {
-                                            $status_class = 'bg-warning';
-                                            $status_text = 'ALMOST FULL';
-                                        } else {
-                                            $status_class = 'bg-success';
-                                            $status_text = 'AVAILABLE';
-                                        }
-                                    ?>
-                                    <tr>
-                                        <td>
-                                            <strong class="text-primary"><?php echo htmlspecialchars($section['section_name']); ?></strong><br>
-                                            <small class="text-muted"><?php echo htmlspecialchars($section['year_name'] ?? 'N/A'); ?></small>
-                                        </td>
-                                        <td>
-                                            <strong><?php echo htmlspecialchars($section['subject_code'] ?? 'N/A'); ?></strong><br>
-                                            <small class="text-muted"><?php echo htmlspecialchars($section['subject_title'] ?? 'N/A'); ?> (<?php echo $section['units'] ?? 0; ?> units)</small><br>
-                                            <small class="text-info"><?php echo htmlspecialchars($curriculum_label); ?></small><br>
-                                            <small class="text-secondary">Year Level: <?php echo htmlspecialchars($year_label); ?></small>
-                                        </td>
-                                        <td>
-                                            <?php if ($section['teacher_name']): ?>
-                                                <strong><?php echo htmlspecialchars($section['teacher_name']); ?></strong><br>
-                                                <small class="text-success">Assigned</small>
-                                            <?php else: ?>
-                                                <span class="text-danger">Not Assigned</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <small><?php echo htmlspecialchars($section['schedule'] ?? '-'); ?></small><br>
-                                            <small class="text-muted">Room: <?php echo htmlspecialchars($section['room'] ?? '-'); ?></small>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress me-2" style="width: 60px; height: 8px;">
-                                                    <div class="progress-bar bg-<?php echo $status_class == 'bg-danger' ? 'danger' : ($status_class == 'bg-warning' ? 'warning' : 'success'); ?>"
-                                                         style="width: <?php echo min($percentage, 100); ?>%">
-                                                    </div>
-                                                </div>
-                                                <small><?php echo $enrolled; ?>/<?php echo $capacity; ?></small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge <?php echo $status_class; ?>">
-                                                <?php echo $status_text; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group-vertical btn-group-sm">
-                                                <button class="btn btn-outline-info mb-1" onclick="viewSectionDetails(<?php echo $section['id']; ?>)">
-                                                    <i class="bi bi-eye"></i> Details
-                                                </button>
-                                                <button class="btn btn-outline-success mb-1" onclick="bulkAssignStudents(<?php echo $section['id']; ?>, '<?php echo htmlspecialchars($section['section_name']); ?>')">
-                                                    <i class="bi bi-plus-circle"></i> Enroll
-                                                </button>
-                                                <button class="btn btn-outline-warning" onclick="manageSection(<?php echo $section['id']; ?>)">
-                                                    <i class="bi bi-gear"></i> Manage
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Unassigned Students -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #6f42c1; color: white;">
-                        <h5 class="mb-0"><i class="bi bi-person-dash"></i> Unassigned Students (<?php echo $unassigned_students->num_rows; ?>)</h5>
-                        <button class="btn btn-sm btn-light" onclick="bulkAssignModal()">
-                            <i class="bi bi-plus-circle"></i> Bulk Assign
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <?php if ($unassigned_students->num_rows > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead style="background-color: #f8f9fa;">
-                                    <tr>
-                                        <th><input type="checkbox" id="selectAllUnassigned"></th>
-                                        <th>Student Name</th>
-                                        <th>Email</th>
-                                        <th>Quick Assign</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php while ($student = $unassigned_students->fetch_assoc()): ?>
-                                    <tr>
-                                        <td><input type="checkbox" class="student-checkbox" value="<?php echo $student['id']; ?>"></td>
-                                        <td><?php echo htmlspecialchars($student['student_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($student['email']); ?></td>
-                                        <td>
-                                            <select class="form-select form-select-sm quick-assign" data-student-id="<?php echo $student['id']; ?>">
-                                                <option value="">-- Quick Assign to Section --</option>
-                                                <?php
-                                                $sections->data_seek(0);
-                                                while ($sec = $sections->fetch_assoc()):
-                                                    $sec_enrolled = $sec['approved_enrollments'] ?? 0;
-                                                    $sec_capacity = $sec['max_capacity'];
-                                                    $sec_curriculum = $sec['program_name'] ?? $sec['strand_name'] ?? 'General';
-                                                    $sec_year = $sec['program_year_name'] ?? $sec['shs_grade_name'] ?? 'N/A';
-                                                    if ($sec_enrolled < $sec_capacity):
-                                                ?>
-                                                    <option value="<?php echo $sec['id']; ?>">
-                                                        <?php echo htmlspecialchars($sec['section_name'] . ' - ' . ($sec['subject_code'] ?? 'N/A') . ' (' . $sec_curriculum . ' - ' . $sec_year . ')'); ?>
-                                                    </option>
-                                                <?php endif; endwhile; ?>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <?php else: ?>
-                        <div class="text-center text-success">
-                            <i class="bi bi-check-circle"></i> All students are assigned to sections
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-pill-modern text-white shadow-sm" style="background-color: #800000;" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Section
+            </button>
+            <button class="btn btn-pill-modern text-white shadow-sm" style="background-color: #17a2b8;" data-bs-toggle="modal" data-bs-target="#bulkAssignTeacherModal">
+                <i class="bi bi-person-check me-1"></i> Assign Teacher
+            </button>
+            <button class="btn btn-pill-modern text-white shadow-sm" style="background-color: #003366;" onclick="refreshSections()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
         </div>
     </div>
-</div>
+
+    <!-- Scrollable Body -->
+    <div class="scrollable-content">
+        
+        <div id="alertContainer"></div>
+
+        <!-- Row 1: Programs & Strands Overview -->
+        <div class="main-card-modern">
+            <div class="card-header-modern card-header-blue">
+                <span><i class="bi bi-mortarboard me-2"></i> Programs & Strands (Approved Curriculum)</span>
+            </div>
+            <div class="p-4">
+                <h6 class="mb-3 text-primary fw-bold border-bottom pb-2">College Programs</h6>
+                <div class="row g-3">
+                    <?php while ($program = $programs->fetch_assoc()): ?>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm" style="background: #f8f9fa;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="fw-bold text-dark mb-1"><?php echo htmlspecialchars($program['program_code']); ?></h6>
+                                        <span class="badge bg-secondary badge-modern"><?php echo htmlspecialchars($program['degree_level']); ?></span>
+                                    </div>
+                                    <div class="text-muted small mb-2"><?php echo htmlspecialchars($program['program_name']); ?></div>
+                                    
+                                    <div class="mb-3">
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info badge-modern">
+                                            <?php echo $program['subject_count']; ?> Subjects
+                                        </span>
+                                    </div>
+
+                                    <div class="mb-3 d-flex flex-wrap gap-1">
+                                        <?php if (!empty($program_year_levels[$program['id']])): ?>
+                                            <?php foreach ($program_year_levels[$program['id']] as $yl): ?>
+                                                <span class="badge bg-white text-muted border"><?php echo htmlspecialchars($yl['year_name']); ?></span>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <span class="text-muted small">No year levels</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary w-100" onclick="openAddSectionForProgram(<?php echo $program['id']; ?>)">
+                                        <i class="bi bi-plus-circle me-1"></i> Add Section
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+
+                <h6 class="mt-4 mb-3 text-success fw-bold border-bottom pb-2">SHS Strands</h6>
+                <div class="row g-3">
+                    <?php while ($strand = $strands->fetch_assoc()): ?>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm" style="background: #f8f9fa;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="fw-bold text-dark mb-1"><?php echo htmlspecialchars($strand['strand_code']); ?></h6>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success badge-modern">
+                                            <?php echo $strand['subject_count']; ?> Subjects
+                                        </span>
+                                    </div>
+                                    <div class="text-muted small mb-2"><?php echo htmlspecialchars($strand['strand_name']); ?></div>
+                                    
+                                    <div class="mb-3 d-flex flex-wrap gap-1">
+                                        <?php if (!empty($strand_grade_levels[$strand['id']])): ?>
+                                            <?php foreach ($strand_grade_levels[$strand['id']] as $gl): ?>
+                                                <span class="badge bg-white text-muted border"><?php echo htmlspecialchars($gl['grade_name']); ?></span>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <span class="text-muted small">No grade levels</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-success w-100" onclick="openAddSectionForStrand(<?php echo $strand['id']; ?>)">
+                                        <i class="bi bi-plus-circle me-1"></i> Add Section
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Teacher Workload Overview -->
+        <div class="main-card-modern">
+            <div class="card-header-modern card-header-cyan">
+                <span><i class="bi bi-person-workspace me-2"></i> Teacher Workload</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Assigned Sections</th>
+                            <th>Subjects Teaching</th>
+                            <th>Total Students</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $teacher_workload = $conn->query("
+                            SELECT
+                                u.id as teacher_id,
+                                CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
+                                COUNT(DISTINCT cl.id) as section_count,
+                                GROUP_CONCAT(DISTINCT CONCAT(
+                                    cs.subject_code, ' - ',
+                                    COALESCE(p.program_code, ss.strand_code, 'GEN'), ' ',
+                                    COALESCE(pyl.year_name, sgl.grade_name, ''),
+                                    ' (', cl.section_name, ')'
+                                ) SEPARATOR '<br>') as subjects,
+                                SUM(cl.current_enrolled) as total_students
+                            FROM users u
+                            INNER JOIN user_profiles up ON u.id = up.user_id
+                            INNER JOIN user_roles ur ON u.id = ur.user_id
+                            LEFT JOIN classes cl ON cl.teacher_id = u.id AND cl.branch_id = $branch_id
+                            LEFT JOIN curriculum_subjects cs ON cl.curriculum_subject_id = cs.id
+                            LEFT JOIN programs p ON cs.program_id = p.id
+                            LEFT JOIN shs_strands ss ON cs.shs_strand_id = ss.id
+                            LEFT JOIN program_year_levels pyl ON cs.year_level_id = pyl.id
+                            LEFT JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
+                            WHERE ur.role_id = " . ROLE_TEACHER . " AND u.status = 'active'
+                            GROUP BY u.id, up.first_name, up.last_name
+                            ORDER BY up.last_name, up.first_name
+                        ");
+
+                        while ($workload = $teacher_workload->fetch_assoc()):
+                        ?>
+                        <tr>
+                            <td class="fw-bold text-dark"><?php echo htmlspecialchars($workload['teacher_name']); ?></td>
+                            <td><span class="badge bg-primary badge-modern"><?php echo $workload['section_count']; ?> sections</span></td>
+                            <td><small class="text-muted"><?php echo $workload['subjects'] ?: 'No sections assigned'; ?></small></td>
+                            <td><span class="badge bg-info badge-modern"><?php echo $workload['total_students'] ?? 0; ?> students</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTeacherSections(<?php echo $workload['teacher_id']; ?>)">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Row 3: Class Sections Overview -->
+        <div class="main-card-modern">
+            <div class="card-header-modern card-header-blue">
+                <span><i class="bi bi-list-ul me-2"></i> Class Sections List</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-modern mb-0" id="sectionsTable">
+                    <thead>
+                        <tr>
+                            <th>Section</th>
+                            <th>Subject & Curriculum</th>
+                            <th>Teacher Assignment</th>
+                            <th>Schedule & Room</th>
+                            <th>Enrollment</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $sections->data_seek(0);
+                        while ($section = $sections->fetch_assoc()):
+                            $enrolled = $section['approved_enrollments'] ?? 0;
+                            $capacity = $section['max_capacity'];
+                            $percentage = $capacity > 0 ? ($enrolled / $capacity) * 100 : 0;
+
+                            $curriculum_label = $section['program_name'] ?? $section['strand_name'] ?? 'General';
+                            $year_label = $section['program_year_name'] ?? $section['shs_grade_name'] ?? 'N/A';
+
+                            if ($percentage >= 100) {
+                                $status_class = 'bg-danger';
+                                $status_text = 'FULL';
+                            } elseif ($percentage >= 80) {
+                                $status_class = 'bg-warning';
+                                $status_text = 'ALMOST FULL';
+                            } else {
+                                $status_class = 'bg-success';
+                                $status_text = 'AVAILABLE';
+                            }
+                        ?>
+                        <tr>
+                            <td>
+                                <strong class="text-primary"><?php echo htmlspecialchars($section['section_name']); ?></strong><br>
+                                <small class="text-muted"><?php echo htmlspecialchars($section['year_name'] ?? 'N/A'); ?></small>
+                            </td>
+                            <td>
+                                <strong class="text-dark"><?php echo htmlspecialchars($section['subject_code'] ?? 'N/A'); ?></strong><br>
+                                <small class="text-muted"><?php echo htmlspecialchars($section['subject_title'] ?? 'N/A'); ?></small><br>
+                                <span class="badge bg-light text-secondary border mt-1" style="font-size: 0.7rem;">
+                                    <?php echo htmlspecialchars($curriculum_label); ?> &bull; <?php echo htmlspecialchars($year_label); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($section['teacher_name']): ?>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person-circle me-2 text-secondary"></i>
+                                        <div>
+                                            <div class="fw-bold small"><?php echo htmlspecialchars($section['teacher_name']); ?></div>
+                                            <small class="text-success" style="font-size:0.7rem;">Assigned</small>
+                                        </div>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger">Unassigned</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="small"><i class="bi bi-clock me-1 text-muted"></i><?php echo htmlspecialchars($section['schedule'] ?? '-'); ?></div>
+                                <div class="small"><i class="bi bi-geo-alt me-1 text-muted"></i><?php echo htmlspecialchars($section['room'] ?? '-'); ?></div>
+                            </td>
+                            <td style="min-width: 120px;">
+                                <div class="d-flex align-items-center mb-1">
+                                    <small class="fw-bold me-auto"><?php echo $enrolled; ?>/<?php echo $capacity; ?></small>
+                                    <small class="text-muted"><?php echo round($percentage); ?>%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-<?php echo $status_class == 'bg-danger' ? 'danger' : ($status_class == 'bg-warning' ? 'warning' : 'success'); ?>"
+                                         style="width: <?php echo min($percentage, 100); ?>%">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge <?php echo $status_class; ?> badge-modern">
+                                    <?php echo $status_text; ?>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info" onclick="viewSectionDetails(<?php echo $section['id']; ?>)" title="Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="bulkAssignStudents(<?php echo $section['id']; ?>, '<?php echo htmlspecialchars($section['section_name']); ?>')" title="Enroll">
+                                        <i class="bi bi-person-plus"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="manageSection(<?php echo $section['id']; ?>)" title="Manage">
+                                        <i class="bi bi-gear"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Row 4: Unassigned Students -->
+        <div class="main-card-modern">
+            <div class="card-header-modern card-header-purple">
+                <span><i class="bi bi-person-dash me-2"></i> Unassigned Students (<?php echo $unassigned_students->num_rows; ?>)</span>
+                <button class="btn btn-sm btn-light text-purple fw-bold" onclick="bulkAssignModal()">
+                    <i class="bi bi-plus-circle me-1"></i> Bulk Assign
+                </button>
+            </div>
+            <div class="p-0">
+                <?php if ($unassigned_students->num_rows > 0): ?>
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;"><input type="checkbox" id="selectAllUnassigned" class="form-check-input"></th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Quick Assign</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($student = $unassigned_students->fetch_assoc()): ?>
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input student-checkbox" value="<?php echo $student['id']; ?>"></td>
+                                <td class="fw-bold"><?php echo htmlspecialchars($student['student_name']); ?></td>
+                                <td class="text-muted small"><?php echo htmlspecialchars($student['email']); ?></td>
+                                <td>
+                                    <select class="form-select form-select-sm quick-assign" data-student-id="<?php echo $student['id']; ?>" style="max-width: 300px;">
+                                        <option value="">-- Quick Assign to Section --</option>
+                                        <?php
+                                        $sections->data_seek(0);
+                                        while ($sec = $sections->fetch_assoc()):
+                                            $sec_enrolled = $sec['approved_enrollments'] ?? 0;
+                                            $sec_capacity = $sec['max_capacity'];
+                                            $sec_curriculum = $sec['program_name'] ?? $sec['strand_name'] ?? 'General';
+                                            $sec_year = $sec['program_year_name'] ?? $sec['shs_grade_name'] ?? 'N/A';
+                                            if ($sec_enrolled < $sec_capacity):
+                                        ?>
+                                            <option value="<?php echo $sec['id']; ?>">
+                                                <?php echo htmlspecialchars($sec['section_name'] . ' - ' . ($sec['subject_code'] ?? 'N/A') . ' (' . $sec_curriculum . ' - ' . $sec_year . ')'); ?>
+                                            </option>
+                                        <?php endif; endwhile; ?>
+                                    </select>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php else: ?>
+                <div class="text-center p-5 text-muted">
+                    <i class="bi bi-check-circle display-4 text-success mb-3 d-block"></i>
+                    All students are assigned to sections.
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+    </div> <!-- End Scrollable Content -->
+</div> <!-- End Main Container -->
 
 <!-- Add Section Modal -->
 <div class="modal fade" id="addSectionModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: #800000; color: white;">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add New Section</h5>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header text-white" style="background-color: #800000;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i> Add New Section</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="addSectionForm">
                 <input type="hidden" name="branch_id" value="<?php echo $branch_id; ?>">
-                <div class="modal-body">
+                <div class="modal-body p-4 bg-light">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Academic Year <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Academic Year <span class="text-danger">*</span></label>
                             <select class="form-select" name="academic_year_id" required>
                                 <option value="">-- Select Academic Year --</option>
                                 <?php
@@ -521,7 +565,7 @@ include '../../includes/header.php';
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Curriculum Type <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Curriculum Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="curriculum_type" required>
                                 <option value="college" selected>College Program</option>
                                 <option value="shs">SHS Strand</option>
@@ -531,7 +575,7 @@ include '../../includes/header.php';
 
                     <div class="row" id="collegeProgramRow">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Program <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Program <span class="text-danger">*</span></label>
                             <select class="form-select" id="program_id">
                                 <option value="">-- Select Program --</option>
                                 <?php
@@ -545,7 +589,7 @@ include '../../includes/header.php';
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Year Level <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Year Level <span class="text-danger">*</span></label>
                             <select class="form-select" id="program_year_level_id">
                                 <option value="">-- Select Year Level --</option>
                                 <?php foreach ($program_year_levels as $pid => $levels): ?>
@@ -561,7 +605,7 @@ include '../../includes/header.php';
 
                     <div class="row" id="shsStrandRow" style="display: none;">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Strand <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Strand <span class="text-danger">*</span></label>
                             <select class="form-select" id="shs_strand_id">
                                 <option value="">-- Select Strand --</option>
                                 <?php
@@ -575,7 +619,7 @@ include '../../includes/header.php';
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Grade Level <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Grade Level <span class="text-danger">*</span></label>
                             <select class="form-select" id="shs_grade_level_id">
                                 <option value="">-- Select Grade Level --</option>
                                 <?php foreach ($strand_grade_levels as $sid => $levels): ?>
@@ -590,7 +634,7 @@ include '../../includes/header.php';
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Subject <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
                         <select class="form-select" name="curriculum_subject_id" id="curriculum_subject_id" required>
                             <option value="">-- Select Subject --</option>
                             <?php
@@ -636,11 +680,11 @@ include '../../includes/header.php';
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Section Name <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Section Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="section_name" required placeholder="e.g. Section A, Block 1">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Assign Teacher <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Assign Teacher <span class="text-danger">*</span></label>
                             <select class="form-select" name="teacher_id" required>
                                 <option value="">-- Select Teacher --</option>
                                 <?php
@@ -664,30 +708,30 @@ include '../../includes/header.php';
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Room <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Room <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="room" required placeholder="e.g. Lab 1, Room 301">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Max Capacity <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Max Capacity <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="max_capacity" required min="1" max="100" value="35">
                             <small class="text-muted">Maximum number of students for this section</small>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Schedule <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Schedule <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="schedule" required placeholder="e.g. MWF 10:00-11:30 AM, TTH 2:00-3:30 PM">
                         <small class="text-muted">Format: Days and Time (e.g., Monday/Wednesday/Friday 10:00-11:30 AM)</small>
                     </div>
 
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> This will create a new section and assign it to the selected teacher. Students can then be enrolled in this section.
+                    <div class="alert alert-info border-0 shadow-sm">
+                        <i class="bi bi-info-circle me-1"></i> This will create a new section and assign it to the selected teacher. Students can then be enrolled in this section.
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #800000;">
-                        <i class="bi bi-plus-circle"></i> Create Section
+                        <i class="bi bi-plus-circle me-1"></i> Create Section
                     </button>
                 </div>
             </form>
@@ -698,15 +742,15 @@ include '../../includes/header.php';
 <!-- Bulk Assign Teacher Modal -->
 <div class="modal fade" id="bulkAssignTeacherModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: #17a2b8; color: white;">
-                <h5 class="modal-title"><i class="bi bi-person-check"></i> Assign Teacher to Multiple Sections</h5>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header text-white" style="background-color: #17a2b8;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-check me-2"></i> Assign Teacher to Multiple Sections</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="bulkAssignTeacherForm">
-                <div class="modal-body">
+                <div class="modal-body p-4 bg-light">
                     <div class="mb-3">
-                        <label class="form-label">Teacher <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Teacher <span class="text-danger">*</span></label>
                         <select class="form-select" name="teacher_id" required>
                             <option value="">-- Select Teacher --</option>
                             <?php
@@ -727,15 +771,15 @@ include '../../includes/header.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Select Sections <span class="text-danger">*</span></label>
-                        <div id="teacherSectionSelection" style="max-height: 300px; overflow-y: auto;">
+                        <label class="form-label fw-semibold">Select Sections <span class="text-danger">*</span></label>
+                        <div id="teacherSectionSelection" class="border rounded bg-white p-3" style="max-height: 300px; overflow-y: auto;">
                             <?php
                             $sections->data_seek(0);
                             while ($sec = $sections->fetch_assoc()):
                                 $sec_curriculum = $sec['program_name'] ?? $sec['strand_name'] ?? 'General';
                                 $sec_year = $sec['program_year_name'] ?? $sec['shs_grade_name'] ?? 'N/A';
                             ?>
-                            <div class="form-check">
+                            <div class="form-check mb-2">
                                 <input class="form-check-input teacher-section-checkbox" type="checkbox"
                                        value="<?php echo $sec['id']; ?>" id="teacher_section_<?php echo $sec['id']; ?>">
                                 <label class="form-check-label" for="teacher_section_<?php echo $sec['id']; ?>">
@@ -745,14 +789,14 @@ include '../../includes/header.php';
                             <?php endwhile; ?>
                         </div>
                     </div>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Selected sections will be assigned to the chosen teacher. Existing assignments will be replaced.
+                    <div class="alert alert-info border-0 shadow-sm">
+                        <i class="bi bi-info-circle me-1"></i> Selected sections will be assigned to the chosen teacher. Existing assignments will be replaced.
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #17a2b8;">
-                        <i class="bi bi-person-check"></i> Assign Teacher
+                        <i class="bi bi-person-check me-1"></i> Assign Teacher
                     </button>
                 </div>
             </form>
@@ -763,15 +807,15 @@ include '../../includes/header.php';
 <!-- Bulk Assign Modal -->
 <div class="modal fade" id="bulkAssignModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: #800000; color: white;">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Bulk Assign Students to Section</h5>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header text-white" style="background-color: #800000;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i> Bulk Assign Students to Section</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="bulkAssignForm">
-                <div class="modal-body">
+                <div class="modal-body p-4 bg-light">
                     <div class="mb-3">
-                        <label class="form-label">Select Section</label>
+                        <label class="form-label fw-semibold">Select Section</label>
                         <select class="form-select" name="class_id" id="bulk_class_select" required>
                             <option value="">-- Select Section --</option>
                             <?php
@@ -790,13 +834,13 @@ include '../../includes/header.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Select Students</label>
-                        <div id="studentSelection" style="max-height: 300px; overflow-y: auto;">
+                        <label class="form-label fw-semibold">Select Students</label>
+                        <div id="studentSelection" class="border rounded bg-white p-3" style="max-height: 300px; overflow-y: auto;">
                             <?php
                             $unassigned_students->data_seek(0);
                             while ($student = $unassigned_students->fetch_assoc()):
                             ?>
-                            <div class="form-check">
+                            <div class="form-check mb-2">
                                 <input class="form-check-input bulk-student-checkbox" type="checkbox"
                                        value="<?php echo $student['id']; ?>" id="student_<?php echo $student['id']; ?>">
                                 <label class="form-check-label" for="student_<?php echo $student['id']; ?>">
@@ -806,20 +850,22 @@ include '../../includes/header.php';
                             <?php endwhile; ?>
                         </div>
                     </div>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Selected students will be enrolled in the chosen section.
+                    <div class="alert alert-info border-0 shadow-sm">
+                        <i class="bi bi-info-circle me-1"></i> Selected students will be enrolled in the chosen section.
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #800000;">
-                        <i class="bi bi-plus-circle"></i> Assign Students
+                        <i class="bi bi-plus-circle me-1"></i> Assign Students
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<?php include '../../includes/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -1140,13 +1186,14 @@ document.getElementById('selectAllUnassigned')?.addEventListener('change', funct
 
 function showAlert(message, type) {
     const alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        <div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm" role="alert">
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
     document.getElementById('alertContainer').innerHTML = alertHtml;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to alert in custom container
+    document.querySelector('.scrollable-content').scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </body>

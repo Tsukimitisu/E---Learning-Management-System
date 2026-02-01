@@ -61,7 +61,6 @@ $students_query = "
 $students = $conn->query($students_query);
 
 include '../../includes/header.php';
-include '../../includes/sidebar.php'; 
 ?>
 
 <style>
