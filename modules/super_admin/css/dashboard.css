@@ -1,0 +1,49 @@
+      /* Transitions & Fantastic Effects */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 5px solid var(--maroon);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .stat-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 { font-size: 2.2rem; font-weight: 700; color: #333; margin: 0; }
+        .stat-card p { color: #888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; }
+        
+        .quick-action-btn {
+            background: white;
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            text-decoration: none;
+            color: #555;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .quick-action-btn:hover { 
+            background: var(--maroon); 
+            color: white !important; 
+            border-color: var(--maroon);
+            transform: scale(1.05);
+        }
+        .quick-action-btn i { font-size: 1.8rem; display: block; margin-bottom: 10px; }
+
+        /* Live Services Card - Palette Fix */
+        .live-services-card {
+            background: var(--blue); /* Corporate Blue instead of Black */
+            color: white;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 51, 102, 0.2);
+        }
+
+        /* Staggered Animation Delays */
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }

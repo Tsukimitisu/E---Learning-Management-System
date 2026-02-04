@@ -1,0 +1,36 @@
+ /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+
+    /* --- FANTASTIC CLASS UI --- */
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
+    }
+
+    .table-modern thead th { 
+        background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; 
+        letter-spacing: 1px; padding: 15px 20px; position: sticky; top: -1px; z-index: 5;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.85rem; border-bottom: 1px solid #f1f1f1; }
+
+    .progress-tiny { height: 6px; border-radius: 10px; background: #eee; overflow: hidden; margin-top: 5px; }
+
+    .btn-maroon-add {
+        background-color: var(--maroon); color: white; border: none; border-radius: 50px;
+        font-weight: 700; padding: 8px 20px; transition: 0.3s; font-size: 0.85rem;
+    }
+    .btn-maroon-add:hover { background-color: #600000; color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(128,0,0,0.2); }
+
+    .action-btn-edit {
+        width: 32px; height: 32px; border-radius: 8px; display: inline-flex;
+        align-items: center; justify-content: center; transition: 0.2s;
+        background: #f8f9fa; border: 1px solid #eee; color: #f39c12;
+    }
+    .action-btn-edit:hover { background: #f39c12; color: white; border-color: #f39c12; }
+
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+    }

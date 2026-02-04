@@ -8,59 +8,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 
 $page_title = "Certificates";
 
-/** 
- * BACKEND LOGIC - UNTOUCHED 
- */
 $students = $conn->query("SELECT s.user_id, s.student_no, CONCAT(up.first_name, ' ', up.last_name) as full_name FROM students s INNER JOIN user_profiles up ON s.user_id = up.user_id ORDER BY up.last_name, up.first_name");
 $academic_years = $conn->query("SELECT id, year_name FROM academic_years ORDER BY year_name DESC");
 
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+<link rel="stylesheet" href="css/certificates.css">
 
-    /* --- FANTASTIC CERTIFICATE UI --- */
-    .cert-card {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
-    }
-
-    .nav-pills-modern .nav-link {
-        color: #666; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
-        padding: 12px 25px; border-radius: 10px; transition: 0.3s; margin-right: 10px;
-        background: #f1f3f5;
-    }
-    .nav-pills-modern .nav-link.active {
-        background-color: var(--blue); color: white; box-shadow: 0 4px 12px rgba(0,51,102,0.2);
-    }
-
-    .cert-icon-bg {
-        width: 60px; height: 60px; border-radius: 15px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem; background: rgba(128, 0, 0, 0.05); color: var(--maroon);
-        margin-bottom: 20px;
-    }
-
-    .form-section-title {
-        color: var(--blue); font-weight: 800; text-transform: uppercase;
-        font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 20px;
-        display: flex; align-items: center;
-    }
-    .form-section-title::after { content: ""; flex: 1; height: 2px; background: #f1f1f1; margin-left: 15px; }
-
-    @media (max-width: 768px) {
-        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
-        .nav-pills-modern { flex-direction: column; }
-        .nav-pills-modern .nav-link { margin-right: 0; margin-bottom: 5px; width: 100%; }
-    }
-</style>
-
-<!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
     <div class="d-flex justify-content-between align-items-center">
         <div>

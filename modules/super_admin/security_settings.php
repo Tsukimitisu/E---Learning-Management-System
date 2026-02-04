@@ -10,9 +10,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_SUPER_ADMIN) {
 $page_title = "Security & Email Settings";
 $user_id = $_SESSION['user_id'];
 
-/** 
- * BACKEND LOGIC - UNTOUCHED 
- */
 $message = '';
 $error = '';
 
@@ -75,38 +72,7 @@ $email_logs = $conn->query("SELECT * FROM email_logs ORDER BY sent_at DESC LIMIT
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC UI COMPONENTS --- */
-    .sec-stat-card {
-        background: white; border-radius: 12px; padding: 20px; border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
-    }
-    .sec-stat-card:hover { transform: translateY(-5px); }
-
-    .nav-pills-modern .nav-link {
-        color: #666; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
-        padding: 12px 20px; border-radius: 10px; transition: 0.3s;
-    }
-    .nav-pills-modern .nav-link.active {
-        background-color: var(--blue); color: white; box-shadow: 0 4px 12px rgba(0,51,102,0.2);
-    }
-
-    .settings-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-    .section-label { color: var(--blue); font-weight: 800; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; border-bottom: 2px solid #f1f1f1; padding-bottom: 10px; margin-bottom: 20px; }
-
-    .btn-save-maroon {
-        background-color: var(--maroon); color: white; border: none; border-radius: 8px; font-weight: 700; padding: 10px 25px; transition: 0.3s;
-    }
-    .btn-save-maroon:hover { background-color: #600000; transform: scale(1.02); color: white; }
-    
-    code { background: #eee; padding: 2px 6px; border-radius: 4px; color: var(--maroon); }
-</style>
+<link rel="stylesheet" href="css/security_settings.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
