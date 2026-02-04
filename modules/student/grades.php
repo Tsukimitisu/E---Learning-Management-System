@@ -85,27 +85,7 @@ $gpa = $grade_count > 0 ? round($total_grade / $grade_count, 2) : 0;
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL FIX & LAYOUT --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- UI CARDS --- */
-    .summary-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 30px; }
-    .gpa-hero { background: linear-gradient(135deg, var(--maroon) 0%, #4a0000 100%); border-radius: 15px; padding: 25px; color: white; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(128,0,0,0.1); }
-    .table-modern thead th { background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; padding: 15px 20px; position: sticky; top: -1px; z-index: 5; }
-
-    /* --- PRINT STYLES --- */
-    @media print {
-        #sidebar, .navbar-custom, .header-fixed-part, .accordion, .legend-card, .btn-print-hide { display: none !important; }
-        #content, .body-scroll-part { overflow: visible !important; height: auto !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-        .summary-card { box-shadow: none !important; border: 1px solid #000; width: 100% !important; }
-        .table thead th { background-color: #eee !important; color: #000 !important; border: 1px solid #000 !important; }
-        .table td { border: 1px solid #000 !important; }
-    }
-</style>
+<link rel="stylesheet" href="css/grades.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">

@@ -35,44 +35,7 @@ $schools_result = $conn->query("SELECT id, name FROM schools ORDER BY name");
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC ANNOUNCEMENT UI --- */
-    .ann-card {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: 0.3s;
-        overflow: hidden; margin-bottom: 25px; position: relative;
-    }
-    .ann-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-    
-    /* Priority Left Accents */
-    .prio-urgent { border-left: 6px solid var(--maroon) !important; }
-    .prio-high { border-left: 6px solid #ffc107 !important; }
-    .prio-normal { border-left: 6px solid var(--blue) !important; }
-    .prio-low { border-left: 6px solid #6c757d !important; }
-
-    .ann-header { padding: 20px 25px; border-bottom: 1px solid #f9f9f9; display: flex; justify-content: space-between; align-items: center; }
-    .ann-body { padding: 25px; line-height: 1.8; color: #444; font-size: 1rem; }
-    .ann-footer { background: #fcfcfc; padding: 15px 25px; border-top: 1px solid #f1f1f1; }
-
-    .btn-maroon-pill { background-color: var(--maroon); color: white !important; border: none; border-radius: 50px; font-weight: 700; padding: 8px 25px; transition: 0.3s; font-size: 0.85rem; }
-    .btn-maroon-pill:hover { background-color: #600000; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(128,0,0,0.2); }
-
-    .meta-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #777; font-weight: 600; }
-    .meta-item i { color: var(--maroon); font-size: 1rem; }
-
-    /* Staggered Delays */
-    <?php for($i=1; $i<=10; $i++): ?>
-    .delay-<?php echo $i; ?> { animation-delay: <?php echo $i * 0.1; ?>s; }
-    <?php endfor; ?>
-
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } .ann-header { flex-direction: column; align-items: flex-start; gap: 10px; } }
-</style>
+<link rel="stylesheet" href="css/announcements.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">

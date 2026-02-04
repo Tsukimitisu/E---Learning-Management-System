@@ -42,65 +42,7 @@ if ($college_year_levels_result) { while ($row = $college_year_levels_result->fe
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- MATCHING DASHBOARD STYLES --- */
-    :root {
-        --maroon: #800000;
-        --blue: #003366;
-    }
-
-    .welcome-card {
-        background: white;
-        border-radius: 20px;
-        border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        border-left: 6px solid var(--maroon);
-        margin-bottom: 30px;
-    }
-
-    .admin-stat-card {
-        border-radius: 15px; padding: 25px; border: none; color: white;
-        transition: 0.3s; height: 100%; display: flex; align-items: center; gap: 20px;
-        cursor: default;
-    }
-    .admin-stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    
-    .stat-icon-bg {
-        width: 55px; height: 55px; border-radius: 12px; background: rgba(255,255,255,0.2);
-        display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
-    }
-
-    .main-card-modern {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; height: 100%;
-    }
-    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-
-    /* Navigation/Action Cards specific to Curriculum */
-    .nav-action-card {
-        background: white; border-radius: 20px; border: 1px solid #eee; padding: 30px;
-        transition: 0.3s; text-decoration: none; color: #333; height: 100%;
-        display: flex; flex-direction: column; justify-content: center;
-        position: relative; overflow: hidden;
-    }
-    .nav-action-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--blue); }
-    .nav-action-card h5 { color: var(--blue); font-weight: 700; margin-bottom: 10px; }
-    .nav-action-card .icon-wrapper {
-        font-size: 2.5rem; margin-bottom: 15px; color: var(--maroon);
-    }
-    .nav-action-card .btn-indicator {
-        margin-top: 20px; font-weight: 600; font-size: 0.9rem; color: var(--blue);
-        display: flex; align-items: center;
-    }
-    
-    .table-modern tbody td { padding: 15px 25px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
-
-    /* Staggered Delays */
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.2s; }
-    .delay-3 { animation-delay: 0.3s; }
-    .delay-4 { animation-delay: 0.4s; }
-</style>
+<link rel=stylesheet href="css/curriculum.css">
 
 <div class="animate__animated animate__fadeIn">
 

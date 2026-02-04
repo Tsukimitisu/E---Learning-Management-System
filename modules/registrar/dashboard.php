@@ -49,55 +49,8 @@ $recent_payments = $conn->query("SELECT s.student_no, CONCAT(up.first_name, ' ',
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+<link rel="stylesheet" href="css/dashboard.css">
 
-    /* --- FANTASTIC REGISTRAR UI --- */
-    .reg-stat-card {
-        background: white; border-radius: 15px; padding: 25px; border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
-        height: 100%; display: flex; align-items: center; gap: 20px;
-    }
-    .reg-stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    
-    .stat-icon-square {
-        width: 55px; height: 55px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
-    }
-
-    .small text-dark:hover {
-        color: white !important;
-    }
-
-    .action-card {
-        background: white; border-radius: 20px; border: 1px solid #eee;
-        padding: 20px; text-align: center; text-decoration: none; transition: 0.3s;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-    }
-    .action-card:hover { background: var(--blue); color: white !important; transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,51,102,0.2); }
-    .action-card i { font-size: 2rem; margin-bottom: 10px; transition: 0.3s; }
-    .action-card:hover i { transform: rotate(-10deg); color: white !important; }
-    .action-card:hover .text-dark {color: white !important;}
-
-    .activity-card { background: white; border-radius: 20px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
-    .activity-header { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; }
-
-    /* Staggered Delays */
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.2s; }
-    .delay-3 { animation-delay: 0.3s; }
-    .delay-4 { animation-delay: 0.4s; }
-
-    @media (max-width: 768px) {
-        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
-    }
-</style>
-
-<!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
     <div class="d-flex justify-content-between align-items-center">
         <div>

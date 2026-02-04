@@ -24,71 +24,7 @@ $roles_result = $conn->query("SELECT id, name FROM roles ORDER BY id");
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- PAGE LEVEL STYLES --- */
-    /* We don't touch html/body/wrapper here because header.php handles it */
-
-    /* Container to ensure full height within the dashboard body */
-    .user-management-container {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        overflow: hidden; /* Prevent double scrollbars */
-    }
-
-    .content-header { 
-        background: white; 
-        padding: 20px 30px; 
-        border-bottom: 1px solid #eee; 
-        margin-bottom: 20px; 
-        border-radius: 10px;
-        flex-shrink: 0; /* Prevent header from shrinking */
-    }
-    
-    /* Scrollable Container for the Table */
-    .table-scroll-container {
-        flex: 1; /* Takes remaining space */
-        overflow-y: auto; /* Adds scrollbar to this area only */
-        padding-bottom: 20px;
-        min-height: 0; /* Crucial for flex scrolling */
-    }
-
-    .main-card { 
-        background: white; 
-        border: none; 
-        border-radius: 15px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-        /* Removed height:100% to let it grow with content naturally or scroll */
-    }
-    
-    .table thead th { 
-        position: sticky; 
-        top: 0;
-        background-color: #fcfcfc; 
-        z-index: 10;
-        text-transform: uppercase; 
-        font-size: 0.75rem; 
-        letter-spacing: 1px; 
-        font-weight: 700; 
-        color: #777; 
-        border-bottom: 2px solid #f1f1f1;
-        padding: 15px 20px;
-        white-space: nowrap;
-    }
-
-    .table tbody td { padding: 15px 20px; vertical-align: middle; }
-    
-    .badge-status { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
-    .badge-active { background: #e6fcf5; color: #0ca678; }
-    .badge-inactive { background: #fff5f5; color: #fa5252; }
-    .badge-role { background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; }
-
-    .btn-maroon { background: #800000; color: white; border-radius: 8px; font-weight: 600; border: none; transition: 0.3s; }
-    .btn-maroon:hover { background: #600000; color: white; transform: translateY(-2px); }
-    
-    .action-btn { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: 0.2s; border: none; background: #f8f9fa; }
-    .action-btn:hover { background: #eee; }
-</style>
+<link rel="stylesheet" href="css/users.css">
 
 <!-- Main Container that fits inside header's .main-content-body -->
 <div class="user-management-container animate__animated animate__fadeIn">

@@ -60,44 +60,7 @@ $sections_result = $conn->query($sections_query);
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SHARED UI DESIGN SYSTEM --- */
-    .page-header {
-        background: white; padding: 20px; border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-    }
-
-    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; height: 100%; }
-    
-    .card-header-modern {
-        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
-        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
-    }
-
-    /* Student Selector */
-    .student-item-modern {
-        padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: 0.2s;
-    }
-    .student-item-modern:hover { background: #f8faff; }
-    .student-item-modern.active { background: #fff5f5; border-left: 5px solid var(--maroon); }
-
-    .balance-text { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-
-    /* Table Styling */
-    .table-modern thead th { 
-        background: #f8f9fa; font-size: 0.7rem; text-transform: uppercase; 
-        color: #888; padding: 12px 15px; border-bottom: 1px solid #eee;
-    }
-    .table-modern tbody td { padding: 12px 15px; vertical-align: middle; font-size: 0.85rem; }
-
-    .capacity-bar { height: 6px; border-radius: 10px; background: #eee; overflow: hidden; width: 60px; margin-top: 4px; }
-    .capacity-fill { height: 100%; transition: 0.3s; }
-    
-    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
-    .btn-maroon:hover { background-color: #600000; color: white; }
-
-    .enroll-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-</style>
+<link rel="stylesheet" href="css/enrollment.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

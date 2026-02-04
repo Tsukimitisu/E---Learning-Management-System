@@ -1,0 +1,28 @@
+ /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+
+    /* --- FANTASTIC ATTENDANCE UI --- */
+    .att-stat-card {
+        background: white; border-radius: 15px; padding: 20px; border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
+        text-align: center; height: 100%;
+    }
+    .att-stat-card:hover { transform: translateY(-5px); }
+    .att-icon-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.3rem; }
+
+    .main-card { background: white; border-radius: 20px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+    .table-modern thead th { background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; padding: 15px 20px; position: sticky; top: -1px; z-index: 5; }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.9rem; }
+
+    .progress-tiny { height: 6px; border-radius: 10px; background: #eee; overflow: hidden; margin: 8px 0; }
+    .month-picker { border-radius: 50px; border: 1px solid #ddd; font-weight: 600; color: var(--blue); padding-left: 15px; width: 220px; }
+
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+        .month-picker { width: 100%; }
+    }

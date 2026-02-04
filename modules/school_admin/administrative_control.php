@@ -80,56 +80,7 @@ $audit_logs_result = $conn->query($audit_logs_query);
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC UI COMPONENTS --- */
-    .nav-pills-modern .nav-link {
-        color: #666; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
-        padding: 12px 20px; border-radius: 10px; transition: 0.3s; margin-right: 10px;
-        background: #fff; border: 1.5px solid #eee;
-    }
-    .nav-pills-modern .nav-link.active {
-        background-color: var(--blue); color: white; border-color: var(--blue); box-shadow: 0 4px 12px rgba(0,51,102,0.2);
-    }
-
-    .main-card-modern {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 25px;
-    }
-
-    .table-modern thead th { 
-        background: #fcfcfc; font-size: 0.7rem; text-transform: uppercase; 
-        letter-spacing: 1px; color: #888; padding: 15px 20px; border-bottom: 2px solid #eee;
-    }
-    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
-
-    /* Announcement Cards */
-    .ann-card {
-        border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        transition: 0.3s; overflow: hidden; background: white; margin-bottom: 20px;
-    }
-    .ann-card:hover { transform: translateY(-5px); }
-    .ann-priority-urgent { border-left: 6px solid var(--maroon); }
-    .ann-priority-high { border-left: 6px solid #ffc107; }
-    .ann-priority-normal { border-left: 6px solid var(--blue); }
-
-    .action-btn-circle {
-        width: 32px; height: 32px; border-radius: 50%; display: inline-flex;
-        align-items: center; justify-content: center; transition: 0.2s; border: 1px solid #eee;
-    }
-    .action-btn-circle:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-    .policy-card { border-radius: 15px; border: none; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-    .policy-header-college { background: var(--blue); color: white; padding: 12px 20px; border-radius: 15px 15px 0 0; }
-    .policy-header-shs { background: var(--maroon); color: white; padding: 12px 20px; border-radius: 15px 15px 0 0; }
-
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } .nav-pills-modern { flex-direction: column; } .nav-pills-modern .nav-link { margin-right: 0; margin-bottom: 5px; } }
-</style>
+<link rel="stylesheet" href="css/administrative_control.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
@@ -197,7 +148,7 @@ include '../../includes/header.php';
                                         <?php if (empty($admin['branch_name'])): ?>
                                             <span class="badge bg-warning text-dark px-3 rounded-pill">⚠ UNASSIGNED</span>
                                         <?php else: ?>
-                                            <span class="badge bg-dark text-dark border border-blue px-3 rounded-pill"><?php echo htmlspecialchars($admin['branch_name']); ?></span>
+                                            <span class="badge bg-dark text-white border border-blue px-3 rounded-pill"><?php echo htmlspecialchars($admin['branch_name']); ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
