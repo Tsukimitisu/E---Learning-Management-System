@@ -92,8 +92,6 @@ try {
 
 $google_oauth_url = ($password_settings['enable_google_login'] && !$user['google_email']) ? get_google_oauth_url() : '';
 
-// --- FIX: PATH LOGIC CHANGED TO RELATIVE PATHS ---
-// Since we are in modules/common/, we go up one level (../) to modules/, then into the specific role folder.
 $dashboard_paths = [
     1 => '../super_admin/dashboard.php',
     2 => '../school_admin/dashboard.php',

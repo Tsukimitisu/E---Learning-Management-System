@@ -51,7 +51,6 @@ include '../../includes/header.php';
 
 <link rel="stylesheet" href="css/dashboard.css">
 
-<!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
     <div class="d-flex justify-content-between align-items-center">
         <div>

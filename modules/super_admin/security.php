@@ -44,6 +44,7 @@ include '../../includes/header.php';
 ?>
 
 <link rel="stylesheet" href="css/security.css"> 
+
 <!-- Part 1:  Header -->
 <div class="header-fixed-part d-flex justify-content-between align-items-center animate__animated animate__fadeInDown">
     <div>
