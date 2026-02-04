@@ -150,7 +150,7 @@ include '../../includes/header.php';
                             <div class="small fw-bold"><?php echo htmlspecialchars($class['program_name'] ?? 'N/A'); ?></div>
                             <span class="badge bg-light text-dark border" style="font-size: 0.6rem;"><?php echo htmlspecialchars($class['year_name'] ?? 'N/A'); ?></span>
                         </td>
-                        <td><span class="badge bg-blue bg-opacity-10 text-blue fw-bold px-3"><?php echo htmlspecialchars($class['section_name'] ?? '-'); ?></span></td>
+                        <td><span class="badge bg-blue bg-opacity-10 text-dark fw-bold px-3"><?php echo htmlspecialchars($class['section_name'] ?? '-'); ?></span></td>
                         <td><small class="fw-bold"><?php echo htmlspecialchars($class['teacher_name'] ?? 'Not Assigned'); ?></small></td>
                         <td>
                             <div class="schedule-text mb-1"><i class="bi bi-clock me-1"></i><?php echo htmlspecialchars($class['schedule'] ?? '-'); ?></div>

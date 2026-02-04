@@ -35,46 +35,7 @@ $announcements = $conn->query("
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SHARED UI DESIGN SYSTEM --- */
-    .page-header {
-        background: white; padding: 20px; border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-    }
-
-    .announcement-card {
-        background: white; border-radius: 15px; border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
-        margin-bottom: 20px; overflow: hidden; position: relative;
-        border-left: 5px solid transparent;
-    }
-    .announcement-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-
-    /* Priority Colors */
-    .priority-urgent { border-left-color: var(--maroon); }
-    .priority-high { border-left-color: #fd7e14; }
-    .priority-normal { border-left-color: var(--blue); }
-    .priority-low { border-left-color: #6c757d; }
-
-    .card-header-modern {
-        padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-        background: #fcfcfc; border-bottom: 1px solid #f5f5f5;
-    }
-
-    .stat-pill {
-        display: inline-flex; align-items: center; padding: 4px 12px;
-        border-radius: 20px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
-    }
-
-    .meta-text { font-size: 0.75rem; color: #888; font-weight: 500; }
-    .meta-text i { margin-right: 4px; color: var(--blue); }
-
-    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
-    .btn-maroon:hover { background-color: #600000; color: white; transform: translateY(-1px); }
-
-    .empty-state { text-align: center; padding: 60px 20px; color: #adb5bd; background: white; border-radius: 15px; }
-    .empty-state i { font-size: 3.5rem; margin-bottom: 15px; display: block; opacity: 0.5; }
-</style>
+<link rel="stylesheet" href="css/announcements.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

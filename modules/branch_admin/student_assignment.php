@@ -66,63 +66,7 @@ while ($row = $grade_levels_query->fetch_assoc()) { $strand_grade_levels[$row['s
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SHARED UI DESIGN SYSTEM --- */
-    .page-header {
-        background: white; padding: 20px; border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-    }
-
-    /* Student Card Layout */
-    .student-card-modern {
-        background: white; border-radius: 12px; border: 1px solid #f0f0f0;
-        padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;
-        border-left: 4px solid var(--blue);
-    }
-    .student-card-modern:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-    .student-card-modern.selected { border-left-color: var(--maroon); background: #fff5f5; border-color: #ffe0e0; }
-
-    .avatar-circle-sm {
-        width: 42px; height: 42px; background: #f0f2f5; color: var(--blue);
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 0.85rem; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    /* Section Cards */
-    .section-card-modern {
-        background: white; border-radius: 12px; padding: 15px; border: 1px solid #eee;
-        margin-bottom: 12px; cursor: pointer; transition: 0.3s; position: relative;
-    }
-    .section-card-modern:hover { border-color: var(--blue); background: #fcfdff; }
-    .section-card-modern.enrolled { border-color: #28a745; background: #f0fff4; border-left: 5px solid #28a745; }
-    .section-card-modern.full { opacity: 0.6; cursor: not-allowed; background: #f8f9fa; }
-
-    /* Control Panel */
-    .control-panel-light {
-        background: #f8f9fb; border-radius: 12px; padding: 20px;
-        margin-bottom: 20px; border: 1px solid #edf2f7;
-    }
-
-    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
-    .card-header-modern {
-        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
-        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
-    }
-
-    /* Progress Capacity */
-    .capacity-wrapper { width: 100px; }
-    .capacity-bar { height: 6px; border-radius: 10px; background: #eee; overflow: hidden; }
-    .capacity-fill { height: 100%; transition: 0.3s; }
-    .bg-low { background: #28a745; }
-    .bg-medium { background: #ffc107; }
-    .bg-high { background: #dc3545; }
-
-    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
-    .btn-maroon:hover { background-color: #600000; color: white; }
-
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .spin { animation: spin 1s linear infinite; display: inline-block; }
-</style>
+<link rel="stylesheet" href="css/student_assignment.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

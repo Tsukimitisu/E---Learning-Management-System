@@ -111,44 +111,7 @@ $registrars = $conn->query("
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SHARED UI DESIGN SYSTEM --- */
-    .page-header {
-        background: white; padding: 20px; border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-    }
-
-    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
-    
-    .card-header-modern {
-        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
-        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
-    }
-
-    .table-modern thead th { 
-        background: #f8f9fa; font-size: 0.7rem; text-transform: uppercase; 
-        color: #888; padding: 15px 20px; border-bottom: 1px solid #eee;
-    }
-    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.85rem; }
-    
-    .status-pill {
-        padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-    }
-    .status-active { background: #e6f4ea; color: #1e7e34; }
-    .status-inactive { background: #f8f9fa; color: #6c757d; border: 1px solid #eee; }
-
-    .avatar-circle-sm {
-        width: 40px; height: 40px; background: var(--blue); color: white;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 0.9rem; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
-    .btn-maroon:hover { background-color: #600000; color: white; transform: translateY(-1px); }
-
-    .empty-state { text-align: center; padding: 60px 20px; color: #adb5bd; }
-    .empty-state i { font-size: 3.5rem; margin-bottom: 15px; display: block; opacity: 0.5; }
-</style>
+<link rel="stylesheet" href="css/registrars.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

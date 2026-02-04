@@ -47,42 +47,7 @@ if ($row = $result->fetch_assoc()) { $stats['today_attendance'] = $row['count'];
 include '../../includes/header.php'; 
 ?>
 
-<style>
-    .welcome-banner {
-        background: linear-gradient(135deg, var(--blue) 0%, #001a33 100%); /* Blue for Admin */
-        border-radius: 20px; padding: 35px; color: white; margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(0, 51, 102, 0.2);
-        position: relative; overflow: hidden;
-    }
-    .welcome-banner i.bg-icon { position: absolute; right: -20px; bottom: -20px; font-size: 10rem; opacity: 0.1; }
-
-    .stat-card-modern {
-        background: white; border-radius: 15px; padding: 20px; border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center;
-        gap: 15px; transition: 0.3s; height: 100%;
-    }
-    .stat-card-modern:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-
-    .content-card { background: white; border-radius: 20px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
-    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-
-    .table-modern thead th { background: #fcfcfc; font-size: 0.7rem; text-transform: uppercase; color: #888; padding: 15px 20px; }
-    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.9rem; }
-
-    .quick-link-btn {
-        background: white; border: 1px solid #eee; border-radius: 12px; padding: 12px 15px;
-        display: flex; align-items: center; color: #444; text-decoration: none; transition: 0.3s;
-        font-weight: 600; font-size: 0.85rem; margin-bottom: 10px;
-    }
-    .quick-link-btn:hover { background: var(--maroon); color: white !important; transform: translateX(5px); }
-    .quick-link-btn i { margin-right: 12px; font-size: 1.1rem; }
-
-    .scope-box { background: #f8f9fa; border-radius: 15px; padding: 20px; border-left: 4px solid var(--maroon); }
-    .scope-box h6 { font-weight: 800; font-size: 0.75rem; text-transform: uppercase; color: var(--blue); margin-top: 15px; }
-    .scope-box ul { padding-left: 20px; margin-bottom: 0; }
-    .scope-box li { font-size: 0.8rem; color: #555; margin-bottom: 5px; }
-</style>
+<link rel="stylesheet" href="css/dashboard.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

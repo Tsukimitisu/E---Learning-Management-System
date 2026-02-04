@@ -1,0 +1,43 @@
+  /* --- FANTASTIC UI COMPONENTS --- */
+    .welcome-card {
+        background: white;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        border-left: 6px solid var(--maroon);
+        margin-bottom: 30px;
+    }
+
+    .admin-stat-card {
+        border-radius: 15px; padding: 25px; border: none; color: white;
+        transition: 0.3s; height: 100%; display: flex; align-items: center; gap: 20px;
+    }
+    .admin-stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    
+    .stat-icon-bg {
+        width: 55px; height: 55px; border-radius: 12px; background: rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    }
+
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
+    }
+    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+    .table-modern thead th { background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; padding: 15px 20px; }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+
+    .action-pill-btn {
+        background: white; border: 1.5px solid #eee; border-radius: 12px; padding: 15px;
+        display: flex; align-items: center; color: #444; text-decoration: none; transition: 0.3s;
+        font-weight: 700; font-size: 0.85rem; margin-bottom: 10px;
+    }
+    .action-pill-btn:hover { background: var(--blue); color: white !important; transform: translateX(10px); border-color: var(--blue); }
+    .action-pill-btn i { margin-right: 15px; font-size: 1.3rem; }
+
+    /* Staggered Delays */
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }

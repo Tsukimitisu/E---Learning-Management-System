@@ -1,0 +1,29 @@
+  /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+
+    /* --- FANTASTIC SCHEDULE UI --- */
+    .section-info-card {
+        background: white; border-radius: 15px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        border-left: 6px solid var(--maroon);
+        overflow: hidden; margin-bottom: 30px;
+    }
+
+    .table-modern { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+    .table-modern thead th { 
+        background: var(--blue); color: white; font-size: 0.75rem; 
+        text-transform: uppercase; letter-spacing: 1px; padding: 15px 20px; border: none;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; }
+
+    .schedule-badge { background: #e7f5ff; color: var(--blue); font-weight: 700; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; }
+    .unit-badge { background: #fff5f5; color: var(--maroon); font-weight: 800; padding: 5px 10px; border-radius: 6px; }
+
+    /* Mobile handling */
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+        .section-info-card .row > div { border: none !important; margin-bottom: 15px; text-align: center; }
+    }

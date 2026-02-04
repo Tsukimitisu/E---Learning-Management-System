@@ -44,57 +44,7 @@ $teachers = $conn->query("
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SHARED UI DESIGN SYSTEM --- */
-    .page-header {
-        background: white; padding: 20px; border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-    }
-
-    /* Modern Subject Cards */
-    .subject-card-modern {
-        background: white; border-radius: 15px; border: 1px solid #f0f0f0;
-        padding: 20px; transition: 0.3s; margin-bottom: 15px;
-        border-left: 5px solid #dee2e6;
-    }
-    .subject-card-modern:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-    .subject-card-modern.assigned { border-left-color: #28a745; background: #f8fff9; }
-    .subject-card-modern.unassigned { border-left-color: var(--maroon); }
-
-    /* Control Panel / Filters */
-    .control-panel {
-        background: var(--blue); border-radius: 15px; padding: 25px;
-        color: white; margin-bottom: 30px; box-shadow: 0 10px 25px rgba(0,51,102,0.1);
-    }
-    .control-panel .form-label-custom {
-        font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
-        color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 8px; display: block;
-    }
-    .control-panel .form-select {
-        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-        color: white; font-weight: 600; font-size: 0.85rem; border-radius: 8px;
-    }
-    .control-panel .form-select option { color: #333; }
-
-    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
-    .card-header-modern {
-        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
-        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
-    }
-
-    .stat-pill {
-        display: inline-flex; align-items: center; padding: 5px 12px;
-        border-radius: 20px; font-size: 0.7rem; font-weight: 700;
-    }
-    .pill-success { background: #e6f4ea; color: #1e7e34; }
-    .pill-warning { background: #fff4e5; color: #664d03; }
-
-    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
-    .btn-maroon:hover { background-color: #600000; color: white; }
-
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .spin { animation: spin 1s linear infinite; display: inline-block; }
-</style>
+<link rel="stylesheet" href="css/teacher_assignment.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

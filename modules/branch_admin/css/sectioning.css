@@ -1,0 +1,61 @@
+   /* --- PAGE LEVEL STYLES --- */
+    :root {
+        --maroon: #800000;
+        --blue: #003366;
+    }
+
+    /* Container to ensure full height within the dashboard body */
+    .section-management-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Fixed Header Section */
+    .content-header { 
+        background: white; 
+        padding: 20px 30px; 
+        border-bottom: 1px solid #eee; 
+        margin-bottom: 20px; 
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    /* Scrollable Content Area */
+    .scrollable-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 30px;
+        scrollbar-width: thin;
+    }
+
+    /* Modern Card Styling */
+    .main-card-modern {
+        background: white; border-radius: 15px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px;
+    }
+    .card-header-modern { 
+        padding: 15px 25px; border-bottom: 1px solid #eee; 
+        font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .card-header-blue { background: var(--blue); color: white; }
+    .card-header-cyan { background: #17a2b8; color: white; }
+    .card-header-purple { background: #6f42c1; color: white; }
+
+    /* Modern Table Styling */
+    .table-modern thead th { 
+        background: #f8f9fa; color: #444; font-size: 0.75rem; 
+        text-transform: uppercase; padding: 15px 20px; font-weight: 700;
+        border-bottom: 2px solid #eee;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+    .table-modern tr:hover { background-color: #fcfcfc; }
+
+    /* Custom Badges & Buttons */
+    .badge-modern { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    
+    .btn-action-group .btn { margin-right: 5px; border-radius: 6px; }
+    .btn-pill-modern { border-radius: 50px; padding: 6px 20px; font-weight: 600; font-size: 0.85rem; transition: 0.2s; }
+    .btn-pill-modern:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }

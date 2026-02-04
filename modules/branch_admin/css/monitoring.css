@@ -1,0 +1,35 @@
+  /* --- SHARED UI DESIGN SYSTEM --- */
+    .page-header {
+        background: white; padding: 20px; border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
+    }
+
+    .stat-card-modern {
+        background: white; border-radius: 15px; padding: 20px; border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center;
+        gap: 15px; transition: 0.3s; height: 100%; border-left: 5px solid transparent;
+    }
+    
+    .content-card { background: white; border-radius: 15px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 30px; }
+    
+    .card-header-modern {
+        padding: 15px 20px; border-bottom: 1px solid #eee;
+        font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+    }
+
+    /* Table Styling */
+    .table-modern thead th { 
+        background: #f8f9fa; font-size: 0.7rem; text-transform: uppercase; 
+        color: #888; padding: 15px 20px; border-bottom: 1px solid #eee;
+    }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.85rem; }
+
+    .grade-btn { font-size: 0.65rem; font-weight: 800; border-radius: 6px; padding: 4px 10px; text-transform: uppercase; }
+
+    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; border: none; }
+    .btn-maroon:hover { background-color: #600000; color: white; transform: translateY(-1px); }
+
+    .date-filter-group {
+        background: #f1f3f5; border-radius: 10px; padding: 5px 15px; display: flex; align-items: center; gap: 10px;
+    }
+    .date-filter-group input { background: transparent; border: none; outline: none; font-size: 0.85rem; font-weight: 600; color: var(--blue); }

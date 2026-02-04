@@ -53,45 +53,7 @@ $payments = $conn->query("
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC FINANCE UI --- */
-    .finance-stat-card {
-        background: white; border-radius: 15px; padding: 20px; border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; transition: 0.3s;
-    }
-    .finance-stat-card:hover { transform: translateY(-5px); }
-
-    .filter-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px; }
-    .modern-input { border-radius: 50px; border: 1px solid #ddd; font-size: 0.85rem; font-weight: 600; padding-left: 15px; }
-
-    .main-card-modern {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
-    }
-
-    .table-modern thead th { 
-        background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; 
-        letter-spacing: 1px; padding: 15px 20px; position: sticky; top: -1px; z-index: 5;
-    }
-    .table-modern tbody td { padding: 12px 15px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
-
-    .btn-maroon-action {
-        background-color: var(--maroon); color: white; border: none; border-radius: 50px;
-        font-weight: 700; padding: 8px 20px; transition: 0.3s; font-size: 0.85rem;
-    }
-    .btn-maroon-action:hover { background-color: #600000; transform: translateY(-2px); color: white; }
-
-    .btn-excel { background-color: #28a745; color: white; border-radius: 50px; border: none; font-weight: 700; padding: 8px 20px; font-size: 0.85rem; transition: 0.3s; }
-    .btn-excel:hover { background-color: #1e7e34; color: white; }
-
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } }
-</style>
+<link rel="stylesheet" href="css/payment_history.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
