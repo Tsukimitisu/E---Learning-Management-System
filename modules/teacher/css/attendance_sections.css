@@ -1,0 +1,85 @@
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .header-fixed-part {
+        flex: 0 0 auto;
+        background: white;
+        padding: 20px 30px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .body-scroll-part {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 25px 30px 100px 30px; 
+        background-color: #f8f9fa;
+    }
+
+    .subject-info-card {
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(40, 167, 69, 0.15);
+        border: 2px solid #28a745;
+    }
+
+    .section-card .card-body { padding: 25px; }
+
+    .section-icon-box {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        color: white;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-pill {
+        background: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 10px;
+        text-align: center;
+        flex: 1;
+    }
+
+    .card-footer-custom {
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        padding: 12px;
+        text-align: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .info-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-right: 10px;
+    }
+
+    @media (max-width: 576px) {
+        .header-fixed-part { flex-direction: column; gap: 15px; text-align: center; }
+        .body-scroll-part { padding: 15px 15px 100px 15px; }
+    }

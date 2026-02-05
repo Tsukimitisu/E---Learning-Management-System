@@ -81,58 +81,7 @@ $students_result = $students_query->get_result();
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC SECTION UI --- */
-    .section-banner {
-        background: linear-gradient(135deg, var(--blue) 0%, #001a33 100%);
-        border-radius: 20px; padding: 30px; color: white; margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(0, 51, 102, 0.1);
-        position: relative; overflow: hidden;
-    }
-    .section-banner i.bg-icon { position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.1; }
-
-    .stat-pill-modern {
-        background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
-        padding: 6px 15px; border-radius: 50px; margin-right: 10px; font-size: 0.8rem;
-        font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
-    }
-
-    .main-card-modern {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
-    }
-
-    .table-modern thead th { 
-        background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; 
-        letter-spacing: 1px; padding: 15px 20px; position: sticky; top: -1px; z-index: 5;
-    }
-    .table-modern tbody td { padding: 12px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
-
-    .search-box-pill { border-radius: 50px; border: 1px solid #ddd; padding-left: 15px; font-size: 0.85rem; max-width: 300px; }
-
-    .student-avatar {
-        width: 35px; height: 35px; border-radius: 50%; background: var(--maroon);
-        color: white; display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 0.75rem; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .btn-action-pill {
-        border-radius: 50px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;
-        padding: 6px 15px; transition: 0.3s;
-    }
-
-    .breadcrumb-item { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-    .breadcrumb-item a { color: var(--maroon); text-decoration: none; }
-    .breadcrumb-item + .breadcrumb-item::before { content: "›"; color: #ccc; font-size: 1.2rem; vertical-align: middle; }
-
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } .section-banner { text-align: center; } .section-banner .text-end { text-align: center !important; margin-top: 20px; } }
-</style>
+<link rel="stylesheet" href="css/section_students.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">

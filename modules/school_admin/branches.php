@@ -109,17 +109,6 @@ include '../../includes/header.php';
         max-height: 500px;
         overflow-y: auto;
     }
-
-    /* Fix for textarea and inputs in modal */
-    .modal-body .form-control {
-        position: relative;
-        z-index: 1;
-    }
-    
-    .modal-body textarea.form-control {
-        resize: vertical;
-        min-height: 80px;
-    }
 </style>
 
 <!-- Header -->

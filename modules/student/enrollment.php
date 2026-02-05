@@ -63,45 +63,7 @@ $history = $conn->query("
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC ENROLLMENT UI --- */
-    .student-info-card {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
-    }
-    .profile-banner { background: var(--blue); height: 80px; }
-    .profile-avatar-wrapper { margin-top: -40px; position: relative; z-index: 2; }
-
-    .current-status-card {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; overflow: hidden;
-    }
-    .status-ribbon {
-        position: absolute; top: 20px; right: -35px; transform: rotate(45deg);
-        width: 150px; text-align: center; font-weight: 800; font-size: 0.7rem;
-        padding: 5px; color: white; text-transform: uppercase; letter-spacing: 1px;
-    }
-
-    .info-label { font-size: 0.65rem; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-    .info-value { font-weight: 700; color: var(--blue); font-size: 1.1rem; }
-
-    .history-card { background: white; border-radius: 20px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
-    .table-modern thead th { background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; padding: 15px 20px; }
-    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
-
-    .btn-contact { background: var(--maroon); color: white; border: none; border-radius: 10px; font-weight: 700; padding: 12px; transition: 0.3s; }
-    .btn-contact:hover { background: #600000; color: white; transform: translateY(-3px); }
-
-    @media (max-width: 768px) {
-        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
-    }
-</style>
+<link rel="stylesheet" href="css/enrollment.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">

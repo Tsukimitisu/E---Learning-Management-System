@@ -114,58 +114,7 @@ if ($current_ay) {
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- ENHANCED UI ENGINE --- */
-    .page-header {
-        background: white; padding: 20px; border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-    }
-
-    .stat-card-modern {
-        background: white; border-radius: 15px; padding: 20px; border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center;
-        gap: 15px; transition: 0.3s; height: 100%; border-left: 5px solid var(--blue);
-    }
-
-    .content-card {
-        background: white; border-radius: 15px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); height: 100%;
-        display: flex; flex-direction: column; overflow: hidden;
-    }
-
-    .card-header-modern {
-        background: #fcfcfc; padding: 15px 20px; border-bottom: 1px solid #eee;
-        font-weight: 700; color: var(--blue); text-transform: uppercase;
-        font-size: 0.8rem; letter-spacing: 1px;
-    }
-
-    .year-badge {
-        padding: 6px 15px; border-radius: 8px; font-weight: 700;
-        font-size: 0.75rem; border: 1px solid #eee; background: #f8f9fa; color: #666;
-    }
-    .year-badge.active { background: #e6f4ea; color: #1e7e34; border-color: #c3e6cb; }
-
-    /* Promotion Flow Styling */
-    .promotion-step { text-align: center; flex: 1; position: relative; padding: 10px; }
-    .step-circle {
-        width: 50px; height: 50px; background: white; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;
-        font-weight: 800; color: var(--blue); border: 3px solid #eee;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s;
-    }
-    .promotion-step.active .step-circle { border-color: var(--maroon); background: var(--maroon); color: white; }
-    .promotion-step.graduate .step-circle { border-color: #28a745; color: #28a745; }
-    .step-label { font-size: 0.75rem; font-weight: 700; color: #555; }
-
-    .form-label-custom { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #888; margin-bottom: 5px; }
-    
-    .btn-maroon { background-color: var(--maroon); color: white; font-weight: 700; }
-    .btn-maroon:hover { background-color: #600000; color: white; transform: translateY(-2px); }
-
-    .scroll-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 5px; }
-    .scroll-container::-webkit-scrollbar { height: 4px; }
-    .scroll-container::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
-</style>
+<link rel="stylesheet" href="css/academic_year_management.css">
 
 <div class="main-content-body animate__animated animate__fadeIn">
     

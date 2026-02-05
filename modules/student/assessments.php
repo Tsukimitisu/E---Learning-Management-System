@@ -106,46 +106,7 @@ $counts_query = $conn->query("
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- ASSESSMENT UI --- */
-    .filter-pills .nav-link {
-        color: #666; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;
-        padding: 10px 20px; border-radius: 50px; transition: 0.3s; margin-right: 10px;
-        background: white; border: 1px solid #eee;
-    }
-    .filter-pills .nav-link.active { background-color: var(--maroon); color: white; border-color: var(--maroon); box-shadow: 0 4px 10px rgba(128,0,0,0.2); }
-    
-    .type-filter-btn { border-radius: 8px; font-weight: 600; font-size: 0.8rem; padding: 6px 15px; transition: 0.2s; }
-    
-    .assessment-card {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s;
-        height: 100%; position: relative; overflow: hidden;
-    }
-    .assessment-card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-    .assessment-card.overdue { border-left: 5px solid #dc3545 !important; }
-
-    .type-icon-box {
-        width: 45px; height: 45px; background: rgba(0, 51, 102, 0.05);
-        color: var(--blue); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-    }
-
-    .task-info-row { display: flex; gap: 15px; font-size: 0.75rem; color: #888; }
-    .task-info-row i { color: var(--maroon); }
-
-    .grade-pill { background: #e6fcf5; color: #0ca678; padding: 5px 15px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; display: inline-block; }
-
-    .btn-maroon-outline { border: 2px solid var(--maroon); color: var(--maroon); font-weight: 700; border-radius: 10px; transition: 0.3s; background: transparent; }
-    .btn-maroon-outline:hover { background: var(--maroon); color: white; }
-
-    .ajax-loading { opacity: 0.4; pointer-events: none; transition: 0.3s; }
-</style>
+<link rel="stylesheet" href="css/assessments.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">

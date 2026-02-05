@@ -47,55 +47,7 @@ if ($college_subjects_result) {
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC UI COMPONENTS --- */
-    .nav-pills-modern .nav-link {
-        color: #666; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
-        padding: 12px 25px; border-radius: 10px; transition: 0.3s; margin-right: 10px;
-        background: #fff; border: 1.5px solid #eee;
-    }
-    .nav-pills-modern .nav-link.active {
-        background-color: var(--blue); color: white; border-color: var(--blue); box-shadow: 0 4px 12px rgba(0,51,102,0.2);
-    }
-
-    .main-card-modern {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 25px;
-    }
-
-    .prog-card {
-        border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        transition: 0.3s; background: white; overflow: hidden; height: 100%;
-    }
-    .prog-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    .prog-header { background: var(--blue); color: white; padding: 15px; }
-
-    .year-level-card {
-        border-radius: 12px; border: 1.5px solid #f1f1f1; background: #fcfcfc;
-        padding: 15px; text-align: center; transition: 0.3s;
-    }
-    .year-level-card:hover { border-color: var(--maroon); background: white; }
-
-    .table-modern thead th { 
-        background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; 
-        letter-spacing: 1px; padding: 15px 20px; position: sticky; top: -1px; z-index: 5;
-    }
-    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
-
-    .btn-maroon-pill { background-color: var(--maroon); color: white !important; border: none; border-radius: 50px; font-weight: 700; padding: 8px 20px; transition: 0.3s; font-size: 0.8rem; }
-    .btn-maroon-pill:hover { background-color: #600000; transform: translateY(-2px); }
-
-    .breadcrumb-item { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-    .breadcrumb-item a { color: var(--maroon); text-decoration: none; }
-
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } .nav-pills-modern { flex-direction: column; } .nav-pills-modern .nav-link { margin-right: 0; margin-bottom: 5px; } }
-</style>
+<link rel="stylesheet" href="css/college_curriculum.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">
@@ -251,7 +203,7 @@ include '../../includes/header.php';
                                 </td>
                                 <td class="text-center fw-bold text-maroon"><?php echo $subject['units']; ?></td>
                                 <td class="text-center small text-muted"><?php echo $subject['lecture_hours']; ?> / <?php echo $subject['lab_hours']; ?></td>
-                                <td><span class="badge bg-light text-blue border border-blue px-3"><?php echo htmlspecialchars($subject['program_name'] ?? 'Unassigned'); ?></span></td>
+                                <td><span class="badge bg-light text-dark border border-blue px-3"><?php echo htmlspecialchars($subject['program_name'] ?? 'Unassigned'); ?></span></td>
                                 <td><small class="fw-bold"><?php echo htmlspecialchars($subject['year_name'] ?? 'N/A'); ?></small><br><small class="text-muted"><?php echo $subject['semester'] ?? 'N/A'; ?></small></td>
                                 <td class="text-center">
                                     <span class="badge rounded-pill bg-<?php echo $subject['is_active'] ? 'success' : 'secondary'; ?> px-3">

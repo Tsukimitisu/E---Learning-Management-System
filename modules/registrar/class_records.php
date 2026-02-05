@@ -20,42 +20,7 @@ $class_list = $conn->query("SELECT cl.id, cl.section_name, cs.subject_code, cs.s
 include '../../includes/header.php';
 ?>
 
-<style>
-    /* --- SCROLL & LAYOUT ENGINE --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
-    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
-
-    /* --- FANTASTIC UI COMPONENTS --- */
-    .control-card {
-        background: white; border-radius: 15px; padding: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px;
-        border-left: 5px solid var(--maroon);
-    }
-
-    .main-card-modern {
-        background: white; border-radius: 20px; border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
-    }
-
-    .table-modern thead th { 
-        background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; 
-        letter-spacing: 1px; padding: 15px 20px; position: sticky; top: -1px; z-index: 5;
-    }
-    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
-
-    .modern-select { border-radius: 50px; border: 1px solid #ddd; font-weight: 600; color: #555; padding-left: 20px; }
-    .modern-select:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px rgba(128,0,0,0.1); }
-
-    .btn-export-pill {
-        background-color: var(--blue); color: white; border-radius: 50px;
-        font-weight: 700; padding: 8px 20px; transition: 0.3s; font-size: 0.8rem; border: none;
-    }
-    .btn-export-pill:hover { background-color: #002244; transform: translateY(-2px); color: white; }
-
-    @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } }
-</style>
+<link rel="stylesheet" href="css/class_records.css">
 
 <!-- Part 1: Fixed Header -->
 <div class="header-fixed-part animate__animated animate__fadeInDown">

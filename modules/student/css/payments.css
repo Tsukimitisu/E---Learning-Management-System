@@ -1,0 +1,36 @@
+ /* --- SCROLL & LAYOUT ENGINE --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header-fixed-part { flex: 0 0 auto; background: white; padding: 15px 30px; border-bottom: 1px solid #eee; z-index: 10; }
+    .body-scroll-part { flex: 1 1 auto; overflow-y: auto; padding: 25px 30px 100px 30px; background-color: #f8f9fa; }
+
+    /* --- FANTASTIC PAYMENT UI --- */
+    .finance-card {
+        border-radius: 15px; padding: 25px; border: none; color: white;
+        transition: 0.3s; height: 100%; display: flex; align-items: center; gap: 20px;
+    }
+    .finance-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    
+    .finance-icon {
+        width: 55px; height: 55px; border-radius: 12px; background: rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    }
+
+    .main-card-modern {
+        background: white; border-radius: 20px; border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden;
+    }
+
+    .card-header-modern { background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+    .table-modern thead th { background: var(--blue); color: white; font-size: 0.7rem; text-transform: uppercase; padding: 15px 20px; position: sticky; top: -1px; z-index: 5; }
+    .table-modern tbody td { padding: 15px 20px; vertical-align: middle; font-size: 0.9rem; }
+
+    .currency-symbol { font-size: 0.8rem; opacity: 0.7; margin-right: 2px; }
+
+    .fee-item { border-left: 4px solid var(--maroon); padding: 12px 15px; background: #fff; margin-bottom: 10px; border-radius: 0 8px 8px 0; transition: 0.2s; }
+    .fee-item:hover { background: #fafafa; }
+
+    @media (max-width: 768px) {
+        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+    }

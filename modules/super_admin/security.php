@@ -43,72 +43,7 @@ $audit_logs = $conn->query("
 include '../../includes/header.php'; 
 ?>
 
-<style>
-    /* --- THE SCROLL & SIDEBAR LOCK FIX --- */
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-
-    #content {
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .header-fixed-part {
-        flex: 0 0 auto;
-        background: white;
-        padding: 20px 30px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .body-scroll-part {
-        flex: 1 1 auto;
-        overflow-y: auto;
-        padding: 25px 30px 100px 30px; 
-        background-color: #f8f9fa;
-    }
-
-    .custom-tabs-container {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    }
-
-    .nav-pills .nav-link {
-        color: #666;
-        font-weight: 600;
-        border-radius: 8px;
-        padding: 10px 20px;
-        transition: 0.3s;
-    }
-
-    .nav-pills .nav-link.active {
-        background-color: #800000;
-        color: white;
-        box-shadow: 0 4px 12px rgba(128,0,0,0.2);
-    }
-
-    /* Table Sticky Headers */
-    .table thead th {
-        background: #fcfcfc;
-        position: sticky;
-        top: -1px; 
-        z-index: 10;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        color: #888;
-        border-bottom: 2px solid #eee;
-    }
-
-    .sec-stat-box {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        border-left: 4px solid #ddd;
-    }
-</style>
+<link rel="stylesheet" href="css/security.css"> 
 
 <!-- Part 1:  Header -->
 <div class="header-fixed-part d-flex justify-content-between align-items-center animate__animated animate__fadeInDown">
