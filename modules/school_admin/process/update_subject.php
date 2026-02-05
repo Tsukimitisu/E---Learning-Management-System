@@ -21,9 +21,13 @@ try {
     $subject_type = clean_input($_POST['category'] ?? $_POST['subject_type'] ?? 'college');
     $prerequisites = clean_input($_POST['prerequisites'] ?? '');
     $is_active = (int)$_POST['is_active'];
-    $program_id = isset($_POST['program_id']) ? (int)$_POST['program_id'] : null;
-    $year_level_id = isset($_POST['year_level_id']) ? (int)$_POST['year_level_id'] : null;
-    $semester = isset($_POST['semester']) ? (int)$_POST['semester'] : (isset($_POST['college_semester']) ? (int)$_POST['college_semester'] : null);
+    $program_id = isset($_POST['program_id']) && $_POST['program_id'] !== '' ? (int)$_POST['program_id'] : null;
+    $year_level_id = isset($_POST['year_level_id']) && $_POST['year_level_id'] !== '' ? (int)$_POST['year_level_id'] : null;
+    $semester = isset($_POST['semester']) && $_POST['semester'] !== '' ? (int)$_POST['semester'] : (isset($_POST['college_semester']) ? (int)$_POST['college_semester'] : 1);
+    
+    // SHS-specific fields
+    $shs_strand_id = isset($_POST['shs_strand_id']) && $_POST['shs_strand_id'] !== '' ? (int)$_POST['shs_strand_id'] : null;
+    $shs_grade_level_id = isset($_POST['shs_grade_level_id']) && $_POST['shs_grade_level_id'] !== '' ? (int)$_POST['shs_grade_level_id'] : null;
 
     // Check if subject code conflicts with another subject
     $check_code = $conn->prepare("SELECT id FROM curriculum_subjects WHERE subject_code = ? AND id != ?");
@@ -37,11 +41,16 @@ try {
 
     $stmt = $conn->prepare("
         UPDATE curriculum_subjects
-        SET subject_code = ?, subject_title = ?, units = ?, lecture_hours = ?, lab_hours = ?, subject_type = ?, prerequisites = ?, is_active = ?, program_id = ?, year_level_id = ?, semester = ?
+        SET subject_code = ?, subject_title = ?, units = ?, lecture_hours = ?, lab_hours = ?, 
+            subject_type = ?, prerequisites = ?, is_active = ?, program_id = ?, year_level_id = ?, 
+            semester = ?, shs_strand_id = ?, shs_grade_level_id = ?
         WHERE id = ?
     ");
-    // ssddssiiiiii: 2 string, 2 double, 2 string, 6 int
-    $stmt->bind_param("ssddssiiiiii", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $subject_type, $prerequisites, $is_active, $program_id, $year_level_id, $semester, $subject_id);
+    $stmt->bind_param("ssdiissiiiiiii", 
+        $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, 
+        $subject_type, $prerequisites, $is_active, $program_id, $year_level_id, 
+        $semester, $shs_strand_id, $shs_grade_level_id, $subject_id
+    );
     
     if ($stmt->execute()) {
         echo json_encode(['status' => 'success', 'message' => 'Subject updated successfully', 'debug_post' => $debug_post]);

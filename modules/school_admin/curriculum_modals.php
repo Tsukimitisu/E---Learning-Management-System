@@ -295,7 +295,7 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Strand <span class="text-danger">*</span></label>
-                                <select class="form-select" name="shs_strand_id">
+                                <select class="form-select" name="shs_strand_id" id="shsStrandSelect" required>
                                     <option value="">-- Select Strand --</option>
                                     <?php 
                                     $strands_result = $conn->query("SELECT id, strand_name FROM shs_strands WHERE is_active = 1 ORDER BY strand_name");
@@ -307,21 +307,28 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Grade Level <span class="text-danger">*</span></label>
-                                <select class="form-select" name="shs_grade_level_id">
+                                <select class="form-select" name="shs_grade_level_id" id="shsGradeLevelSelect" required>
                                     <option value="">-- Select Grade Level --</option>
                                     <?php 
-                                    // Only show Grade 11 and Grade 12 for SHS grade level selection
-                                    $grades_result = $conn->query("SELECT id, grade_name FROM shs_grade_levels WHERE is_active = 1 AND grade_level IN (11,12) ORDER BY grade_level");
-                                    while ($grade = $grades_result->fetch_assoc()): 
+                                    // Get unique grade levels (11 and 12) from shs_grade_levels table
+                                    $shs_grade_query = $conn->query("SELECT MIN(id) as id, grade_level, grade_name FROM shs_grade_levels WHERE is_active = 1 AND grade_level IN (11,12) GROUP BY grade_level, grade_name ORDER BY grade_level");
+                                    if ($shs_grade_query && $shs_grade_query->num_rows > 0):
+                                        while ($shs_gl = $shs_grade_query->fetch_assoc()): 
                                     ?>
-                                    <option value="<?php echo $grade['id']; ?>"><?php echo htmlspecialchars($grade['grade_name']); ?></option>
-                                    <?php endwhile; ?>
+                                    <option value="<?php echo $shs_gl['id']; ?>"><?php echo htmlspecialchars($shs_gl['grade_name']); ?></option>
+                                    <?php 
+                                        endwhile;
+                                    else:
+                                    ?>
+                                    <option value="1">Grade 11</option>
+                                    <option value="2">Grade 12</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Semester</label>
-                            <select class="form-select" name="shs_semester">
+                            <label class="form-label">Semester <span class="text-danger">*</span></label>
+                            <select class="form-select" name="shs_semester" required>
                                 <option value="1">1st Semester</option>
                                 <option value="2">2nd Semester</option>
                             </select>
@@ -384,6 +391,122 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #800000;">
                         <i class="bi bi-save"></i> Add Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Subject Modal -->
+<div class="modal fade" id="editSubjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color: #c29200;">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit Subject</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editSubjectForm">
+                <input type="hidden" name="subject_id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subject Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="subject_code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subject Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="subject_title" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Units/Credits <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="units" value="3" min="0.5" max="6" step="0.5" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subject Type <span class="text-danger">*</span></label>
+                            <select class="form-select" name="subject_type" required>
+                                <option value="shs_core">SHS Core</option>
+                                <option value="shs_applied">SHS Applied</option>
+                                <option value="shs_specialized">SHS Specialized</option>
+                                <option value="college">College</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Lecture Hours</label>
+                            <input type="number" class="form-control" name="lecture_hours" min="0" value="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Lab Hours</label>
+                            <input type="number" class="form-control" name="lab_hours" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Strand</label>
+                            <select class="form-select" name="shs_strand_id">
+                                <option value="">-- Select Strand --</option>
+                                <?php 
+                                $edit_strands_result = $conn->query("SELECT id, strand_name FROM shs_strands WHERE is_active = 1 ORDER BY strand_name");
+                                if ($edit_strands_result && $edit_strands_result->num_rows > 0):
+                                    while ($edit_strand = $edit_strands_result->fetch_assoc()): 
+                                ?>
+                                <option value="<?php echo $edit_strand['id']; ?>"><?php echo htmlspecialchars($edit_strand['strand_name']); ?></option>
+                                <?php 
+                                    endwhile;
+                                endif; 
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grade Level</label>
+                            <select class="form-select" name="shs_grade_level_id">
+                                <option value="">-- Select Grade Level --</option>
+                                <?php 
+                                // Get unique grade levels (11 and 12) from shs_grade_levels table for edit modal
+                                $edit_grade_query = $conn->query("SELECT MIN(id) as id, grade_level, grade_name FROM shs_grade_levels WHERE is_active = 1 AND grade_level IN (11,12) GROUP BY grade_level, grade_name ORDER BY grade_level");
+                                if ($edit_grade_query && $edit_grade_query->num_rows > 0):
+                                    while ($edit_gl = $edit_grade_query->fetch_assoc()): 
+                                ?>
+                                <option value="<?php echo $edit_gl['id']; ?>"><?php echo htmlspecialchars($edit_gl['grade_name']); ?></option>
+                                <?php 
+                                    endwhile;
+                                else:
+                                ?>
+                                <option value="1">Grade 11</option>
+                                <option value="2">Grade 12</option>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Semester</label>
+                            <select class="form-select" name="semester">
+                                <option value="1">1st Semester</option>
+                                <option value="2">2nd Semester</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="is_active">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prerequisites</label>
+                        <input type="text" class="form-control" name="prerequisites" placeholder="e.g. STEM100 or None">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white" style="background-color: #c29200;">
+                        <i class="bi bi-save"></i> Update Subject
                     </button>
                 </div>
             </form>

@@ -20,6 +20,13 @@ try {
     $shs_strand_id = (int)($_POST['shs_strand_id'] ?? 0) ?: null;
     $shs_grade_level_id = (int)($_POST['shs_grade_level_id'] ?? 0) ?: null;
     $semester = (int)($_POST['semester'] ?? $_POST['shs_semester'] ?? 1);
+    $subject_type = clean_input($_POST['subject_type'] ?? 'shs_core');
+    
+    // Validate subject_type is SHS type
+    if (!in_array($subject_type, ['shs_core', 'shs_applied', 'shs_specialized'])) {
+        $subject_type = 'shs_core';
+    }
+    
     $created_by = (int)$_SESSION['user_id'];
 
     // Check for duplicate subject code
@@ -37,9 +44,9 @@ try {
             subject_code, subject_title, units, lecture_hours, lab_hours, subject_type,
             shs_strand_id, shs_grade_level_id, semester, prerequisites, is_active, created_by
         )
-        VALUES (?, ?, ?, ?, ?, 'shs_core', ?, ?, ?, ?, 1, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
     ");
-    $stmt->bind_param("ssdiiiiisi", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $shs_strand_id, $shs_grade_level_id, $semester, $prerequisites, $created_by);
+    $stmt->bind_param("ssdiisiiisi", $subject_code, $subject_title, $units, $lecture_hours, $lab_hours, $subject_type, $shs_strand_id, $shs_grade_level_id, $semester, $prerequisites, $created_by);
     
     if ($stmt->execute()) {
         $subject_id = $conn->insert_id;

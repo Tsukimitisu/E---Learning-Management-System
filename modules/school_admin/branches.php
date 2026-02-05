@@ -109,6 +109,17 @@ include '../../includes/header.php';
         max-height: 500px;
         overflow-y: auto;
     }
+
+    /* Fix for textarea and inputs in modal */
+    .modal-body .form-control {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .modal-body textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
 </style>
 
 <!-- Header -->
@@ -176,7 +187,7 @@ include '../../includes/header.php';
 
                     <div class="mb-3">
                         <label for="branch-address" class="form-label">Address</label>
-                        <textarea class="form-control border-light shadow-sm" id="branch-address" rows="3" placeholder="Branch location address"></textarea>
+                        <textarea class="form-control shadow-sm" id="branch-address" rows="3" placeholder="Branch location address" style="pointer-events: auto;"></textarea>
                     </div>
 
                     <div class="mb-3">
@@ -189,6 +200,30 @@ include '../../includes/header.php';
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-maroon-action" onclick="saveBranch()">
                     <i class="bi bi-save me-1"></i> Save Branch
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Branch Confirmation Modal -->
+<div id="delete-branch-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Are you sure you want to delete this branch?</h5>
+                <p class="text-muted mb-0">Branch: <strong id="deleteBranchName"></strong></p>
+                <p class="text-danger small mt-2"><i class="bi bi-info-circle me-1"></i>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4" onclick="confirmDeleteBranch()">
+                    <i class="bi bi-trash me-1"></i> Delete
                 </button>
             </div>
         </div>
@@ -227,6 +262,47 @@ include '../../includes/header.php';
         }
     }
 
+    // Delete branch with confirmation
+    let branchToDelete = null;
+    function deleteBranch(id, name) {
+        // Get branch name from the row if not provided
+        if (!name) {
+            const row = Array.from(document.querySelectorAll('#branches-tbody tr')).find(tr => tr.children[0].textContent == id);
+            name = row ? (row.children[1].textContent || '').trim() : 'this branch';
+        }
+        branchToDelete = { id, name };
+        document.getElementById('deleteBranchName').textContent = name;
+        const modal = new bootstrap.Modal(document.getElementById('delete-branch-modal'));
+        modal.show();
+    }
+
+    async function confirmDeleteBranch() {
+        if (!branchToDelete) return;
+        const btn = document.querySelector('#delete-branch-modal .btn-danger');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
+        try {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('branch_id', branchToDelete.id);
+            const res = await fetch('process/branch_management_api.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            bootstrap.Modal.getInstance(document.getElementById('delete-branch-modal')).hide();
+            if (data.success) {
+                showAlert(data.message || 'Branch deleted successfully!', 'success');
+                setTimeout(() => loadBranches(), 400);
+            } else {
+                showAlert(data.message || 'Failed to delete branch', 'danger');
+            }
+        } catch (err) {
+            showAlert('Error: ' + err.message, 'danger');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete';
+            branchToDelete = null;
+        }
+    }
+
     // Fetch and display branches
     async function loadBranches() {
         const tbody = document.getElementById('branches-tbody');
@@ -239,13 +315,13 @@ include '../../includes/header.php';
                         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No branches found.</td></tr>';
                     } else {
                         tbody.innerHTML = data.branches.map(b => `
-                            <tr>
+                            <tr data-id="${b.id}" data-name="${escapeHtml(b.name)}">
                                 <td>${b.id}</td>
-                                <td>${b.name}</td>
-                                <td>${b.address || ''}</td>
+                                <td>${escapeHtml(b.name)}</td>
+                                <td>${escapeHtml(b.address || '')}</td>
                                 <td>
                                     <button class="btn btn-warning btn-sm" title="Edit" onclick="editBranch(${b.id})"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteBranch(${b.id})"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-danger btn-sm" title="Delete" onclick="deleteBranch(${b.id}, '${escapeHtml(b.name).replace(/'/g, "\\'")}')"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                         `).join('');
@@ -262,8 +338,17 @@ include '../../includes/header.php';
             }
     }
 
-    // Add branch via AJAX
+    // Helper to escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Add or Update branch via AJAX
     async function saveBranch() {
+        const branchId = document.getElementById('branch-id').value.trim();
         const name = document.getElementById('branch-name').value.trim();
         const address = document.getElementById('branch-address').value.trim();
         if (!name) {
@@ -275,17 +360,23 @@ include '../../includes/header.php';
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
         try {
             const formData = new FormData();
-            formData.append('action', 'create');
+            // Determine if this is create or update based on branch ID
+            if (branchId) {
+                formData.append('action', 'update');
+                formData.append('branch_id', branchId);
+            } else {
+                formData.append('action', 'create');
+            }
             formData.append('name', name);
             formData.append('address', address);
             const res = await fetch('process/branch_management_api.php', { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) {
-                showAlert(data.message || 'Branch added!', 'success');
+                showAlert(data.message || (branchId ? 'Branch updated!' : 'Branch added!'), 'success');
                 bootstrap.Modal.getInstance(document.getElementById('branch-modal')).hide();
                 setTimeout(() => loadBranches(), 400);
             } else {
-                showAlert(data.message || 'Failed to add branch', 'danger');
+                showAlert(data.message || 'Failed to save branch', 'danger');
             }
         } catch (err) {
             showAlert('Error: ' + err.message, 'danger');

@@ -105,18 +105,18 @@ try {
             $dup_stmt->execute();
             if ($dup_stmt->get_result()->num_rows > 0) { $conn->rollback(); echo json_encode(['success' => false, 'message' => 'Branch name already exists']); exit(); }
 
-            $update_stmt = $conn->prepare("UPDATE branches SET name = ?, address = ?, updated_at = NOW() WHERE id = ?");
-                $update_stmt->bind_param("ssi", $name, $address, $branch_id);
+            $update_stmt = $conn->prepare("UPDATE branches SET name = ?, address = ? WHERE id = ?");
+            $update_stmt->bind_param("ssi", $name, $address, $branch_id);
             $update_stmt->execute();
 
-                // Optionally handle activate/deactivate if status is provided
-                $status = get_post(['status', 'branch_status', 'active']);
-                if ($status !== '') {
-                    $active = ($status == '1' || $status === true || strtolower($status) === 'active') ? 1 : 0;
-                    $status_stmt = $conn->prepare("UPDATE branches SET active = ? WHERE id = ?");
-                    $status_stmt->bind_param("ii", $active, $branch_id);
-                    $status_stmt->execute();
-                }
+            // Optionally handle activate/deactivate if status is provided (only if column exists)
+            // $status = get_post(['status', 'branch_status', 'active']);
+            // if ($status !== '') {
+            //     $active = ($status == '1' || $status === true || strtolower($status) === 'active') ? 1 : 0;
+            //     $status_stmt = $conn->prepare("UPDATE branches SET active = ? WHERE id = ?");
+            //     $status_stmt->bind_param("ii", $active, $branch_id);
+            //     $status_stmt->execute();
+            // }
 
             $ip = get_client_ip();
             $action_log = "Updated branch: $name (ID: $branch_id)";

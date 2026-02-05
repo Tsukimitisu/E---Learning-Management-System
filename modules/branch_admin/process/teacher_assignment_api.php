@@ -53,21 +53,17 @@ function getYearLevels() {
             return;
         }
         $stmt->bind_param("i", $program_id);
-    } else {
-        $query = "SELECT id, grade_name as name FROM shs_grade_levels WHERE strand_id = ? AND is_active = 1 ORDER BY grade_level";
-        $stmt = $conn->prepare($query);
-        if (!$stmt) {
-            echo json_encode(['success' => false, 'message' => 'Query error: ' . $conn->error]);
-            return;
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $levels[] = $row;
         }
-        $stmt->bind_param("i", $program_id);
-    }
-    
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $levels[] = $row;
+    } else {
+        // For SHS, return static Grade 11 and Grade 12
+        $levels = [
+            ['id' => 11, 'name' => 'Grade 11'],
+            ['id' => 12, 'name' => 'Grade 12']
+        ];
     }
     
     echo json_encode(['success' => true, 'levels' => $levels]);
@@ -119,7 +115,8 @@ function getSubjects() {
         }
         $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
     } else {
-        // For SHS, get subjects that match the grade level (shs_grade_level_id)
+        // For SHS, get subjects that match the grade level
+        // The shs_grade_level_id could be stored as actual ID or grade level value (11/12)
         // Include subjects where shs_strand_id matches OR is NULL (core subjects for all strands)
         $query = "
             SELECT cs.id, cs.subject_code, cs.subject_title, cs.units,
@@ -130,7 +127,9 @@ function getSubjects() {
             LEFT JOIN users u ON tsa.teacher_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
             WHERE (cs.shs_strand_id = ? OR cs.shs_strand_id IS NULL) 
-                AND cs.shs_grade_level_id = ? 
+                AND (cs.shs_grade_level_id = ? OR cs.shs_grade_level_id IN (
+                    SELECT id FROM shs_grade_levels WHERE grade_level = ? AND strand_id = ?
+                ))
                 AND cs.semester = ? 
                 AND cs.is_active = 1
                 AND cs.subject_type IN ('shs_core', 'shs_applied', 'shs_specialized')
@@ -141,7 +140,7 @@ function getSubjects() {
             echo json_encode(['success' => false, 'message' => 'Query prepare error: ' . $conn->error, 'debug' => $debug]);
             return;
         }
-        $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
+        $stmt->bind_param("iiiiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $year_level_id, $program_id, $semester_num);
     }
     
     if (!$stmt->execute()) {

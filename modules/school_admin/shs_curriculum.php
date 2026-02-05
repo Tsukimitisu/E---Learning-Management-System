@@ -181,7 +181,7 @@ include '../../includes/header.php';
         <!-- TAB 3: SUBJECTS -->
         <div class="tab-pane fade" id="shs-subjects" role="tabpanel">
             <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                <button class="btn btn-maroon-pill shadow-sm" onclick="openAddShsSubjectModal()">
                     <i class="bi bi-plus-circle me-1"></i> Add SHS Subject
                 </button>
             </div>
@@ -252,6 +252,29 @@ function goBack() {
     if (document.referrer && document.referrer.includes('/elms_system/')) { window.history.back(); } 
     else { window.location.href = 'curriculum.php'; }
 }
+
+// Open Add Subject Modal with SHS fields pre-shown
+function openAddShsSubjectModal() {
+    // Reset the form
+    const form = document.getElementById('addSubjectForm');
+    if (form) form.reset();
+    
+    // Set default to SHS Core and show SHS fields
+    const subjectTypeSelect = document.getElementById('subjectTypeSelect');
+    if (subjectTypeSelect) {
+        subjectTypeSelect.value = 'shs_core';
+    }
+    
+    // Show SHS fields, hide college fields
+    const shsFields = document.getElementById('shsFields');
+    const collegeFields = document.getElementById('collegeFields');
+    if (shsFields) shsFields.style.display = 'block';
+    if (collegeFields) collegeFields.style.display = 'none';
+    
+    // Open the modal
+    new bootstrap.Modal(document.getElementById('addSubjectModal')).show();
+}
+window.openAddShsSubjectModal = openAddShsSubjectModal;
 
 // --- SHS STRAND AJAX LOGIC ---
 async function addStrand(e) {
