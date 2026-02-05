@@ -373,7 +373,7 @@ function getAvailableStudents() {
 }
 
 function addStudentToSection() {
-    global $conn, $branch_id;
+    global $conn, $branch_id, $current_ay_id;
     
     $section_id = (int)($_POST['section_id'] ?? 0);
     $student_id = (int)($_POST['student_id'] ?? 0);
@@ -394,10 +394,28 @@ function addStudentToSection() {
         return;
     }
     
-    // Check if already enrolled
+    // Check if already enrolled in this section
     $check = $conn->prepare("SELECT id FROM section_students WHERE section_id = ? AND student_id = ?");
     $check->bind_param("ii", $section_id, $student_id);
     $check->execute();
+    
+    // Check if student is already in any other section for this academic year (only 1 section per student allowed)
+    $existing_section_check = $conn->prepare("
+        SELECT ss.id, s.section_name 
+        FROM section_students ss
+        INNER JOIN sections s ON ss.section_id = s.id
+        WHERE ss.student_id = ? AND ss.status = 'active' 
+        AND s.academic_year_id = ? AND s.branch_id = ?
+        AND ss.section_id != ?
+    ");
+    $existing_section_check->bind_param("iiii", $student_id, $current_ay_id, $branch_id, $section_id);
+    $existing_section_check->execute();
+    $existing_result = $existing_section_check->get_result();
+    if ($existing_result->num_rows > 0) {
+        $existing = $existing_result->fetch_assoc();
+        echo json_encode(['success' => false, 'message' => 'Student is already enrolled in section "' . $existing['section_name'] . '". A student can only be assigned to 1 section.']);
+        return;
+    }
     
     if ($check->get_result()->num_rows > 0) {
         // Reactivate if exists

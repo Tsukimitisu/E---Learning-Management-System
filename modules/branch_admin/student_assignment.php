@@ -46,6 +46,7 @@ $students = $conn->query("
     LEFT JOIN shs_strands ss ON st.course_id = ss.id
     WHERE ur.role_id = " . ROLE_STUDENT . " 
     AND u.status = 'active'
+    AND up.branch_id = $branch_id
     ORDER BY up.last_name, up.first_name
 ");
 
@@ -234,27 +235,66 @@ include '../../includes/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold">Target Class Section</label>
-                        <select class="form-select" id="bulkSectionSelect" onchange="loadUnenrolledStudents()">
-                            <option value="">Select a section...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold">Capacity Status</label>
-                        <div id="bulkSectionInfo" class="form-control bg-light border-0 small py-2">Select a class to view capacity</div>
+                <!-- Step 1: Filter Students -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-funnel me-2"></i>Step 1: Filter Students</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Program Type *</label>
+                            <select class="form-select form-select-sm" id="bulkProgramType" onchange="updateBulkProgramFilter()">
+                                <option value="">-- Select Type --</option>
+                                <option value="college">College</option>
+                                <option value="shs">Senior High School</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Program/Strand *</label>
+                            <select class="form-select form-select-sm" id="bulkProgram" onchange="updateBulkYearLevelFilter()" disabled>
+                                <option value="">-- Select Program --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Year/Grade Level *</label>
+                            <select class="form-select form-select-sm" id="bulkYearLevel" onchange="loadFilteredStudentsAndSections()" disabled>
+                                <option value="">-- Select Level --</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="mb-2 d-flex justify-content-between align-items-center">
-                    <label class="form-label small fw-bold">Select Students</label>
-                    <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-primary px-3" onclick="selectAllBulkStudents()">Select All</button>
-                        <button type="button" class="btn btn-outline-secondary px-3" onclick="clearBulkStudents()">Clear</button>
+
+                <!-- Step 2: Select Section -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-collection me-2"></i>Step 2: Select Section</h6>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Target Class Section</label>
+                            <select class="form-select" id="bulkSectionSelect" onchange="updateBulkSectionInfo()" disabled>
+                                <option value="">-- Complete Step 1 first --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Capacity Status</label>
+                            <div id="bulkSectionInfo" class="form-control bg-light border-0 small py-2">Select filters first</div>
+                        </div>
                     </div>
                 </div>
-                <div id="bulkStudentsList" class="bg-light p-3 rounded-3" style="max-height: 300px; overflow-y: auto;">
-                    <div class="text-center py-4 text-muted small">Please select a class section first.</div>
+
+                <!-- Step 3: Select Students -->
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-primary mb-0"><i class="bi bi-person-check me-2"></i>Step 3: Select Students</h6>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-primary px-3" onclick="selectAllBulkStudents()">Select All</button>
+                            <button type="button" class="btn btn-outline-secondary px-3" onclick="clearBulkStudents()">Clear</button>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="form-control form-control-sm" id="bulkStudentSearch" placeholder="Search student name..." oninput="filterBulkStudentsList()">
+                    </div>
+                    <div id="bulkStudentsList" class="bg-light p-3 rounded-3" style="max-height: 250px; overflow-y: auto;">
+                        <div class="text-center py-4 text-muted small">Complete filters above to see eligible students.</div>
+                    </div>
+                    <div id="bulkStudentCount" class="text-end small text-muted mt-2"></div>
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
@@ -484,41 +524,182 @@ function updateStudentBadge() {
 }
 
 // Bulk Logic
-document.getElementById('bulkEnrollModal').addEventListener('show.bs.modal', function() { loadBulkSections(); });
+let bulkStudentsData = [];
+
+document.getElementById('bulkEnrollModal').addEventListener('show.bs.modal', function() { 
+    resetBulkModal();
+});
+
+function resetBulkModal() {
+    document.getElementById('bulkProgramType').value = '';
+    document.getElementById('bulkProgram').innerHTML = '<option value="">-- Select Program --</option>';
+    document.getElementById('bulkProgram').disabled = true;
+    document.getElementById('bulkYearLevel').innerHTML = '<option value="">-- Select Level --</option>';
+    document.getElementById('bulkYearLevel').disabled = true;
+    document.getElementById('bulkSectionSelect').innerHTML = '<option value="">-- Complete Step 1 first --</option>';
+    document.getElementById('bulkSectionSelect').disabled = true;
+    document.getElementById('bulkSectionInfo').textContent = 'Select filters first';
+    document.getElementById('bulkStudentsList').innerHTML = '<div class="text-center py-4 text-muted small">Complete filters above to see eligible students.</div>';
+    document.getElementById('bulkStudentCount').textContent = '';
+    document.getElementById('bulkStudentSearch').value = '';
+    bulkStudentsData = [];
+}
+
+function updateBulkProgramFilter() {
+    const type = document.getElementById('bulkProgramType').value;
+    const programSelect = document.getElementById('bulkProgram');
+    programSelect.innerHTML = '<option value="">-- Select Program --</option>';
+    
+    if (type === 'college') {
+        programsData.forEach(p => { 
+            programSelect.innerHTML += `<option value="${p.id}">${p.program_code} - ${p.program_name}</option>`; 
+        });
+        programSelect.disabled = false;
+    } else if (type === 'shs') {
+        strandsData.forEach(s => { 
+            programSelect.innerHTML += `<option value="${s.id}">${s.strand_code} - ${s.strand_name}</option>`; 
+        });
+        programSelect.disabled = false;
+    } else {
+        programSelect.disabled = true;
+    }
+    
+    document.getElementById('bulkYearLevel').innerHTML = '<option value="">-- Select Level --</option>';
+    document.getElementById('bulkYearLevel').disabled = true;
+    document.getElementById('bulkSectionSelect').innerHTML = '<option value="">-- Complete Step 1 first --</option>';
+    document.getElementById('bulkSectionSelect').disabled = true;
+    document.getElementById('bulkStudentsList').innerHTML = '<div class="text-center py-4 text-muted small">Complete filters above to see eligible students.</div>';
+    document.getElementById('bulkStudentCount').textContent = '';
+}
+
+function updateBulkYearLevelFilter() {
+    const type = document.getElementById('bulkProgramType').value;
+    const programId = document.getElementById('bulkProgram').value;
+    const yearLevelSelect = document.getElementById('bulkYearLevel');
+    yearLevelSelect.innerHTML = '<option value="">-- Select Level --</option>';
+    
+    if (programId) {
+        const levels = type === 'college' ? (programYearLevels[programId] || []) : (strandGradeLevels[programId] || []);
+        levels.forEach(l => {
+            const name = type === 'college' ? l.year_name : l.grade_name;
+            yearLevelSelect.innerHTML += `<option value="${l.id}">${name}</option>`;
+        });
+        yearLevelSelect.disabled = false;
+    } else {
+        yearLevelSelect.disabled = true;
+    }
+    
+    document.getElementById('bulkSectionSelect').innerHTML = '<option value="">-- Complete Step 1 first --</option>';
+    document.getElementById('bulkSectionSelect').disabled = true;
+    document.getElementById('bulkStudentsList').innerHTML = '<div class="text-center py-4 text-muted small">Complete filters above to see eligible students.</div>';
+    document.getElementById('bulkStudentCount').textContent = '';
+}
+
+function loadFilteredStudentsAndSections() {
+    const type = document.getElementById('bulkProgramType').value;
+    const programId = document.getElementById('bulkProgram').value;
+    const yearLevelId = document.getElementById('bulkYearLevel').value;
+    
+    if (!type || !programId || !yearLevelId) {
+        document.getElementById('bulkSectionSelect').innerHTML = '<option value="">-- Complete Step 1 first --</option>';
+        document.getElementById('bulkSectionSelect').disabled = true;
+        return;
+    }
+    
+    // Load sections for the selected program/year level
+    const sectionSelect = document.getElementById('bulkSectionSelect');
+    sectionSelect.innerHTML = '<option value="">Loading sections...</option>';
+    
+    fetch(`process/student_assignment_api.php?action=get_sections_by_program&program_type=${type}&program_id=${programId}&year_level_id=${yearLevelId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.sections.length > 0) {
+                sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+                data.sections.forEach(s => {
+                    sectionSelect.innerHTML += `<option value="${s.id}" data-capacity="${s.max_capacity}" data-enrolled="${s.current_enrolled}">${s.subject_code} - ${s.section_name} (${s.current_enrolled}/${s.max_capacity})</option>`;
+                });
+                sectionSelect.disabled = false;
+            } else {
+                sectionSelect.innerHTML = '<option value="">No sections available</option>';
+                sectionSelect.disabled = true;
+            }
+        });
+    
+    // Load students for the selected program/year level
+    loadFilteredStudents(type, programId, yearLevelId);
+}
+
+function loadFilteredStudents(type, programId, yearLevelId) {
+    const container = document.getElementById('bulkStudentsList');
+    container.innerHTML = '<div class="text-center py-4 small text-muted"><i class="bi bi-arrow-repeat spin"></i> Loading students...</div>';
+    
+    fetch(`process/student_assignment_api.php?action=get_students_by_program&program_type=${type}&program_id=${programId}&year_level_id=${yearLevelId}`)
+        .then(response => response.json())
+        .then(data => {
+            bulkStudentsData = data.students || [];
+            renderBulkStudentsList();
+        });
+}
+
+function renderBulkStudentsList() {
+    const container = document.getElementById('bulkStudentsList');
+    const search = document.getElementById('bulkStudentSearch').value.toLowerCase();
+    
+    let filteredStudents = bulkStudentsData.filter(s => {
+        if (search) {
+            const searchStr = `${s.first_name} ${s.last_name} ${s.student_no}`.toLowerCase();
+            return searchStr.includes(search);
+        }
+        return true;
+    });
+    
+    if (filteredStudents.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-muted small">No students found matching the criteria.</div>';
+        document.getElementById('bulkStudentCount').textContent = '';
+        return;
+    }
+    
+    let html = '';
+    filteredStudents.forEach(s => {
+        html += `<div class="form-check mb-2 bg-white p-2 px-3 rounded-2 shadow-sm border-start border-3 border-info bulk-student-item" data-name="${s.first_name} ${s.last_name}" data-no="${s.student_no}">
+            <input type="checkbox" class="form-check-input bulk-student-cb" value="${s.id}" id="bulk_s_${s.id}">
+            <label class="form-check-label small fw-bold" for="bulk_s_${s.id}">
+                ${s.first_name} ${s.last_name} 
+                <small class="text-muted ms-2">${s.student_no || 'NO-ID'}</small>
+                <span class="badge bg-${s.program_code ? 'primary' : 'secondary'} bg-opacity-10 text-${s.program_code ? 'primary' : 'secondary'} ms-2" style="font-size: 0.6rem;">${s.program_code || 'N/A'}</span>
+            </label>
+        </div>`;
+    });
+    container.innerHTML = html;
+    document.getElementById('bulkStudentCount').textContent = `${filteredStudents.length} student(s) found`;
+}
+
+function filterBulkStudentsList() {
+    renderBulkStudentsList();
+}
+
+function updateBulkSectionInfo() {
+    const sectionId = document.getElementById('bulkSectionSelect').value;
+    const infoDiv = document.getElementById('bulkSectionInfo');
+    
+    if (!sectionId) {
+        infoDiv.textContent = 'Select a section';
+        return;
+    }
+    
+    const option = document.querySelector(`#bulkSectionSelect option[value="${sectionId}"]`);
+    const capacity = option.dataset.capacity;
+    const enrolled = option.dataset.enrolled;
+    const available = capacity - enrolled;
+    infoDiv.innerHTML = `<span class="badge bg-primary me-2">${enrolled}/${capacity} Filled</span><span class="badge bg-success">${available} Open Slots</span>`;
+}
 
 function loadBulkSections() {
-    fetch('process/student_assignment_api.php?action=get_all_sections_for_bulk').then(response => response.json()).then(data => {
-        if (data.success) {
-            const select = document.getElementById('bulkSectionSelect');
-            select.innerHTML = '<option value="">Select a section...</option>';
-            data.sections.forEach(s => {
-                select.innerHTML += `<option value="${s.id}" data-capacity="${s.max_capacity}" data-enrolled="${s.current_enrolled}">${s.subject_code} - ${s.section_name} (${s.current_enrolled}/${s.max_capacity})</option>`;
-            });
-        }
-    });
+    // This is now handled by loadFilteredStudentsAndSections
 }
 
 function loadUnenrolledStudents() {
-    const sectionId = document.getElementById('bulkSectionSelect').value;
-    const container = document.getElementById('bulkStudentsList');
-    const infoDiv = document.getElementById('bulkSectionInfo');
-    if (!sectionId) { container.innerHTML = '<div class="text-center text-muted py-4 small">Select a section first.</div>'; infoDiv.textContent = 'Select a class...'; return; }
-    const option = document.querySelector(`#bulkSectionSelect option[value="${sectionId}"]`);
-    const capacity = option.dataset.capacity, enrolled = option.dataset.enrolled, available = capacity - enrolled;
-    infoDiv.innerHTML = `<span class="badge bg-blue me-2">${enrolled}/${capacity} Filled</span><span class="badge bg-success">${available} Open Slots</span>`;
-    container.innerHTML = '<div class="text-center py-4 small text-muted"><i class="bi bi-arrow-repeat spin"></i> Finding eligible students...</div>';
-    fetch(`process/student_assignment_api.php?action=get_unenrolled_students&section_id=${sectionId}`).then(response => response.json()).then(data => {
-        if (data.success && data.students.length > 0) {
-            let html = '';
-            data.students.forEach(s => {
-                html += `<div class="form-check mb-2 bg-white p-2 px-3 rounded-2 shadow-sm border-start border-3 border-info">
-                    <input type="checkbox" class="form-check-input bulk-student-cb" value="${s.id}" id="bulk_s_${s.id}">
-                    <label class="form-check-label small fw-bold" for="bulk_s_${s.id}">${s.first_name} ${s.last_name} <small class="text-muted ms-2">${s.student_no || 'NO-ID'}</small></label>
-                </div>`;
-            });
-            container.innerHTML = html;
-        } else { container.innerHTML = '<div class="text-center text-muted py-4 small">All eligible students are already assigned to this class.</div>'; }
-    });
+    // This is now handled by loadFilteredStudents
 }
 
 function selectAllBulkStudents() { document.querySelectorAll('.bulk-student-cb').forEach(cb => cb.checked = true); }

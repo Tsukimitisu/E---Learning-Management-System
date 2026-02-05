@@ -51,6 +51,12 @@ switch ($action) {
     case 'bulk_assign_to_section':
         bulkAssignToSection();
         break;
+    case 'get_sections_by_program':
+        getSectionsByProgram();
+        break;
+    case 'get_students_by_program':
+        getStudentsByProgram();
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
@@ -180,7 +186,7 @@ function enrollStudent() {
         return;
     }
     
-    // Check if already enrolled
+    // Check if already enrolled in this section
     $dup_check = $conn->prepare("
         SELECT id FROM section_students WHERE student_id = ? AND section_id = ? AND status = 'active'
     ");
@@ -188,6 +194,23 @@ function enrollStudent() {
     $dup_check->execute();
     if ($dup_check->get_result()->num_rows > 0) {
         echo json_encode(['success' => false, 'message' => 'Student is already in this section']);
+        return;
+    }
+    
+    // Check if student is already enrolled in any other section for this academic year (only 1 section per student)
+    $existing_section_check = $conn->prepare("
+        SELECT ss.id, s.section_name 
+        FROM section_students ss
+        INNER JOIN sections s ON ss.section_id = s.id
+        WHERE ss.student_id = ? AND ss.status = 'active' 
+        AND s.academic_year_id = ? AND s.branch_id = ?
+    ");
+    $existing_section_check->bind_param("iii", $student_id, $current_ay_id, $branch_id);
+    $existing_section_check->execute();
+    $existing_result = $existing_section_check->get_result();
+    if ($existing_result->num_rows > 0) {
+        $existing = $existing_result->fetch_assoc();
+        echo json_encode(['success' => false, 'message' => 'Student is already enrolled in section "' . $existing['section_name'] . '". A student can only be assigned to 1 section.']);
         return;
     }
     
@@ -363,10 +386,29 @@ function bulkEnroll() {
     }
     
     $enrolled_count = 0;
+    $skipped_students = [];
+    
+    // Prepare statements
     $stmt = $conn->prepare("INSERT IGNORE INTO section_students (section_id, student_id, status, enrolled_at) VALUES (?, ?, 'active', NOW())");
+    $existing_check = $conn->prepare("
+        SELECT ss.id, s.section_name 
+        FROM section_students ss
+        INNER JOIN sections s ON ss.section_id = s.id
+        WHERE ss.student_id = ? AND ss.status = 'active' 
+        AND s.academic_year_id = ? AND s.branch_id = ?
+    ");
     
     foreach ($student_ids as $student_id) {
         $student_id = (int)$student_id;
+        
+        // Check if student is already in any section for this academic year
+        $existing_check->bind_param("iii", $student_id, $current_ay_id, $branch_id);
+        $existing_check->execute();
+        if ($existing_check->get_result()->num_rows > 0) {
+            $skipped_students[] = $student_id;
+            continue;
+        }
+        
         $stmt->bind_param("ii", $section_id, $student_id);
         $stmt->execute();
         if ($stmt->affected_rows > 0) {
@@ -374,7 +416,12 @@ function bulkEnroll() {
         }
     }
     
-    echo json_encode(['success' => true, 'message' => "$enrolled_count students added to section"]);
+    $message = "$enrolled_count students added to section";
+    if (count($skipped_students) > 0) {
+        $message .= ". " . count($skipped_students) . " student(s) skipped (already assigned to a section).";
+    }
+    
+    echo json_encode(['success' => true, 'message' => $message]);
 }
 function getBulkUnenrolledStudents() {
     global $conn, $branch_id, $current_ay_id;
@@ -466,7 +513,16 @@ function bulkAssignToSection() {
     
     try {
         $assigned_count = 0;
+        $skipped_students = [];
+        
         $stmt = $conn->prepare("INSERT IGNORE INTO section_students (section_id, student_id, status, enrolled_at) VALUES (?, ?, 'active', NOW())");
+        $existing_check = $conn->prepare("
+            SELECT ss.id, s.section_name 
+            FROM section_students ss
+            INNER JOIN sections s ON ss.section_id = s.id
+            WHERE ss.student_id = ? AND ss.status = 'active' 
+            AND s.academic_year_id = ? AND s.branch_id = ?
+        ");
         
         foreach ($student_ids as $student_id) {
             $student_id = (int)$student_id;
@@ -483,6 +539,14 @@ function bulkAssignToSection() {
                 continue;
             }
             
+            // Check if student is already in any section for this academic year (only 1 section allowed)
+            $existing_check->bind_param("iii", $student_id, $current_ay_id, $branch_id);
+            $existing_check->execute();
+            if ($existing_check->get_result()->num_rows > 0) {
+                $skipped_students[] = $student_id;
+                continue;
+            }
+            
             $stmt->bind_param("ii", $section_id, $student_id);
             if ($stmt->execute() && $stmt->affected_rows > 0) {
                 $assigned_count++;
@@ -491,10 +555,143 @@ function bulkAssignToSection() {
         
         $conn->commit();
         
-        echo json_encode(['success' => true, 'message' => "$assigned_count student(s) assigned to section successfully"]);
+        $message = "$assigned_count student(s) assigned to section successfully";
+        if (count($skipped_students) > 0) {
+            $message .= ". " . count($skipped_students) . " student(s) skipped (already assigned to a section).";
+        }
+        
+        echo json_encode(['success' => true, 'message' => $message]);
         
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => 'Error assigning students: ' . $e->getMessage()]);
     }
+}
+
+// Get sections filtered by program/strand and year level
+function getSectionsByProgram() {
+    global $conn, $branch_id, $current_ay_id;
+    
+    $program_type = $_GET['program_type'] ?? '';
+    $program_id = (int)($_GET['program_id'] ?? 0);
+    $year_level_id = (int)($_GET['year_level_id'] ?? 0);
+    
+    if (!$program_type || !$program_id) {
+        echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+        return;
+    }
+    
+    $sections = [];
+    
+    if ($program_type === 'college') {
+        $query = "
+            SELECT 
+                s.id,
+                s.section_name,
+                s.max_capacity,
+                p.program_code as subject_code,
+                CONCAT(p.program_code, ' - ', s.section_name) as display_name,
+                (SELECT COUNT(*) FROM section_students WHERE section_id = s.id AND status = 'active') as current_enrolled
+            FROM sections s
+            INNER JOIN programs p ON s.program_id = p.id
+            WHERE s.branch_id = ? 
+            AND s.academic_year_id = ? 
+            AND s.is_active = 1
+            AND s.program_id = ?
+            " . ($year_level_id ? "AND s.year_level_id = ?" : "") . "
+            ORDER BY s.section_name
+        ";
+        
+        if ($year_level_id) {
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("iiii", $branch_id, $current_ay_id, $program_id, $year_level_id);
+        } else {
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("iii", $branch_id, $current_ay_id, $program_id);
+        }
+    } else {
+        // SHS
+        $query = "
+            SELECT 
+                s.id,
+                s.section_name,
+                s.max_capacity,
+                ss.strand_code as subject_code,
+                CONCAT(ss.strand_code, ' - ', s.section_name) as display_name,
+                (SELECT COUNT(*) FROM section_students WHERE section_id = s.id AND status = 'active') as current_enrolled
+            FROM sections s
+            INNER JOIN shs_strands ss ON s.shs_strand_id = ss.id
+            WHERE s.branch_id = ? 
+            AND s.academic_year_id = ? 
+            AND s.is_active = 1
+            AND s.shs_strand_id = ?
+            " . ($year_level_id ? "AND s.shs_grade_level_id = ?" : "") . "
+            ORDER BY s.section_name
+        ";
+        
+        if ($year_level_id) {
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("iiii", $branch_id, $current_ay_id, $program_id, $year_level_id);
+        } else {
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("iii", $branch_id, $current_ay_id, $program_id);
+        }
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $sections[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'sections' => $sections]);
+}
+
+// Get students filtered by program/strand (enrolled students in that program)
+function getStudentsByProgram() {
+    global $conn, $branch_id;
+    
+    $program_type = $_GET['program_type'] ?? '';
+    $program_id = (int)($_GET['program_id'] ?? 0);
+    $year_level_id = (int)($_GET['year_level_id'] ?? 0);
+    
+    if (!$program_type || !$program_id) {
+        echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+        return;
+    }
+    
+    $students = [];
+    
+    // Get students enrolled in the specified program/strand
+    $query = "
+        SELECT 
+            u.id,
+            up.first_name,
+            up.last_name,
+            COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
+            COALESCE(p.program_code, ss.strand_code) as program_code
+        FROM users u
+        INNER JOIN user_profiles up ON u.id = up.user_id
+        INNER JOIN user_roles ur ON u.id = ur.user_id
+        INNER JOIN students st ON u.id = st.user_id
+        LEFT JOIN programs p ON st.course_id = p.id
+        LEFT JOIN shs_strands ss ON st.course_id = ss.id
+        WHERE ur.role_id = " . ROLE_STUDENT . "
+        AND u.status = 'active'
+        AND up.branch_id = ?
+        AND st.course_id = ?
+        ORDER BY up.last_name, up.first_name
+    ";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $branch_id, $program_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $students[] = $row;
+    }
+    
+    echo json_encode(['success' => true, 'students' => $students]);
 }

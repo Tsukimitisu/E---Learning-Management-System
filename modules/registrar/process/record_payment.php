@@ -30,7 +30,14 @@ $amount = (float)($_POST['amount'] ?? 0);
 $payment_type = trim($_POST['payment_type'] ?? '');
 $payment_method = trim($_POST['payment_method'] ?? 'cash');
 $semester = trim($_POST['semester'] ?? '1st');
+$term = trim($_POST['term'] ?? '');
+$other_type_description = trim($_POST['other_type_description'] ?? '');
 $description = trim($_POST['description'] ?? '');
+
+// If payment type is "Other", use the other_type_description as description
+if ($payment_type === 'Other' && !empty($other_type_description)) {
+    $description = $other_type_description;
+}
 
 // Validation
 if ($student_id <= 0) {
@@ -77,12 +84,12 @@ $reference_no = 'PAY-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_
 // Insert payment - set as verified since recorded by registrar
 $stmt = $conn->prepare("
     INSERT INTO payments (reference_no, or_number, student_id, amount, payment_type, description, 
-                          academic_year_id, semester, branch_id, recorded_by, payment_method, status, verified_by, verified_at) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'verified', ?, NOW())
+                          academic_year_id, semester, branch_id, recorded_by, payment_method, term, other_type_description, status, verified_by, verified_at) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'verified', ?, NOW())
 ");
-$stmt->bind_param("ssidssisisis", 
+$stmt->bind_param("ssidssisissssi", 
     $reference_no, $or_number, $student_id, $amount, $payment_type, $description,
-    $current_ay_id, $semester, $branch_id, $registrar_id, $payment_method, $registrar_id
+    $current_ay_id, $semester, $branch_id, $registrar_id, $payment_method, $term, $other_type_description, $registrar_id
 );
 
 if ($stmt->execute()) {

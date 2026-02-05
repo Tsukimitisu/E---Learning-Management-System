@@ -67,24 +67,18 @@
              <li><a href="teacher_assignment.php" class="<?php echo ($current_page == 'teacher_assignment.php') ? 'active' : ''; ?>"><i class="bi bi-person-badge"></i> <span>Teacher Assignment</span></a></li>
              <li><a href="student_assignment.php" class="<?php echo ($current_page == 'student_assignment.php') ? 'active' : ''; ?>"><i class="bi bi-person-plus"></i> <span>Student Assignment</span></a></li>
              <li><a href="teachers.php" class="<?php echo ($current_page == 'teachers.php') ? 'active' : ''; ?>"><i class="bi bi-person-workspace"></i> <span>Teachers</span></a></li>
-             <li><a href="students.php" class="<?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"><i class="bi bi-people-fill"></i> <span>Students</span></a></li>
              <li><a href="registrars.php" class="<?php echo ($current_page == 'registrars.php') ? 'active' : ''; ?>"><i class="bi bi-person-badge-fill"></i> <span>Registrars</span></a></li>
              <li><a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>"><i class="bi bi-megaphone-fill"></i> <span>Announcements</span></a></li>
-             <li><a href="monitoring.php" class="<?php echo ($current_page == 'monitoring.php') ? 'active' : ''; ?>"><i class="bi bi-eye-fill"></i> <span>Monitoring</span></a></li>
              <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-bar-graph"></i> <span>Reports</span></a></li>
         <?php }
 
         // --- 4. REGISTRAR MENU ---
         if ($_SESSION['role_id'] == ROLE_REGISTRAR) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
-            <li><a href="enroll.php" class="<?php echo ($current_page == 'enroll.php') ? 'active' : ''; ?>"><i class="bi bi-pencil-square"></i> <span>Enrollment</span></a></li>
-            <li><a href="classes.php" class="<?php echo ($current_page == 'classes.php') ? 'active' : ''; ?>"><i class="bi bi-door-open-fill"></i> <span>Classes</span></a></li>
             <li><a href="students.php" class="<?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"><i class="bi bi-person-badge-fill"></i> <span>Students</span></a></li>
-            <li><a href="records.php" class="<?php echo ($current_page == 'records.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-text"></i> <span>Academic Records</span></a></li>
+            <li><a href="tuition_fees.php" class="<?php echo ($current_page == 'tuition_fees.php') ? 'active' : ''; ?>"><i class="bi bi-currency-dollar"></i> <span>Tuition Fees</span></a></li>
             <li><a href="certificates.php" class="<?php echo ($current_page == 'certificates.php') ? 'active' : ''; ?>"><i class="bi bi-award"></i> <span>Certificates</span></a></li>
-            <li><a href="record_payment.php" class="<?php echo ($current_page == 'record_payment.php') ? 'active' : ''; ?>"><i class="bi bi-receipt"></i> <span>Record Payment</span></a></li>
             <li><a href="payment_history.php" class="<?php echo ($current_page == 'payment_history.php') ? 'active' : ''; ?>"><i class="bi bi-clock-history"></i> <span>Payment History</span></a></li>
-            <li><a href="payments.php" class="<?php echo ($current_page == 'payments.php') ? 'active' : ''; ?>"><i class="bi bi-cash-coin"></i> <span>Verify Payments</span></a></li>
             <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-bar-graph"></i> <span>Reports</span></a></li>
         <?php }
 

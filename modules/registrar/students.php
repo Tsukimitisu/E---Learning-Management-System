@@ -103,9 +103,14 @@ include '../../includes/header.php';
             <h4 class="fw-bold mb-0" style="color: var(--blue);"><i class="bi bi-people-fill me-2 text-maroon"></i>Student Management</h4>
             <p class="text-muted small mb-0">Manage student registry, academic assignments, and financial records</p>
         </div>
-        <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-            <i class="bi bi-person-plus me-1"></i> Add New Student
-        </button>
+        <div class="d-flex gap-2">
+            <a href="tuition_fees.php" class="btn btn-outline-primary btn-sm px-3 rounded-pill">
+                <i class="bi bi-currency-dollar me-1"></i> Tuition Fees
+            </a>
+            <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                <i class="bi bi-person-plus me-1"></i> Add New Student
+            </button>
+        </div>
     </div>
 </div>
 
@@ -218,7 +223,6 @@ include '../../includes/header.php';
                                     data-student-id="<?php echo $student['user_id']; ?>" data-student-no="<?php echo $student['student_no']; ?>"
                                     data-full-name="<?php echo $student['full_name']; ?>" data-email="<?php echo $student['email']; ?>"
                                     data-status="<?php echo $student['status']; ?>"><i class="bi bi-pencil-square"></i></button>
-                                <button class="action-btn-circle text-info" onclick="openAssessFeeModal(<?php echo $student['user_id']; ?>, '<?php echo $student['student_no']; ?>', '<?php echo addslashes($student['full_name']); ?>')" title="Assess Fees"><i class="bi bi-calculator"></i></button>
                                 <button class="action-btn-circle <?php echo $student['status'] === 'active' ? 'text-secondary' : 'text-success'; ?>" onclick="toggleStudentStatus(<?php echo $student['user_id']; ?>, '<?php echo $student['status']; ?>')">
                                     <i class="bi bi-<?php echo $student['status'] === 'active' ? 'pause-circle' : 'play-circle'; ?>"></i>
                                 </button>
@@ -258,19 +262,73 @@ include '../../includes/header.php';
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Academic Assignment</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4"><label class="form-label small fw-bold">Level Type *</label><select class="form-select border-light shadow-sm" name="program_type" id="program_type" required><option value="college">College</option><option value="shs">SHS</option></select></div>
-                        <div class="col-md-4" id="collegeProgramCol"><label class="form-label small fw-bold">Program *</label><select class="form-select border-light shadow-sm" name="course_id" id="course_id">
+                        <div class="col-md-4" id="collegeProgramCol"><label class="form-label small fw-bold">Program *</label><select class="form-select border-light shadow-sm" name="course_id" id="course_id" onchange="loadYearLevels()">
                             <option value="">-- Choose Program --</option>
                             <?php $programs_result->data_seek(0); while ($p = $programs_result->fetch_assoc()): ?><option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option><?php endwhile; ?>
                         </select></div>
-                        <div class="col-md-4" id="shsStrandCol" style="display:none;"><label class="form-label small fw-bold">SHS Strand *</label><select class="form-select border-light shadow-sm" name="shs_strand_id" id="shs_strand_id">
+                        <div class="col-md-4" id="shsStrandCol" style="display:none;"><label class="form-label small fw-bold">SHS Strand *</label><select class="form-select border-light shadow-sm" name="shs_strand_id" id="shs_strand_id" onchange="loadYearLevels()">
                             <option value="">-- Choose Strand --</option>
                             <?php $strands_result->data_seek(0); while ($s = $strands_result->fetch_assoc()): ?><option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['strand_code'].' - '.$s['strand_name']); ?></option><?php endwhile; ?>
                         </select></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold">Year Level</label><select class="form-select border-light shadow-sm" name="year_level_id" id="year_level_id">
-                            <option value="">-- Select Level --</option>
-                            <?php foreach ($program_year_levels as $pid => $levels): foreach ($levels as $l): ?><option value="<?php echo $l['id']; ?>" data-program-id="<?php echo $pid; ?>"><?php echo htmlspecialchars($l['year_name']); ?></option><?php endforeach; endforeach; ?>
-                            <?php foreach ($shs_grade_levels as $sid => $levels): foreach ($levels as $l): ?><option value="<?php echo $l['id']; ?>" data-strand-id="<?php echo $sid; ?>"><?php echo htmlspecialchars($l['grade_name']); ?></option><?php endforeach; endforeach; ?>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Year Level</label><select class="form-select border-light shadow-sm" name="year_level_id" id="year_level_id" onchange="loadTuitionFee()">
+                            <option value="">-- Select Program First --</option>
                         </select></div>
+                    </div>
+
+                    <!-- Tuition Fee Section -->
+                    <div id="tuitionFeeSection" style="display: none;">
+                        <h6 class="text-blue fw-bold mb-3 text-uppercase small"><i class="bi bi-currency-dollar me-1"></i>Tuition & Initial Payment</h6>
+                        <div class="alert alert-primary border-0 shadow-sm mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Tuition Fee for this Program:</small>
+                                    <div class="fs-4 fw-bold" id="displayTuitionFee">₱0.00</div>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">Balance After Payment:</small>
+                                    <div class="fs-4 fw-bold text-danger" id="displayBalance">₱0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Payment Option <span class="text-danger">*</span></label>
+                                <select class="form-select border-light shadow-sm" name="payment_option" id="payment_option" onchange="updatePaymentFields()">
+                                    <option value="">-- Select Payment Option --</option>
+                                    <option value="full">Full Payment</option>
+                                    <option value="downpayment">Down Payment</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="downpaymentCol" style="display: none;">
+                                <label class="form-label small fw-bold">Down Payment Amount (₱) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control border-light shadow-sm" name="downpayment_amount" id="downpayment_amount" step="0.01" min="1" oninput="calculateBalance()">
+                            </div>
+                        </div>
+                        <div id="paymentTermsInfo" style="display: none;">
+                            <div class="alert alert-warning border-0 shadow-sm small mb-3">
+                                <strong><i class="bi bi-calendar-week me-1"></i>Remaining Balance Payment Schedule (4 Terms):</strong>
+                                <div class="row mt-2 text-center">
+                                    <div class="col-3"><span class="badge bg-primary d-block mb-1">Prelim</span> <span id="termPrelim" class="fw-bold">₱0.00</span></div>
+                                    <div class="col-3"><span class="badge bg-info text-dark d-block mb-1">Midterm</span> <span id="termMidterm" class="fw-bold">₱0.00</span></div>
+                                    <div class="col-3"><span class="badge bg-warning text-dark d-block mb-1">Pre-Finals</span> <span id="termPrefinals" class="fw-bold">₱0.00</span></div>
+                                    <div class="col-3"><span class="badge bg-success d-block mb-1">Finals</span> <span id="termFinals" class="fw-bold">₱0.00</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="fullPaymentInfo" style="display: none;">
+                            <div class="alert alert-success border-0 shadow-sm small mb-3">
+                                <i class="bi bi-check-circle me-1"></i> <strong>Full Payment Selected</strong> - Student will have ₱0.00 balance after enrollment.
+                            </div>
+                        </div>
+                        <input type="hidden" name="tuition_fee_id" id="tuition_fee_id">
+                        <input type="hidden" name="total_tuition" id="total_tuition">
+                    </div>
+
+                    <div id="noTuitionWarning" style="display: none;">
+                        <div class="alert alert-warning border-0 shadow-sm mb-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i> <strong>No tuition fee configured</strong> for this program/year level. 
+                            <a href="tuition_fees.php" class="alert-link">Configure tuition fees</a> first.
+                        </div>
                     </div>
 
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Account Setup</h6>
@@ -333,10 +391,33 @@ include '../../includes/header.php';
                         <div class="col-md-6"><label class="form-label small fw-bold">OR Number *</label><input type="text" class="form-control" name="or_number" required></div>
                         <div class="col-md-6"><label class="form-label small fw-bold">Amount (₱) *</label><input type="number" class="form-control" name="amount" step="0.01" required></div>
                     </div>
-                    <div class="mb-3"><label class="form-label small fw-bold">Payment Type *</label><input type="text" class="form-control" name="payment_type" required placeholder="Tuition, Misc, Laboratory, etc."></div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Payment Type *</label>
+                            <select class="form-select" name="payment_type" id="payment_type_select" required onchange="toggleOtherTypeField()">
+                                <option value="Tuition">Tuition</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Payment Term *</label>
+                            <select class="form-select" name="term" id="payment_term" required>
+                                <option value="downpayment">Down Payment</option>
+                                <option value="prelim">Prelim</option>
+                                <option value="midterm">Midterm</option>
+                                <option value="prefinals">Pre-Finals</option>
+                                <option value="finals">Finals</option>
+                                <option value="full">Full Payment</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="other_type_container" style="display: none;">
+                        <label class="form-label small fw-bold">Specify Payment Type *</label>
+                        <input type="text" class="form-control" name="other_type_description" id="other_type_description" placeholder="e.g., Laboratory Fee, Miscellaneous, etc.">
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label small fw-bold">Method *</label><select class="form-select" name="payment_method" required><option value="cash">Cash</option><option value="check">Check</option><option value="bank_transfer">Bank Transfer</option><option value="online">Online</option></select></div>
-                        <div class="col-md-6"><label class="form-label small fw-bold">Term *</label><select class="form-select" name="semester" required><option value="1st">1st Semester</option><option value="2nd">2nd Semester</option><option value="summer">Summer</option></select></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Semester *</label><select class="form-select" name="semester" required><option value="1st">1st Semester</option><option value="2nd">2nd Semester</option><option value="summer">Summer</option></select></div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4"><button type="submit" class="btn btn-success w-100 fw-bold">Confirm Transaction</button></div>
@@ -360,34 +441,9 @@ include '../../includes/header.php';
                 </div>
                 <div class="p-4">
                     <ul class="nav nav-pills mb-3"><li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pTab">Payments Ledger</a></li><li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#fTab">Assessed Fees</a></li></ul>
-                    <div class="tab-content"><div class="tab-pane fade show active" id="pTab"><table class="table table-sm small table-modern"><thead><tr><th>Date</th><th>OR#</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead><tbody id="payments_list"></tbody></table></div><div class="tab-pane fade" id="fTab"><table class="table table-sm small table-modern"><thead><tr><th>Date</th><th>Fee Type</th><th>Term</th><th>Amount</th></tr></thead><tbody id="fees_list"></tbody></table></div></div>
+                    <div class="tab-content"><div class="tab-pane fade show active" id="pTab"><table class="table table-sm small table-modern"><thead><tr><th>Date</th><th>OR#</th><th>Type</th><th>Term</th><th>Amount</th><th>Status</th></tr></thead><tbody id="payments_list"></tbody></table></div><div class="tab-pane fade" id="fTab"><table class="table table-sm small table-modern"><thead><tr><th>Date</th><th>Fee Type</th><th>Term</th><th>Amount</th></tr></thead><tbody id="fees_list"></tbody></table></div></div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Assess Fee -->
-<div class="modal fade" id="assessFeeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header p-4 text-white" style="background-color: var(--blue);">
-                <h5 class="modal-title fw-bold"><i class="bi bi-calculator me-2"></i>Assess Student Fee</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="assessFeeForm">
-                <input type="hidden" name="student_id" id="assess_student_id">
-                <div class="modal-body p-4 bg-light">
-                    <div class="alert bg-white border border-light small mb-4" id="assess_student_info"></div>
-                    <div class="mb-3"><label class="form-label small fw-bold">Fee Description *</label><input type="text" class="form-control" name="fee_type" required placeholder="Tuition, Laboratory, Entrance, etc."></div>
-                    <div class="row g-3">
-                        <div class="col-6"><label class="form-label small fw-bold">Amount (₱) *</label><input type="number" class="form-control" name="amount" step="0.01" required></div>
-                        <div class="col-6"><label class="form-label small fw-bold">Term *</label><select class="form-select" name="semester" required><option value="1st">1st Semester</option><option value="2nd">2nd Semester</option><option value="summer">Summer</option></select></div>
-                    </div>
-                    <div class="mt-3"><label class="form-label small fw-bold">Optional Details</label><textarea class="form-control" name="description" rows="2"></textarea></div>
-                </div>
-                <div class="modal-footer border-0 p-4"><button type="submit" class="btn btn-primary w-100 fw-bold">Add Assessment</button></div>
-            </form>
         </div>
     </div>
 </div>
@@ -425,21 +481,10 @@ document.getElementById('addPaymentForm').addEventListener('submit', async funct
     } catch (e) { showAlert('Financial sync failed.', 'danger'); }
 });
 
-/** 3. ASSESS FEE */
-document.getElementById('assessFeeForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    try {
-        const r = await fetch('process/assess_fee.php', { method: 'POST', body: new FormData(e.target) });
-        const d = await r.json();
-        if (d.success) { showAlert(d.message, 'success'); setTimeout(() => location.reload(), 1500); }
-        else { showAlert(d.message, 'danger'); }
-    } catch (e) { showAlert('Logic error.', 'danger'); }
-});
-
-/** 4. FETCH HISTORY */
+/** 3. FETCH HISTORY */
 async function viewPaymentHistory(studentId, studentNo, fullName) {
     document.getElementById('history_student_info').textContent = studentNo + ' - ' + fullName;
-    document.getElementById('payments_list').innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
+    document.getElementById('payments_list').innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
     new bootstrap.Modal(document.getElementById('paymentHistoryModal')).show();
     try {
         const r = await fetch(`process/get_payment_history.php?student_id=${studentId}`);
@@ -448,10 +493,13 @@ async function viewPaymentHistory(studentId, studentNo, fullName) {
             document.getElementById('history_total_fees').textContent = '₱' + parseFloat(d.total_fees).toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('history_total_paid').textContent = '₱' + parseFloat(d.total_paid).toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('history_balance').textContent = '₱' + Math.abs(d.total_fees - d.total_paid).toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('payments_list').innerHTML = d.payments.map(p => `<tr><td>${new Date(p.created_at).toLocaleDateString()}</td><td>${p.or_number || '-'}</td><td>${p.payment_type}</td><td class="fw-bold">₱${parseFloat(p.amount).toLocaleString()}</td><td><span class="badge bg-${p.status === 'verified' ? 'success' : 'warning'}">${p.status}</span></td></tr>`).join('');
+            document.getElementById('payments_list').innerHTML = d.payments.map(p => {
+                const termLabel = p.term ? p.term.charAt(0).toUpperCase() + p.term.slice(1) : '-';
+                return `<tr><td>${new Date(p.created_at).toLocaleDateString()}</td><td>${p.or_number || '-'}</td><td>${p.payment_type}${p.other_type_description ? ' ('+p.other_type_description+')' : ''}</td><td><span class="badge bg-info bg-opacity-10 text-info">${termLabel}</span></td><td class="fw-bold">₱${parseFloat(p.amount).toLocaleString()}</td><td><span class="badge bg-${p.status === 'verified' ? 'success' : 'warning'}">${p.status}</span></td></tr>`;
+            }).join('');
             document.getElementById('fees_list').innerHTML = d.fees.map(f => `<tr><td>${new Date(f.created_at).toLocaleDateString()}</td><td>${f.fee_type}</td><td>${f.semester}</td><td class="fw-bold">₱${parseFloat(f.amount).toLocaleString()}</td></tr>`).join('');
         }
-    } catch (e) { document.getElementById('payments_list').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading ledger.</td></tr>'; }
+    } catch (e) { document.getElementById('payments_list').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading ledger.</td></tr>'; }
 }
 
 /** 5. FILTERS */
@@ -478,12 +526,6 @@ function openPaymentModal(sid, sno, name, fees, paid) {
     new bootstrap.Modal(document.getElementById('addPaymentModal')).show();
 }
 
-function openAssessFeeModal(sid, sno, name) {
-    document.getElementById('assess_student_id').value = sid;
-    document.getElementById('assess_student_info').textContent = sno + ' - ' + name;
-    new bootstrap.Modal(document.getElementById('assessFeeModal')).show();
-}
-
 function openEditStudent(button) {
     document.getElementById('edit_student_id').value = button.dataset.studentId;
     document.getElementById('edit_full_name').value = button.dataset.fullName;
@@ -503,11 +545,177 @@ function showAlert(m, t) {
     document.querySelector('.body-scroll-part').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Program year levels data from PHP
+const programYearLevels = <?php echo json_encode($program_year_levels); ?>;
+const shsGradeLevels = <?php echo json_encode($shs_grade_levels); ?>;
+
 document.getElementById('program_type').addEventListener('change', function() {
     const isCol = this.value === 'college';
     document.getElementById('collegeProgramCol').style.display = isCol ? 'block' : 'none';
     document.getElementById('shsStrandCol').style.display = isCol ? 'none' : 'block';
+    
+    // Reset selections
+    document.getElementById('course_id').value = '';
+    document.getElementById('shs_strand_id').value = '';
+    document.getElementById('year_level_id').innerHTML = '<option value="">-- Select ' + (isCol ? 'Program' : 'Strand') + ' First --</option>';
+    
+    // Reset tuition section
+    document.getElementById('tuitionFeeSection').style.display = 'none';
+    document.getElementById('noTuitionWarning').style.display = 'none';
 });
+
+// Load year levels based on selected program/strand
+function loadYearLevels() {
+    const programType = document.getElementById('program_type').value;
+    const yearLevelSelect = document.getElementById('year_level_id');
+    
+    // Clear current options
+    yearLevelSelect.innerHTML = '<option value="">-- Select Level --</option>';
+    
+    if (programType === 'college') {
+        const programId = document.getElementById('course_id').value;
+        if (programId && programYearLevels[programId]) {
+            programYearLevels[programId].forEach(level => {
+                const option = document.createElement('option');
+                option.value = level.id;
+                option.textContent = level.year_name;
+                option.dataset.programId = programId;
+                yearLevelSelect.appendChild(option);
+            });
+        }
+    } else {
+        const strandId = document.getElementById('shs_strand_id').value;
+        if (strandId && shsGradeLevels[strandId]) {
+            shsGradeLevels[strandId].forEach(level => {
+                const option = document.createElement('option');
+                option.value = level.id;
+                option.textContent = level.grade_name;
+                option.dataset.strandId = strandId;
+                yearLevelSelect.appendChild(option);
+            });
+        }
+    }
+    
+    // Also trigger tuition load
+    loadTuitionFee();
+}
+
+// Toggle other type description field
+function toggleOtherTypeField() {
+    const paymentType = document.getElementById('payment_type_select').value;
+    const otherContainer = document.getElementById('other_type_container');
+    const otherInput = document.getElementById('other_type_description');
+    
+    if (paymentType === 'Other') {
+        otherContainer.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherContainer.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
+
+// Load tuition fee based on program and year level
+let currentTuitionData = null;
+async function loadTuitionFee() {
+    const programType = document.getElementById('program_type').value;
+    const programId = document.getElementById('course_id').value;
+    const yearLevelId = document.getElementById('year_level_id').value;
+    
+    // Reset sections
+    document.getElementById('tuitionFeeSection').style.display = 'none';
+    document.getElementById('noTuitionWarning').style.display = 'none';
+    currentTuitionData = null;
+    
+    // Only load for college programs with a program selected
+    if (programType !== 'college' || !programId) {
+        return;
+    }
+    
+    try {
+        const res = await fetch(`process/tuition_api.php?action=get_by_program&program_id=${programId}&year_level_id=${yearLevelId}&semester=1st`);
+        const data = await res.json();
+        
+        if (data.success && data.tuition) {
+            currentTuitionData = data.tuition;
+            const tuitionFee = parseFloat(data.tuition.tuition_fee);
+            
+            document.getElementById('tuitionFeeSection').style.display = 'block';
+            document.getElementById('displayTuitionFee').textContent = '₱' + tuitionFee.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('displayBalance').textContent = '₱' + tuitionFee.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('tuition_fee_id').value = data.tuition.id;
+            document.getElementById('total_tuition').value = tuitionFee;
+            
+            // Reset payment fields
+            document.getElementById('payment_option').value = '';
+            document.getElementById('downpayment_amount').value = '';
+            document.getElementById('downpaymentCol').style.display = 'none';
+            document.getElementById('paymentTermsInfo').style.display = 'none';
+            document.getElementById('fullPaymentInfo').style.display = 'none';
+        } else {
+            document.getElementById('noTuitionWarning').style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Error loading tuition:', err);
+        document.getElementById('noTuitionWarning').style.display = 'block';
+    }
+}
+
+// Update payment fields based on payment option selection
+function updatePaymentFields() {
+    const paymentOption = document.getElementById('payment_option').value;
+    const totalTuition = parseFloat(document.getElementById('total_tuition').value) || 0;
+    
+    document.getElementById('downpaymentCol').style.display = 'none';
+    document.getElementById('paymentTermsInfo').style.display = 'none';
+    document.getElementById('fullPaymentInfo').style.display = 'none';
+    document.getElementById('downpayment_amount').required = false;
+    
+    if (paymentOption === 'full') {
+        document.getElementById('fullPaymentInfo').style.display = 'block';
+        document.getElementById('displayBalance').textContent = '₱0.00';
+        document.getElementById('displayBalance').classList.remove('text-danger');
+        document.getElementById('displayBalance').classList.add('text-success');
+    } else if (paymentOption === 'downpayment') {
+        document.getElementById('downpaymentCol').style.display = 'block';
+        document.getElementById('downpayment_amount').required = true;
+        document.getElementById('displayBalance').textContent = '₱' + totalTuition.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('displayBalance').classList.add('text-danger');
+        document.getElementById('displayBalance').classList.remove('text-success');
+        calculateBalance();
+    } else {
+        document.getElementById('displayBalance').textContent = '₱' + totalTuition.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('displayBalance').classList.add('text-danger');
+        document.getElementById('displayBalance').classList.remove('text-success');
+    }
+}
+
+// Calculate balance and term payments based on down payment
+function calculateBalance() {
+    const totalTuition = parseFloat(document.getElementById('total_tuition').value) || 0;
+    const downpayment = parseFloat(document.getElementById('downpayment_amount').value) || 0;
+    
+    if (downpayment > 0 && downpayment < totalTuition) {
+        const remainingBalance = totalTuition - downpayment;
+        const perTerm = remainingBalance / 4;
+        
+        document.getElementById('displayBalance').textContent = '₱' + remainingBalance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('paymentTermsInfo').style.display = 'block';
+        document.getElementById('termPrelim').textContent = '₱' + perTerm.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('termMidterm').textContent = '₱' + perTerm.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('termPrefinals').textContent = '₱' + perTerm.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('termFinals').textContent = '₱' + perTerm.toLocaleString('en-US', {minimumFractionDigits: 2});
+    } else if (downpayment >= totalTuition) {
+        document.getElementById('displayBalance').textContent = '₱0.00';
+        document.getElementById('displayBalance').classList.remove('text-danger');
+        document.getElementById('displayBalance').classList.add('text-success');
+        document.getElementById('paymentTermsInfo').style.display = 'none';
+    } else {
+        document.getElementById('displayBalance').textContent = '₱' + totalTuition.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('paymentTermsInfo').style.display = 'none';
+    }
+}
 </script>
 </body>
 </html>

@@ -24,7 +24,14 @@ try {
     $program_type = clean_input($_POST['program_type'] ?? 'college');
     $course_id = (int)($_POST['course_id'] ?? 0);
     $shs_strand_id = (int)($_POST['shs_strand_id'] ?? 0);
+    $year_level_id = (int)($_POST['year_level_id'] ?? 0);
     $password = $_POST['password'] ?? '';
+    
+    // Tuition fee fields
+    $tuition_fee_id = (int)($_POST['tuition_fee_id'] ?? 0);
+    $total_tuition = (float)($_POST['total_tuition'] ?? 0);
+    $payment_option = clean_input($_POST['payment_option'] ?? '');
+    $downpayment_amount = (float)($_POST['downpayment_amount'] ?? 0);
 
     if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
         echo json_encode(['status' => 'error', 'message' => 'All required fields must be filled']);
@@ -114,6 +121,34 @@ try {
 
     if (!$insert_role->execute()) {
         throw new Exception('Failed to assign student role');
+    }
+
+    // Get current academic year for fee assessment
+    $current_ay = $conn->query("SELECT id FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+    $current_ay_id = $current_ay['id'] ?? null;
+    
+    // If tuition fee is set and payment option is selected, create fee assessments and record payment
+    if ($tuition_fee_id > 0 && $total_tuition > 0 && !empty($payment_option)) {
+        // Create student fee assessment for the full tuition amount
+        $insert_fee = $conn->prepare("INSERT INTO student_fees (student_id, fee_type, amount, semester, academic_year_id, description, created_by, created_at) VALUES (?, 'Tuition', ?, '1st', ?, 'Tuition Fee', ?, NOW())");
+        $insert_fee->bind_param("idii", $user_id, $total_tuition, $current_ay_id, $_SESSION['user_id']);
+        $insert_fee->execute();
+        
+        // Generate reference number for payment
+        $reference_no = 'PAY-' . date('Ymd') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        
+        if ($payment_option === 'full') {
+            // Record full payment
+            $insert_payment = $conn->prepare("INSERT INTO payments (reference_no, student_id, amount, payment_type, description, academic_year_id, semester, branch_id, recorded_by, payment_method, status, created_at) VALUES (?, ?, ?, 'Tuition', 'Full tuition payment upon enrollment', ?, '1st', ?, ?, 'cash', 'verified', NOW())");
+            $insert_payment->bind_param("sidiii", $reference_no, $user_id, $total_tuition, $current_ay_id, $registrar_branch_id, $_SESSION['user_id']);
+            $insert_payment->execute();
+            
+        } else if ($payment_option === 'downpayment' && $downpayment_amount > 0) {
+            // Record down payment
+            $insert_payment = $conn->prepare("INSERT INTO payments (reference_no, student_id, amount, payment_type, description, academic_year_id, semester, branch_id, recorded_by, payment_method, status, created_at) VALUES (?, ?, ?, 'Tuition', 'Down payment upon enrollment', ?, '1st', ?, ?, 'cash', 'verified', NOW())");
+            $insert_payment->bind_param("sidiii", $reference_no, $user_id, $downpayment_amount, $current_ay_id, $registrar_branch_id, $_SESSION['user_id']);
+            $insert_payment->execute();
+        }
     }
 
     // Log the action

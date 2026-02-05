@@ -47,28 +47,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
             if ($check->get_result()->num_rows > 0) {
                 $error = "Email already exists.";
             } else {
-            $conn->begin_transaction();
-            try {
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("INSERT INTO users (email, password, status) VALUES (?, ?, 'active')");
-                $stmt->bind_param("ss", $email, $hashed_password);
-                $stmt->execute();
-                $new_user_id = $conn->insert_id;
-                
-                $role_id = ROLE_REGISTRAR;
-                $stmt = $conn->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
-                $stmt->bind_param("ii", $new_user_id, $role_id);
-                $stmt->execute();
-                
-                $stmt = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, contact_no, branch_id) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("isssi", $new_user_id, $first_name, $last_name, $contact_no, $branch_id);
-                $stmt->execute();
-                
-                $conn->commit();
-                $message = "Registrar account created successfully!";
-            } catch (Exception $e) {
-                $conn->rollback();
-                $error = "Failed to create registrar account: " . $e->getMessage();
+                $conn->begin_transaction();
+                try {
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $conn->prepare("INSERT INTO users (email, password, status) VALUES (?, ?, 'active')");
+                    $stmt->bind_param("ss", $email, $hashed_password);
+                    $stmt->execute();
+                    $new_user_id = $conn->insert_id;
+                    
+                    $role_id = ROLE_REGISTRAR;
+                    $stmt = $conn->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
+                    $stmt->bind_param("ii", $new_user_id, $role_id);
+                    $stmt->execute();
+                    
+                    $stmt = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, contact_no, branch_id) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->bind_param("isssi", $new_user_id, $first_name, $last_name, $contact_no, $branch_id);
+                    $stmt->execute();
+                    
+                    $conn->commit();
+                    $message = "Registrar account created successfully!";
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $error = "Failed to create registrar account: " . $e->getMessage();
+                }
             }
         }
     }
@@ -105,8 +106,6 @@ $registrars = $conn->query("
     WHERE ur.role_id = " . ROLE_REGISTRAR . " AND up.branch_id = $branch_id
     ORDER BY up.last_name, up.first_name
 ");
-
-}
 
 include '../../includes/header.php';
 ?>

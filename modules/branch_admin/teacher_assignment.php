@@ -31,13 +31,13 @@ $strands = $conn->query("
     ORDER BY ss.strand_code
 ");
 
-// Fetch teachers
+// Fetch teachers (only from this branch)
 $teachers = $conn->query("
     SELECT u.id, CONCAT(up.first_name, ' ', up.last_name) as name
     FROM users u
     INNER JOIN user_profiles up ON u.id = up.user_id
     INNER JOIN user_roles ur ON u.id = ur.user_id
-    WHERE ur.role_id = " . ROLE_TEACHER . " AND u.status = 'active'
+    WHERE ur.role_id = " . ROLE_TEACHER . " AND u.status = 'active' AND up.branch_id = $branch_id
     ORDER BY up.last_name, up.first_name
 ");
 
