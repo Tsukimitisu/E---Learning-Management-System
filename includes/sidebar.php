@@ -87,7 +87,6 @@
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a></li>
             <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php', 'classroom.php'])) ? 'active' : ''; ?>"><i class="bi bi-journal-bookmark"></i> <span>My Classes</span></a></li>
             <li><a href="grading.php" class="<?php echo (in_array($current_page, ['grading.php','grading_sections.php', 'gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-calculator-fill"></i> <span>Grades</span></a></li>
-            <li><a href="attendance.php" class="<?php echo (in_array($current_page, ['attendance.php','attendance_sections.php', 'attendance_sheet.php'])) ? 'active' : ''; ?>"><i class="bi bi-calendar-check-fill"></i> <span>Attendance</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-check-fill"></i> <span>Assessments</span></a></li>
             <li><a href="materials.php" class="<?php echo (in_array($current_page, ['materials.php','materials_sections.php', 'materials_list.php'])) ? 'active' : ''; ?>"><i class="bi bi-file-earmark-pdf-fill"></i> <span>Materials</span></a></li>
             <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-text"></i> <span>Reports</span></a></li>
@@ -99,7 +98,6 @@
             <li><a href="my_classes.php" class="<?php echo (in_array($current_page, ['my_classes.php', 'subject_view.php'])) ? 'active' : ''; ?>"><i class="bi bi-book-fill"></i> <span>My Classes</span></a></li>
             <li><a href="schedule.php" class="<?php echo ($current_page == 'schedule.php') ? 'active' : ''; ?>"><i class="bi bi-calendar-week-fill"></i> <span>Schedule</span></a></li>
             <li><a href="grades.php" class="<?php echo ($current_page == 'grades.php') ? 'active' : ''; ?>"><i class="bi bi-bar-chart-fill"></i> <span>My Grades</span></a></li>
-            <li><a href="attendance.php" class="<?php echo ($current_page == 'attendance.php') ? 'active' : ''; ?>"><i class="bi bi-calendar-check-fill"></i> <span>Attendance</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-clipboard-check-fill"></i> <span>Assessments</span></a></li>
             <li><a href="materials.php" class="<?php echo ($current_page == 'materials.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-pdf-fill"></i> <span>Materials</span></a></li>
             <li><a href="payments.php" class="<?php echo ($current_page == 'payments.php') ? 'active' : ''; ?>"><i class="bi bi-credit-card-fill"></i> <span>Payments</span></a></li>

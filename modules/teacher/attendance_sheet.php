@@ -7,6 +7,16 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     exit();
 }
 
+$user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
+if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
+    header('Location: ../../index.php');
+    exit();
+}
+
+// Attendance module is disabled for teachers; redirect to dashboard
+header('Location: dashboard.php');
+exit();
+
 $section_id = (int)($_GET['section_id'] ?? 0);
 $subject_id = (int)($_GET['subject_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];

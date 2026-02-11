@@ -6,6 +6,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_STUDENT) {
     exit();
 }
 
+// Attendance module is disabled for students; redirect to dashboard
+header('Location: dashboard.php');
+exit();
+
 $page_title = "My Attendance";
 $student_id = $_SESSION['user_id'];
 

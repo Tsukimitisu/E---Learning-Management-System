@@ -114,12 +114,6 @@ include '../../includes/header.php';
                 <div><h4 class="mb-0 fw-bold"><?php echo $stats['total_subjects']; ?></h4><small class="text-muted fw-bold text-uppercase" style="font-size:0.6rem;">Subjects</small></div>
             </div>
         </div>
-        <div class="col-6 col-md-3 animate__animated animate__zoomIn" style="animation-delay: 0.2s;">
-            <div class="stat-card-modern border-bottom border-success border-4">
-                <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-calendar-check"></i></div>
-                <div><h4 class="mb-0 fw-bold"><?php echo $stats['attendance_rate']; ?>%</h4><small class="text-muted fw-bold text-uppercase" style="font-size:0.6rem;">Attendance</small></div>
-            </div>
-        </div>
         <div class="col-6 col-md-3 animate__animated animate__zoomIn" style="animation-delay: 0.3s;">
             <div class="stat-card-modern border-bottom border-info border-4">
                 <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-graph-up"></i></div>
@@ -196,7 +190,6 @@ include '../../includes/header.php';
                 <div class="card-header-modern"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Quick Access</div>
                 <div class="p-4">
                     <a href="grades.php" class="quick-link-btn"><i class="bi bi-bar-chart-fill text-primary"></i> Academic Grades</a>
-                    <a href="attendance.php" class="quick-link-btn"><i class="bi bi-calendar-check text-success"></i> View Attendance</a>
                     <a href="assessments.php" class="quick-link-btn"><i class="bi bi-clipboard-check text-warning"></i> My Assessments</a>
                     <a href="enrollment.php" class="quick-link-btn"><i class="bi bi-clipboard-data text-info"></i> Enrollment Info</a>
                 </div>

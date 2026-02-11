@@ -212,11 +212,6 @@ include '../../includes/header.php';
                 <i class="bi bi-calculator-fill"></i> Grading
             </a>
         </div>
-        <div class="col-6 col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
-            <a href="attendance.php" class="action-card-btn shadow-sm">
-                <i class="bi bi-calendar-check-fill"></i> Attendance
-            </a>
-        </div>
         <div class="col-6 col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
             <a href="materials.php" class="action-card-btn shadow-sm">
                 <i class="bi bi-folder-fill"></i> Materials

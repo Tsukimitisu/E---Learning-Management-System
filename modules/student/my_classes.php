@@ -157,7 +157,7 @@ include '../../includes/header.php';
                         <tr>
                             <td class="ps-4">
                                 <div class="fw-bold text-dark"><?php echo htmlspecialchars($subject['subject_title']); ?></div>
-                                <span class="badge bg-light text-blue border border-blue small" style="font-size: 0.65rem;"><?php echo htmlspecialchars($subject['subject_code']); ?></span>
+                                <span class="badge bg-light text-dark border border-blue small" style="font-size: 0.65rem;"><?php echo htmlspecialchars($subject['subject_code']); ?></span>
                             </td>
                             <td class="text-center fw-bold text-maroon"><?php echo $subject['units']; ?></td>
                             <td>
