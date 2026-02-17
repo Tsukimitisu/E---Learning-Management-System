@@ -405,7 +405,7 @@ function renderSections() {
         if (availability === 'available' && (section.is_enrolled || section.is_full)) return false;
         if (availability === 'enrolled' && !section.is_enrolled) return false;
         if (search) {
-            const searchStr = `${section.subject_code} ${section.subject_title} ${section.section_name}`.toLowerCase();
+            const searchStr = `${section.program_code || ''} ${section.program_name || ''} ${section.strand_code || ''} ${section.strand_name || ''} ${section.section_name || ''}`.toLowerCase();
             if (!searchStr.includes(search)) return false;
         }
         return true;
@@ -418,6 +418,11 @@ function renderSections() {
     
     let html = '';
     filteredSections.forEach(section => {
+        const displayProgramCode = section.program_code || section.strand_code || 'N/A';
+        const displayProgramName = section.program_name || section.strand_name || 'Program not set';
+        const displayYearLevel = section.year_name || section.grade_name || 'N/A';
+        const displaySemester = section.semester ? `${section.semester} Semester` : 'N/A';
+        const displayAdviser = section.adviser_name || 'TBA';
         const capacityPercent = Math.round((section.current_enrolled / section.max_capacity) * 100);
         const capColor = capacityPercent >= 90 ? 'bg-high' : capacityPercent >= 70 ? 'bg-medium' : 'bg-low';
         const isFull = section.is_full && !section.is_enrolled;
@@ -429,9 +434,9 @@ function renderSections() {
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <span class="badge bg-blue text-white mb-1" style="font-size:0.6rem;">${section.subject_code}</span>
+                                <span class="badge bg-blue text-white mb-1" style="font-size:0.6rem;">${displayProgramCode}</span>
                                 <div class="fw-bold text-dark" style="font-size:0.85rem;">${section.section_name}</div>
-                                <small class="text-muted">${section.subject_title}</small>
+                                <small class="text-muted">${displayProgramName} • ${displayYearLevel} • ${displaySemester}</small>
                             </div>
                             <div>
                                 ${section.is_enrolled 
@@ -442,7 +447,7 @@ function renderSections() {
                         </div>
                         <div class="mt-2 d-flex justify-content-between align-items-center">
                             <div class="small text-muted" style="font-size: 0.7rem;">
-                                <i class="bi bi-person-workspace me-1"></i>${section.teacher_name || 'TBA'}
+                                <i class="bi bi-person-workspace me-1"></i>${displayAdviser}
                             </div>
                             <div class="capacity-wrapper">
                                 <div class="d-flex justify-content-between small text-muted mb-1" style="font-size:0.6rem;">
@@ -480,13 +485,13 @@ function loadCurrentEnrollments() {
     container.innerHTML = '<div class="text-center p-3 small text-muted"><i class="bi bi-arrow-repeat spin"></i> Refreshing list...</div>';
     fetch(`process/student_assignment_api.php?action=get_student_enrollments&student_id=${selectedStudentId}`).then(response => response.json()).then(data => {
         if (data.success && data.enrollments.length > 0) {
-            let html = '<div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle"><thead class="bg-light"><tr style="font-size:0.65rem; text-transform:uppercase;"><th>Subject</th><th>Section</th><th>Instructor</th><th>Action</th></tr></thead><tbody style="font-size:0.8rem;">';
+            let html = '<div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle"><thead class="bg-light"><tr style="font-size:0.65rem; text-transform:uppercase;"><th>Program</th><th>Section</th><th>Adviser</th><th>Action</th></tr></thead><tbody style="font-size:0.8rem;">';
             data.enrollments.forEach(e => {
                 html += `<tr>
-                    <td><div class="fw-bold">${e.subject_code}</div><small class="text-muted line-clamp-1">${e.subject_title}</small></td>
-                    <td><span class="badge bg-light text-dark border">${e.section_name}</span></td>
-                    <td><small>${e.teacher_name || 'TBA'}</small></td>
-                    <td><button class="btn btn-sm btn-outline-danger border-0" onclick="toggleEnrollment(${e.class_id}, true)"><i class="bi bi-trash"></i></button></td>
+                    <td><div class="fw-bold">${e.program_code || 'N/A'}</div><small class="text-muted line-clamp-1">${e.program_name || ''}</small></td>
+                    <td><span class="badge bg-light text-dark border">${e.section_name}</span><div><small class="text-muted">${e.year_level || ''}</small></div></td>
+                    <td><small>${e.adviser_name || 'TBA'}</small></td>
+                    <td><button class="btn btn-sm btn-outline-danger border-0" onclick="toggleEnrollment(${e.section_id}, true)"><i class="bi bi-trash"></i></button></td>
                 </tr>`;
             });
             html += '</tbody></table></div>';

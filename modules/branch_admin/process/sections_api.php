@@ -301,15 +301,29 @@ function getSectionStudents() {
     }
     
     $query = "
-        SELECT u.id, CONCAT(up.first_name, ' ', up.last_name) as name, up.student_id
+        SELECT 
+            u.id,
+            CONCAT(up.first_name, ' ', up.last_name) as name,
+            COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
+            sec.section_name,
+            COALESCE(p.program_code, shs.strand_code) as program_code,
+            COALESCE(p.program_name, shs.strand_name) as program_name
         FROM section_students ss
+        INNER JOIN sections sec ON ss.section_id = sec.id
         INNER JOIN users u ON ss.student_id = u.id
         INNER JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN students st ON u.id = st.user_id
+        LEFT JOIN programs p ON st.course_id = p.id
+        LEFT JOIN shs_strands shs ON st.course_id = shs.id
         WHERE ss.section_id = ? AND ss.status = 'active'
         ORDER BY up.last_name, up.first_name
     ";
     
     $stmt = $conn->prepare($query);
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'Failed to load section students']);
+        return;
+    }
     $stmt->bind_param("i", $section_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -332,10 +346,12 @@ function getAvailableStudents() {
     
     // Get students enrolled in this branch who are not in this section
     $query = "
-        SELECT DISTINCT u.id, CONCAT(up.first_name, ' ', up.last_name) as name, up.student_id
+        SELECT DISTINCT u.id, CONCAT(up.first_name, ' ', up.last_name) as name,
+               COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no
         FROM users u
         INNER JOIN user_profiles up ON u.id = up.user_id
         INNER JOIN user_roles ur ON u.id = ur.user_id
+        LEFT JOIN students st ON u.id = st.user_id
         INNER JOIN enrollments e ON u.id = e.student_id
         WHERE ur.role_id = " . ROLE_STUDENT . "
         AND u.status = 'active'
@@ -349,7 +365,7 @@ function getAvailableStudents() {
     $types = "ii";
     
     if (!empty($search)) {
-        $query .= " AND (up.first_name LIKE ? OR up.last_name LIKE ? OR up.student_id LIKE ?)";
+        $query .= " AND (up.first_name LIKE ? OR up.last_name LIKE ? OR st.student_no LIKE ?)";
         $searchParam = "%$search%";
         $params[] = $searchParam;
         $params[] = $searchParam;

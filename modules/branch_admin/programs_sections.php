@@ -250,9 +250,7 @@ include '../../includes/header.php';
                 <h5 class="fw-bold mb-0" id="selectedSectionName" style="color: var(--blue);"></h5>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-success btn-sm rounded-pill px-3" onclick="openAddStudentModal()">
-                    <i class="bi bi-person-plus"></i> Add Student
-                </button>
+               
                 <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="editSection(currentSectionId)">
                     <i class="bi bi-pencil"></i> Edit Info
                 </button>
@@ -560,7 +558,7 @@ function loadSectionStudents() {
             if (data.success && data.students.length > 0) {
                 let html = '';
                 data.students.forEach((student, index) => {
-                    html += `<div class="student-item"><div><strong>${index + 1}. ${student.name}</strong><br><small class="text-muted">${student.student_id || 'N/A'}</small></div>
+                    html += `<div class="student-item"><div><strong>${index + 1}. ${student.name}</strong></div>
                     <button class="btn btn-sm btn-outline-danger border-0" onclick="removeStudentFromSection(${student.id})"><i class="bi bi-trash"></i></button></div>`;
                 });
                 container.innerHTML = html;
