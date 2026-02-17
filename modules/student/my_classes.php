@@ -38,26 +38,66 @@ $section_id = $section_info['id'] ?? 0;
 
 $subjects = [];
 if ($section_id > 0) {
-    $subjects_query = $conn->query("
-        SELECT cs.*, 
-               tsa.teacher_id,
-               CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
-               u.email as teacher_email,
-               (SELECT COUNT(*) FROM learning_materials lm WHERE lm.class_id = cs.id) as materials_count
-        FROM teacher_subject_assignments tsa
-        INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
-        LEFT JOIN user_profiles up ON tsa.teacher_id = up.user_id
-        LEFT JOIN users u ON tsa.teacher_id = u.id
-        WHERE tsa.branch_id = " . ($section_info['branch_id'] ?? 0) . "
-        AND tsa.academic_year_id = $current_ay_id
-        AND tsa.is_active = 1
-        AND cs.is_active = 1
-        AND (
-            (cs.program_id = " . ($section_info['program_id'] ?? 0) . " AND cs.year_level_id = " . ($section_info['year_level_id'] ?? 0) . ")
-            OR (cs.shs_strand_id = " . ($section_info['shs_strand_id'] ?? 0) . " AND cs.shs_grade_level_id = " . ($section_info['shs_grade_level_id'] ?? 0) . ")
-        )
-        ORDER BY cs.subject_code
-    ");
+    $section_semester = $conn->real_escape_string($section_info['semester'] ?? '1st');
+    $semester_num = $section_semester === '2nd' ? 2 : ($section_semester === 'summer' ? 3 : 1);
+
+    $use_subject_enrollment = false;
+    $tbl_check = $conn->query("SHOW TABLES LIKE 'student_subject_enrollments'");
+    if ($tbl_check && $tbl_check->num_rows > 0) {
+        $enr_count = $conn->query("
+            SELECT COUNT(*) as cnt
+            FROM student_subject_enrollments
+            WHERE student_id = $student_id AND academic_year_id = $current_ay_id AND status = 'enrolled'
+        ")->fetch_assoc();
+        $use_subject_enrollment = (($enr_count['cnt'] ?? 0) > 0);
+    }
+
+    if ($use_subject_enrollment) {
+        $subjects_query = $conn->query("
+            SELECT DISTINCT cs.*, 
+                   tsa.teacher_id,
+                   CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
+                   u.email as teacher_email,
+                   (SELECT COUNT(*) FROM learning_materials lm WHERE lm.class_id = cs.id) as materials_count
+            FROM student_subject_enrollments sse
+            INNER JOIN curriculum_subjects cs ON sse.subject_id = cs.id
+            LEFT JOIN teacher_subject_assignments tsa ON tsa.curriculum_subject_id = cs.id
+                AND tsa.branch_id = " . (int)($section_info['branch_id'] ?? 0) . "
+                AND tsa.academic_year_id = $current_ay_id
+                AND tsa.is_active = 1
+            LEFT JOIN user_profiles up ON tsa.teacher_id = up.user_id
+            LEFT JOIN users u ON tsa.teacher_id = u.id
+            WHERE sse.student_id = $student_id
+              AND sse.academic_year_id = $current_ay_id
+              AND sse.status = 'enrolled'
+              AND (sse.section_id IS NULL OR sse.section_id = $section_id)
+              AND cs.is_active = 1
+              AND (cs.semester = $semester_num OR $semester_num = 3)
+            ORDER BY cs.subject_code
+        ");
+    } else {
+        $subjects_query = $conn->query("
+            SELECT DISTINCT cs.*, 
+                   tsa.teacher_id,
+                   CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
+                   u.email as teacher_email,
+                   (SELECT COUNT(*) FROM learning_materials lm WHERE lm.class_id = cs.id) as materials_count
+            FROM teacher_subject_assignments tsa
+            INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
+            LEFT JOIN user_profiles up ON tsa.teacher_id = up.user_id
+            LEFT JOIN users u ON tsa.teacher_id = u.id
+            WHERE tsa.branch_id = " . ($section_info['branch_id'] ?? 0) . "
+            AND tsa.academic_year_id = $current_ay_id
+            AND tsa.is_active = 1
+            AND cs.is_active = 1
+            AND (cs.semester = $semester_num OR $semester_num = 3)
+            AND (
+                (cs.program_id = " . ($section_info['program_id'] ?? 0) . " AND cs.year_level_id = " . ($section_info['year_level_id'] ?? 0) . ")
+                OR (cs.shs_strand_id = " . ($section_info['shs_strand_id'] ?? 0) . " AND cs.shs_grade_level_id = " . ($section_info['shs_grade_level_id'] ?? 0) . ")
+            )
+            ORDER BY cs.subject_code
+        ");
+    }
     while ($row = $subjects_query->fetch_assoc()) {
         $subjects[] = $row;
     }

@@ -8,14 +8,75 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_STUDENT) {
 
 $page_title = "Assessments";
 $student_id = $_SESSION['user_id'];
+$current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$current_ay_id = $current_ay['id'] ?? 0;
+
+$section_info = $conn->query("
+    SELECT s.id, s.section_name, s.branch_id
+    FROM section_students ss
+    INNER JOIN sections s ON ss.section_id = s.id
+    WHERE ss.student_id = $student_id
+      AND ss.status = 'active'
+      AND s.academic_year_id = $current_ay_id
+    LIMIT 1
+")->fetch_assoc();
+
+$has_subject_enrollment_table = false;
+$check_sse = $conn->query("SHOW TABLES LIKE 'student_subject_enrollments'");
+if ($check_sse && $check_sse->num_rows > 0) {
+    $has_subject_enrollment_table = true;
+}
+
+$use_subject_enrollment = false;
+$enrolled_subject_ids = [];
+if ($has_subject_enrollment_table) {
+    $sse_count = $conn->query("
+        SELECT COUNT(*) as cnt
+        FROM student_subject_enrollments
+        WHERE student_id = $student_id AND academic_year_id = $current_ay_id AND status = 'enrolled'
+    ")->fetch_assoc();
+    $use_subject_enrollment = (($sse_count['cnt'] ?? 0) > 0);
+
+    if ($use_subject_enrollment) {
+        $sse_subjects = $conn->query("
+            SELECT DISTINCT subject_id
+            FROM student_subject_enrollments
+            WHERE student_id = $student_id
+              AND academic_year_id = $current_ay_id
+              AND status = 'enrolled'
+              AND subject_id IS NOT NULL
+        ");
+        while ($row = $sse_subjects->fetch_assoc()) {
+            $enrolled_subject_ids[] = (int)$row['subject_id'];
+        }
+        if (empty($enrolled_subject_ids)) {
+            $use_subject_enrollment = false;
+        }
+    }
+}
 
 // --- AJAX HANDLER ---
 if (isset($_GET['ajax'])) {
     $filter_status = $_GET['status'] ?? 'all';
     $filter_type = $_GET['type'] ?? 'all';
+    $section_name = $conn->real_escape_string($section_info['section_name'] ?? '');
+    $branch_id = (int)($section_info['branch_id'] ?? 0);
+
+    if (empty($section_name) || $branch_id <= 0) {
+        header('Content-Type: application/json');
+        echo json_encode(['html' => '<div class="col-12 text-center py-5 opacity-50"><i class="bi bi-clipboard-x display-1"></i><p class="mt-3">No assessments found. You are not assigned to an active section.</p></div>']);
+        exit();
+    }
 
     // Build conditions (Logic untouched)
-    $conditions = ["e.student_id = $student_id"];
+    $conditions = [
+        "cl.section_name = '$section_name'",
+        "cl.branch_id = $branch_id",
+        "cl.academic_year_id = $current_ay_id"
+    ];
+    if ($use_subject_enrollment) {
+        $conditions[] = "cl.curriculum_subject_id IN (" . implode(',', $enrolled_subject_ids) . ")";
+    }
     if ($filter_status == 'pending') { $conditions[] = "(ascore.status IS NULL OR ascore.status = 'pending')"; } 
     elseif ($filter_status == 'submitted') { $conditions[] = "ascore.status = 'submitted'"; } 
     elseif ($filter_status == 'graded') { $conditions[] = "ascore.status = 'graded'"; }
@@ -24,18 +85,25 @@ if (isset($_GET['ajax'])) {
     $where_clause = implode(' AND ', $conditions);
 
     $assessments = $conn->query("
-        SELECT a.*, c.course_code as subject_code, c.title as subject_title,
+        SELECT a.*,
+               COALESCE(csub.subject_code, c.course_code) as subject_code,
+               COALESCE(csub.subject_title, c.title) as subject_title,
                CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
                ascore.score, ascore.status as submission_status, ascore.feedback, ascore.graded_at
         FROM assessments a
         INNER JOIN classes cl ON a.class_id = cl.id
-        INNER JOIN courses c ON cl.course_id = c.id
-        INNER JOIN enrollments e ON e.class_id = a.class_id
+        LEFT JOIN curriculum_subjects csub ON cl.curriculum_subject_id = csub.id
+        LEFT JOIN courses c ON cl.course_id = c.id
         LEFT JOIN assessment_scores ascore ON ascore.assessment_id = a.id AND ascore.student_id = $student_id
         LEFT JOIN user_profiles up ON a.created_by = up.user_id
         WHERE $where_clause
         ORDER BY a.scheduled_date DESC, a.created_at DESC
     ");
+    if (!$assessments) {
+        header('Content-Type: application/json');
+        echo json_encode(['html' => '<div class="col-12 text-center py-5 opacity-50"><i class="bi bi-exclamation-triangle display-1"></i><p class="mt-3">Unable to load assessments right now.</p></div>']);
+        exit();
+    }
 
     $html = '';
     $count = 0;
@@ -91,17 +159,32 @@ if (isset($_GET['ajax'])) {
 $filter_status = 'all';
 $filter_type = 'all';
 // Fetch initial counts for labels (Logic untouched)
-$counts_query = $conn->query("
-    SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN ascore.status IS NULL OR ascore.status = 'pending' THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN ascore.status = 'submitted' THEN 1 ELSE 0 END) as submitted,
-        SUM(CASE WHEN ascore.status = 'graded' THEN 1 ELSE 0 END) as graded
-    FROM assessments a
-    INNER JOIN enrollments e ON e.class_id = a.class_id
-    LEFT JOIN assessment_scores ascore ON ascore.assessment_id = a.id AND ascore.student_id = $student_id
-    WHERE e.student_id = $student_id
-")->fetch_assoc();
+$counts_query = ['total' => 0, 'pending' => 0, 'submitted' => 0, 'graded' => 0];
+if (!empty($section_info)) {
+    $section_name = $conn->real_escape_string($section_info['section_name'] ?? '');
+    $branch_id = (int)($section_info['branch_id'] ?? 0);
+    $subject_filter_sql = "";
+    if ($use_subject_enrollment) {
+        $subject_filter_sql = " AND cl.curriculum_subject_id IN (" . implode(',', $enrolled_subject_ids) . ") ";
+    }
+    $counts_result = $conn->query("
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN ascore.status IS NULL OR ascore.status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN ascore.status = 'submitted' THEN 1 ELSE 0 END) as submitted,
+            SUM(CASE WHEN ascore.status = 'graded' THEN 1 ELSE 0 END) as graded
+        FROM assessments a
+        INNER JOIN classes cl ON a.class_id = cl.id
+        LEFT JOIN assessment_scores ascore ON ascore.assessment_id = a.id AND ascore.student_id = $student_id
+        WHERE cl.section_name = '$section_name'
+          AND cl.branch_id = $branch_id
+          AND cl.academic_year_id = $current_ay_id
+          $subject_filter_sql
+    ");
+    if ($counts_result) {
+        $counts_query = $counts_result->fetch_assoc();
+    }
+}
 
 include '../../includes/header.php';
 ?>

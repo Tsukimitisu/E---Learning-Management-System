@@ -7,6 +7,10 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     exit();
 }
 
+// Compatibility guard for student type label support.
+$conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+$conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
+
 $user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
 if (!isset($_SESSION['user_id']) || $user_role != ROLE_TEACHER) {
     header('Location: ../../index.php');
@@ -74,24 +78,64 @@ $class_info = [
     'subject_title' => $subject_info['subject_title']
 ];
 
-// Get students from section_students table with attendance
-$students_query = $conn->prepare("
-    SELECT 
-        u.id as user_id, 
-        COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no, 
-        CONCAT(up.first_name, ' ', up.last_name) as student_name,
-        a.status, a.time_in, a.time_out, a.remarks
-    FROM section_students ss
-    INNER JOIN users u ON ss.student_id = u.id
-    INNER JOIN user_profiles up ON u.id = up.user_id
-    LEFT JOIN students st ON u.id = st.user_id
-    LEFT JOIN attendance a ON u.id = a.student_id 
-        AND a.section_id = ? AND a.subject_id = ?
-        AND a.attendance_date = ?
-    WHERE ss.section_id = ? AND ss.status = 'active'
-    ORDER BY up.last_name, up.first_name
-");
-$students_query->bind_param("iisi", $section_id, $subject_id, $attendance_date, $section_id);
+// Get students from subject-level enrollment when available (fallback to section roster)
+$has_subject_enrollment_table = false;
+$check_table = $conn->query("SHOW TABLES LIKE 'student_subject_enrollments'");
+if ($check_table && $check_table->num_rows > 0) {
+    $has_subject_enrollment_table = true;
+}
+
+$use_subject_roster = false;
+if ($has_subject_enrollment_table) {
+    $roster_check = $conn->prepare("
+        SELECT COUNT(*) as cnt
+        FROM student_subject_enrollments
+        WHERE section_id = ? AND subject_id = ? AND academic_year_id = ? AND status = 'enrolled'
+    ");
+    $roster_check->bind_param("iii", $section_id, $subject_id, $current_ay_id);
+    $roster_check->execute();
+    $use_subject_roster = (($roster_check->get_result()->fetch_assoc()['cnt'] ?? 0) > 0);
+}
+
+if ($use_subject_roster) {
+    $students_query = $conn->prepare("
+        SELECT 
+            u.id as user_id, 
+            COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no, 
+            CONCAT(up.first_name, ' ', up.last_name) as student_name,
+            COALESCE(st.student_type, 'regular') as student_type,
+            a.status, a.time_in, a.time_out, a.remarks
+        FROM student_subject_enrollments sse
+        INNER JOIN users u ON sse.student_id = u.id
+        INNER JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN students st ON u.id = st.user_id
+        LEFT JOIN attendance a ON u.id = a.student_id 
+            AND a.section_id = ? AND a.subject_id = ?
+            AND a.attendance_date = ?
+        WHERE sse.section_id = ? AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status = 'enrolled'
+        ORDER BY up.last_name, up.first_name
+    ");
+    $students_query->bind_param("iisiii", $section_id, $subject_id, $attendance_date, $section_id, $subject_id, $current_ay_id);
+} else {
+    $students_query = $conn->prepare("
+        SELECT 
+            u.id as user_id, 
+            COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no, 
+            CONCAT(up.first_name, ' ', up.last_name) as student_name,
+            COALESCE(st.student_type, 'regular') as student_type,
+            a.status, a.time_in, a.time_out, a.remarks
+        FROM section_students ss
+        INNER JOIN users u ON ss.student_id = u.id
+        INNER JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN students st ON u.id = st.user_id
+        LEFT JOIN attendance a ON u.id = a.student_id 
+            AND a.section_id = ? AND a.subject_id = ?
+            AND a.attendance_date = ?
+        WHERE ss.section_id = ? AND ss.status = 'active'
+        ORDER BY up.last_name, up.first_name
+    ");
+    $students_query->bind_param("iisi", $section_id, $subject_id, $attendance_date, $section_id);
+}
 $students_query->execute();
 $students = $students_query->get_result();
 
@@ -171,7 +215,12 @@ include '../../includes/header.php';
                     <tr data-student-id="<?php echo $student['user_id']; ?>">
                         <td class="ps-4 text-muted fw-bold"><?php echo $no++; ?></td>
                         <td>
-                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($student['student_name']); ?></div>
+                            <div class="fw-bold text-dark">
+                                <?php echo htmlspecialchars($student['student_name']); ?>
+                                <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
+                                    <span class="badge bg-warning text-dark ms-2"><?php echo ucfirst($student['student_type']); ?></span>
+                                <?php endif; ?>
+                            </div>
                             <small class="text-muted"><?php echo htmlspecialchars($student['student_no']); ?></small>
                         </td>
                         <td class="text-center">

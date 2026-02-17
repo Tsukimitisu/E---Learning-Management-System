@@ -16,6 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
+    // Compatibility guard for environments where migrations are not yet applied.
+    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
+
     $first_name = clean_input($_POST['first_name'] ?? '');
     $last_name = clean_input($_POST['last_name'] ?? '');
     $email = clean_input($_POST['email'] ?? '');
@@ -108,8 +112,9 @@ try {
     // For SHS: use the strand id from shs_strands table
     $final_course_id = $program_type === 'college' ? $course_id : $shs_strand_id;
     
-    $insert_student = $conn->prepare("INSERT INTO students (user_id, student_no, course_id) VALUES (?, ?, ?)");
-    $insert_student->bind_param("isi", $user_id, $student_no, $final_course_id);
+    $student_type = 'regular';
+    $insert_student = $conn->prepare("INSERT INTO students (user_id, student_no, course_id, student_type) VALUES (?, ?, ?, ?)");
+    $insert_student->bind_param("isis", $user_id, $student_no, $final_course_id, $student_type);
 
     if (!$insert_student->execute()) {
         throw new Exception('Failed to create student record');

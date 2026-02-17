@@ -13,6 +13,7 @@ if ($branch_id === null) {
     echo json_encode(['success' => false, 'message' => 'No branch assigned']);
     exit();
 }
+ensureIrregularSupportSchema($conn);
 
 // Get current academic year
 $current_ay = $conn->query("SELECT id FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
@@ -219,6 +220,7 @@ function enrollStudent() {
     $stmt->bind_param("ii", $section_id, $student_id);
     
     if ($stmt->execute()) {
+        syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $current_ay_id, $_SESSION['user_id']);
         echo json_encode(['success' => true, 'message' => 'Student added to section successfully']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error adding student to section']);
@@ -412,6 +414,7 @@ function bulkEnroll() {
         $stmt->bind_param("ii", $section_id, $student_id);
         $stmt->execute();
         if ($stmt->affected_rows > 0) {
+            syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $current_ay_id, $_SESSION['user_id']);
             $enrolled_count++;
         }
     }
@@ -549,6 +552,7 @@ function bulkAssignToSection() {
             
             $stmt->bind_param("ii", $section_id, $student_id);
             if ($stmt->execute() && $stmt->affected_rows > 0) {
+                syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $current_ay_id, $_SESSION['user_id']);
                 $assigned_count++;
             }
         }
@@ -694,4 +698,145 @@ function getStudentsByProgram() {
     }
     
     echo json_encode(['success' => true, 'students' => $students]);
+}
+
+function syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $current_ay_id, $recorded_by) {
+    global $conn;
+
+    $section_stmt = $conn->prepare("
+        SELECT id, program_id, year_level_id, shs_strand_id, shs_grade_level_id, semester
+        FROM sections
+        WHERE id = ?
+        LIMIT 1
+    ");
+    $section_stmt->bind_param("i", $section_id);
+    $section_stmt->execute();
+    $section = $section_stmt->get_result()->fetch_assoc();
+    if (!$section) {
+        return;
+    }
+
+    $semester = $section['semester'] ?? '1st';
+    $semester_num = 1;
+    if ($semester === '2nd') {
+        $semester_num = 2;
+    } elseif ($semester === 'summer') {
+        $semester_num = 3;
+    }
+
+    if (!empty($section['program_id'])) {
+        $subjects_stmt = $conn->prepare("
+            SELECT id
+            FROM curriculum_subjects
+            WHERE program_id = ? AND year_level_id = ? AND is_active = 1
+              AND (semester = ? OR ? = 3)
+        ");
+        $subjects_stmt->bind_param("iiii", $section['program_id'], $section['year_level_id'], $semester_num, $semester_num);
+    } else {
+        $subjects_stmt = $conn->prepare("
+            SELECT id
+            FROM curriculum_subjects
+            WHERE shs_strand_id = ? AND shs_grade_level_id = ? AND is_active = 1
+              AND (semester = ? OR ? = 3)
+        ");
+        $subjects_stmt->bind_param("iiii", $section['shs_strand_id'], $section['shs_grade_level_id'], $semester_num, $semester_num);
+    }
+    $subjects_stmt->execute();
+    $subjects_result = $subjects_stmt->get_result();
+
+    $subject_ids = [];
+    while ($row = $subjects_result->fetch_assoc()) {
+        $subject_ids[] = (int)$row['id'];
+    }
+    if (empty($subject_ids)) {
+        return;
+    }
+
+    $completed_map = [];
+    $completed_sql = "
+        SELECT subject_id FROM student_completed_subjects
+        WHERE student_id = ? AND subject_id IN (" . implode(',', array_fill(0, count($subject_ids), '?')) . ")
+    ";
+    $completed_stmt = $conn->prepare($completed_sql);
+    $completed_types = 'i' . str_repeat('i', count($subject_ids));
+    $completed_params = array_merge([$student_id], $subject_ids);
+    $completed_stmt->bind_param($completed_types, ...$completed_params);
+    $completed_stmt->execute();
+    $completed_result = $completed_stmt->get_result();
+    while ($row = $completed_result->fetch_assoc()) {
+        $completed_map[(int)$row['subject_id']] = true;
+    }
+
+    $student_type = 'regular';
+    $type_stmt = $conn->prepare("SELECT COALESCE(student_type, 'regular') as student_type FROM students WHERE user_id = ?");
+    $type_stmt->bind_param("i", $student_id);
+    $type_stmt->execute();
+    $type_row = $type_stmt->get_result()->fetch_assoc();
+    if (!empty($type_row['student_type'])) {
+        $student_type = $type_row['student_type'];
+    }
+
+    $upsert = $conn->prepare("
+        INSERT INTO student_subject_enrollments
+            (student_id, subject_id, section_id, academic_year_id, status, enrollment_type, recorded_by)
+        VALUES (?, ?, ?, ?, 'enrolled', ?, ?)
+        ON DUPLICATE KEY UPDATE
+            section_id = VALUES(section_id),
+            status = 'enrolled',
+            enrollment_type = VALUES(enrollment_type),
+            recorded_by = VALUES(recorded_by),
+            updated_at = NOW()
+    ");
+
+    foreach ($subject_ids as $subject_id) {
+        if (isset($completed_map[$subject_id])) {
+            continue;
+        }
+        $upsert->bind_param("iiiisi", $student_id, $subject_id, $section_id, $current_ay_id, $student_type, $recorded_by);
+        $upsert->execute();
+    }
+}
+
+function ensureIrregularSupportSchema($conn) {
+    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
+
+    $conn->query("
+        CREATE TABLE IF NOT EXISTS student_completed_subjects (
+            id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            student_id INT(10) UNSIGNED NOT NULL,
+            subject_id INT(10) UNSIGNED NOT NULL,
+            completion_source VARCHAR(255) DEFAULT NULL,
+            remarks TEXT DEFAULT NULL,
+            recorded_by INT(10) UNSIGNED DEFAULT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_student_subject (student_id, subject_id),
+            KEY idx_student (student_id),
+            KEY idx_subject (subject_id),
+            KEY idx_recorded_by (recorded_by)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    $conn->query("
+        CREATE TABLE IF NOT EXISTS student_subject_enrollments (
+            id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            student_id INT(10) UNSIGNED NOT NULL,
+            subject_id INT(10) UNSIGNED NOT NULL,
+            section_id INT(11) DEFAULT NULL,
+            academic_year_id INT(10) UNSIGNED NOT NULL,
+            status ENUM('enrolled','completed','dropped') NOT NULL DEFAULT 'enrolled',
+            enrollment_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular',
+            recorded_by INT(10) UNSIGNED DEFAULT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_student_subject_ay (student_id, subject_id, academic_year_id),
+            KEY idx_student_status (student_id, status),
+            KEY idx_subject_status (subject_id, status),
+            KEY idx_section_subject_status (section_id, subject_id, status),
+            KEY idx_academic_year (academic_year_id),
+            KEY idx_recorded_by (recorded_by)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
 }

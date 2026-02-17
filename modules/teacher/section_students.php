@@ -6,6 +6,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
     exit();
 }
 
+// Compatibility guard for student type label support.
+$conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+$conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
+
 $teacher_id = $_SESSION['user_id'];
 $section_id = (int)($_GET['section_id'] ?? 0);
 $subject_id = (int)($_GET['subject_id'] ?? 0);
@@ -60,21 +64,58 @@ $subject_query->bind_param("i", $subject_id);
 $subject_query->execute();
 $subject = $subject_query->get_result()->fetch_assoc();
 
-// Get students
-$students_query = $conn->prepare("
-    SELECT u.id, up.first_name, up.last_name, u.email,
-           COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
-           up.contact_no as phone,
-           CONCAT(up.first_name, ' ', up.last_name) as name,
-           ss.enrolled_at
-    FROM section_students ss
-    INNER JOIN users u ON ss.student_id = u.id
-    INNER JOIN user_profiles up ON u.id = up.user_id
-    LEFT JOIN students st ON u.id = st.user_id
-    WHERE ss.section_id = ? AND ss.status = 'active'
-    ORDER BY up.last_name, up.first_name
-");
-$students_query->bind_param("i", $section_id);
+// Get students (subject-specific roster when available, fallback to section roster)
+$has_subject_enrollment_table = false;
+$check_table = $conn->query("SHOW TABLES LIKE 'student_subject_enrollments'");
+if ($check_table && $check_table->num_rows > 0) {
+    $has_subject_enrollment_table = true;
+}
+
+$use_subject_roster = false;
+if ($has_subject_enrollment_table) {
+    $roster_check = $conn->prepare("
+        SELECT COUNT(*) as cnt
+        FROM student_subject_enrollments
+        WHERE section_id = ? AND subject_id = ? AND academic_year_id = ? AND status = 'enrolled'
+    ");
+    $roster_check->bind_param("iii", $section_id, $subject_id, $current_ay_id);
+    $roster_check->execute();
+    $use_subject_roster = (($roster_check->get_result()->fetch_assoc()['cnt'] ?? 0) > 0);
+}
+
+if ($use_subject_roster) {
+    $students_query = $conn->prepare("
+        SELECT u.id, up.first_name, up.last_name, u.email,
+               COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
+               COALESCE(st.student_type, 'regular') as student_type,
+               up.contact_no as phone,
+               CONCAT(up.first_name, ' ', up.last_name) as name,
+               sse.created_at as enrolled_at
+        FROM student_subject_enrollments sse
+        INNER JOIN users u ON sse.student_id = u.id
+        INNER JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN students st ON u.id = st.user_id
+        WHERE sse.section_id = ? AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status = 'enrolled'
+        ORDER BY up.last_name, up.first_name
+    ");
+    $students_query->bind_param("iii", $section_id, $subject_id, $current_ay_id);
+} else {
+    $students_query = $conn->prepare("
+        SELECT u.id, up.first_name, up.last_name, u.email,
+               COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
+               COALESCE(st.student_type, 'regular') as student_type,
+               up.contact_no as phone,
+               CONCAT(up.first_name, ' ', up.last_name) as name,
+               ss.enrolled_at
+        FROM section_students ss
+        INNER JOIN users u ON ss.student_id = u.id
+        INNER JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN students st ON u.id = st.user_id
+        WHERE ss.section_id = ? AND ss.status = 'active'
+        ORDER BY up.last_name, up.first_name
+    ");
+    $students_query->bind_param("i", $section_id);
+}
 $students_query->execute();
 $students_result = $students_query->get_result();
 
@@ -167,7 +208,12 @@ include '../../includes/header.php';
                                 <div class="student-avatar me-3">
                                     <?php echo strtoupper(substr($student['first_name'], 0, 1) . substr($student['last_name'], 0, 1)); ?>
                                 </div>
-                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($student['name']); ?></div>
+                                <div class="fw-bold text-dark">
+                                    <?php echo htmlspecialchars($student['name']); ?>
+                                    <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
+                                        <span class="badge bg-warning text-dark ms-2"><?php echo ucfirst($student['student_type']); ?></span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </td>
                         <td><small class="text-muted"><?php echo htmlspecialchars($student['email']); ?></small></td>

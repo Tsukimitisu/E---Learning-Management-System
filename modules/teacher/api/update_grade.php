@@ -20,7 +20,7 @@ $remarks = clean_input($_POST['remarks'] ?? '');
 $notes = clean_input($_POST['notes'] ?? '');
 $grade_id = (int)($_POST['grade_id'] ?? 0);
 $teacher_id = $_SESSION['user_id'];
-$current_version = (int)($_POST['version'] ?? 1);
+$current_version = (int)($_POST['version'] ?? 0);
 
 // Get current academic year
 $current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
@@ -48,23 +48,57 @@ if ($prefinal > 0) $grading_periods[] = 'prefinal';
 if ($final > 0) $grading_periods[] = 'final';
 
 if (!empty($grading_periods)) {
-    $placeholders = str_repeat('?,', count($grading_periods) - 1) . '?';
-    $check_lock = $conn->prepare("
-        SELECT grading_period, is_locked, locked_by
-        FROM grade_locks
-        WHERE section_id = ? AND subject_id = ? AND grading_period IN ($placeholders) AND is_locked = 1
-    ");
-    $types = "ii" . str_repeat('s', count($grading_periods));
-    $params = array_merge([$section_id, $subject_id], $grading_periods);
-    $check_lock->bind_param($types, ...$params);
-    $check_lock->execute();
-    $locked_periods = $check_lock->get_result();
+    // Support both schemas:
+    // 1) New lock format: section_id + subject_id
+    // 2) Legacy lock format: class_id
+    $has_section_id = false;
+    $has_subject_id = false;
+    $has_class_id = false;
 
-    if ($locked_periods->num_rows > 0) {
-        $locked_list = [];
-        while ($row = $locked_periods->fetch_assoc()) {
-            $locked_list[] = ucfirst($row['grading_period']);
+    if ($col = $conn->query("SHOW COLUMNS FROM grade_locks LIKE 'section_id'")) {
+        $has_section_id = $col->num_rows > 0;
+    }
+    if ($col = $conn->query("SHOW COLUMNS FROM grade_locks LIKE 'subject_id'")) {
+        $has_subject_id = $col->num_rows > 0;
+    }
+    if ($col = $conn->query("SHOW COLUMNS FROM grade_locks LIKE 'class_id'")) {
+        $has_class_id = $col->num_rows > 0;
+    }
+
+    $locked_list = [];
+    foreach ($grading_periods as $period) {
+        $check_lock = null;
+
+        if ($has_section_id && $has_subject_id) {
+            $check_lock = $conn->prepare("
+                SELECT 1 FROM grade_locks
+                WHERE section_id = ? AND subject_id = ? AND grading_period = ? AND is_locked = 1
+                LIMIT 1
+            ");
+            if ($check_lock) {
+                $check_lock->bind_param("iis", $section_id, $subject_id, $period);
+            }
+        } elseif ($has_class_id) {
+            // Fallback for legacy schema where class_id is used for section context
+            $check_lock = $conn->prepare("
+                SELECT 1 FROM grade_locks
+                WHERE class_id = ? AND grading_period = ? AND is_locked = 1
+                LIMIT 1
+            ");
+            if ($check_lock) {
+                $check_lock->bind_param("is", $section_id, $period);
+            }
         }
+
+        if ($check_lock) {
+            $check_lock->execute();
+            if ($check_lock->get_result()->num_rows > 0) {
+                $locked_list[] = ucfirst($period);
+            }
+        }
+    }
+
+    if (!empty($locked_list)) {
         echo json_encode([
             'status' => 'error',
             'message' => 'Cannot update grades. The following grading periods are locked: ' . implode(', ', $locked_list)
@@ -96,8 +130,8 @@ try {
 
         $current_grade = $result->fetch_assoc();
 
-        // Optimistic locking: Check version
-        if ($current_grade['version'] != $current_version) {
+        // Optimistic locking: only enforce when client sends a version (>0)
+        if ($current_version > 0 && $current_grade['version'] != $current_version) {
             $conn->rollback();
             echo json_encode([
                 'status' => 'error',
