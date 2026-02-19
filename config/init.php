@@ -15,6 +15,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Security Headers
+// HSTS Header (Forces HTTPS)
+header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+
+// Best effort to hide Server disclosure (Note: May be overridden by OpenResty/Nginx)
+header_remove("X-Powered-By");
+header("Server: Website"); // Obfuscate server header if possible
+
 // Define System Constants
 define('SITE_NAME', 'ELMS - Datamex');
 define('BASE_URL', 'http://localhost/elms_system/');

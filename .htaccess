@@ -1,0 +1,2 @@
+# .htaccess is currently ignored because the server is identified as OpenResty/Nginx.
+# Security headers are managed in config/init.php
