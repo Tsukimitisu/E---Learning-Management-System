@@ -437,9 +437,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('audit-logs-tbody')) loadAuditLogs(1);
     if (document.getElementById('security-logs-tbody')) loadSecurityLogs(1);
     if (document.getElementById('branches-tbody')) loadBranches();
-    
+
     // Refresh dashboard every 30 seconds
     if (document.getElementById('dashboard-stats')) {
         setInterval(loadDashboardStats, 30000);
     }
+
+    // Listen for real-time update events
+    window.addEventListener('elms-realtime-update', function(e) {
+        // Reload dashboard stats and logs instantly
+        if (document.getElementById('dashboard-stats')) loadDashboardStats();
+        if (document.getElementById('audit-logs-tbody')) loadAuditLogs(1);
+        if (document.getElementById('security-logs-tbody')) loadSecurityLogs(1);
+        if (document.getElementById('branches-tbody')) loadBranches();
+    });
 });

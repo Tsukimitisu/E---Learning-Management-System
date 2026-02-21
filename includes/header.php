@@ -9,6 +9,9 @@ if (!isset($_SESSION['user_id'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Real-time Socket.IO Loader -->
+    <script src="/elms_system/assets/js/realtime_loader.js"></script>
+    <script src="/elms_system/assets/js/realtime_client.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?php echo $page_title ?? 'Dashboard'; ?> - <?php echo SITE_NAME; ?></title>

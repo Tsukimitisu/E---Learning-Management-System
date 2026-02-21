@@ -8,13 +8,18 @@ const userRole = document.body.dataset.userRole || null;
 
 if (userRole === '6' || window.location.pathname.includes('/student/')) {
     let lastCheckTime = Math.floor(Date.now() / 1000);
-    
+
     // Poll every 3 seconds
     setInterval(checkForUpdates, 3000);
-    
+
     // Initial check
     checkForUpdates();
-    
+
+    // Listen for real-time update events
+    window.addEventListener('elms-realtime-update', function(e) {
+        checkForUpdates();
+    });
+
     async function checkForUpdates() {
         try {
             const response = await fetch('../../api/check_updates.php', {

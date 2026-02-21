@@ -3,6 +3,14 @@ const BASE_URL = '/elms_system/';
 
 $(document).ready(function() {
     initializeFormHandlers();
+
+    // Listen for real-time update events
+    window.addEventListener('elms-realtime-update', function(e) {
+        // Reload curriculum data (customize as needed)
+        if (typeof loadCurriculumData === 'function') loadCurriculumData();
+        if (typeof loadTracks === 'function') loadTracks();
+        if (typeof loadPrograms === 'function') loadPrograms();
+    });
 });
 
 // Toggle SHS/College fields based on subject type selection
