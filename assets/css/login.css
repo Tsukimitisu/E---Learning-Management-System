@@ -21,7 +21,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('../image/LoginImage.png'); 
+    background-image: url('../image/senior-high.png'); 
     background-size: cover;
     background-position: center;
     transition: transform 10s ease;
@@ -34,7 +34,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(128, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
+    background: linear-gradient(135deg, rgba(107, 38, 38, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
 }
 
 .hero-content {
