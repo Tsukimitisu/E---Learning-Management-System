@@ -9,7 +9,7 @@
 
     <script>
         $(document).ready(function () {
-            
+
             // BURGER MENU FUNCTIONALITY
             $('#sidebarCollapse').on('click', function (e) {
                 e.preventDefault();
@@ -48,6 +48,13 @@
                     if (result.isConfirmed) {
                         window.location.href = '../../logout.php';
                     }
+                });
+            });
+
+            // Ensure Bootstrap modals are always clickable by removing backdrops
+            document.addEventListener('shown.bs.modal', function () {
+                document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+                    el.parentNode && el.parentNode.removeChild(el);
                 });
             });
         });

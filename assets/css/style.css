@@ -35,3 +35,12 @@ body {
 .min-vh-100 {
     min-height: 100vh;
 }
+
+/* Ensure modals are always clickable, even if backdrop stacking misbehaves */
+.modal-backdrop {
+    pointer-events: none !important;
+}
+.modal,
+.modal * {
+    pointer-events: auto !important;
+}

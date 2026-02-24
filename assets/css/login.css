@@ -8,11 +8,13 @@
 }
 
 body {
-    font-family: 'Public Sans', sans-serif;
-    background-color: var(--white);
-    color: var(--text-dark);
-    margin: 0;
+        font-family: 'Public Sans', sans-serif;
+        background-color: var(--white);
+        color: var(--text-dark);
+        margin: 0;
 }
+
+/* (modal-specific overrides removed; Bootstrap defaults are used) */
 
 /* LEFT PANEL */
 .hero-image {
