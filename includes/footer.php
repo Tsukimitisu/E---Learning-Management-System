@@ -9,32 +9,41 @@
 
     <script>
         $(document).ready(function () {
+            
             // BURGER MENU FUNCTIONALITY
             $('#sidebarCollapse').on('click', function (e) {
                 e.preventDefault();
                 $('#sidebar').toggleClass('active');
-                $('#sidebarOverlay').toggleClass('active');
+                
+                // Only toggle overlay if on Mobile (screen width < 992px)
+                if (window.innerWidth <= 992) {
+                    $('#sidebarOverlay').toggleClass('active');
+                }
             });
 
+            // Close sidebar when clicking overlay (Mobile only)
             $('#sidebarOverlay').on('click', function () {
                 $('#sidebar').removeClass('active');
                 $(this).removeClass('active');
             });
 
-            // LOGOUT CONFIRMATION (Matches the Class in Header Dropdown)
+            // LOGOUT CONFIRMATION
             $(document).on('click', '.logout-trigger', function (e) {
                 e.preventDefault();
                 
                 Swal.fire({
-                    title: 'Logout Account?',
-                    text: "You will need to sign in again to access the ELMS portal.",
-                    icon: 'warning',
+                    title: 'Sign Out?',
+                    text: "Are you sure you want to end your session?",
+                    icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#800000', 
-                    cancelButtonColor: '#003366',  
-                    confirmButtonText: 'Yes, Logout',
-                    cancelButtonText: 'Stay Logged In',
-                    reverseButtons: true
+                    cancelButtonColor: '#6c757d',  
+                    confirmButtonText: 'Yes, Sign Out',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.location.href = '../../logout.php';
@@ -45,5 +54,3 @@
     </script>
 </body>
 </html>
-
-
