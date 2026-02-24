@@ -8,6 +8,10 @@ if (!isset($_SESSION['user_id'])) {
 <html lang="en">
 <head>
     <!-- Real-time Socket.IO Loader -->
+    <script>
+        // Enable realtime client for all authenticated roles
+        window.ELMS_REALTIME_ENABLED = true;
+    </script>
     <script src="/elms_system/assets/js/realtime_loader.js"></script>
     <script src="/elms_system/assets/js/realtime_client.js"></script>
     <meta charset="UTF-8">
@@ -185,7 +189,7 @@ if (!isset($_SESSION['user_id'])) {
         }
     </style>
 </head>
-<body>
+<body data-user-role="<?php echo isset($_SESSION['role_id']) ? (int)$_SESSION['role_id'] : 0; ?>">
     <div class="overlay" id="sidebarOverlay"></div>
     
     <div class="wrapper">
