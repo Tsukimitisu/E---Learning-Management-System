@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:pm2": "pm2 start ecosystem.config.cjs",
+    "restart:pm2": "pm2 restart elms-realtime",
+    "logs:pm2": "pm2 logs elms-realtime"
   },
   "keywords": [],
   "author": "",

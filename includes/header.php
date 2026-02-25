@@ -3,14 +3,30 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: ../../index.php');
     exit();
 }
+
+$session_role_id = isset($_SESSION['role_id']) ? (int)$_SESSION['role_id'] : 0;
+$session_user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+$session_role_raw = isset($_SESSION['role']) ? (string)$_SESSION['role'] : 'guest';
+$session_role_key = strtolower(trim($session_role_raw));
+$session_role_key = preg_replace('/[\s-]+/', '_', $session_role_key);
+$session_role_key = preg_replace('/[^a-z0-9_]/', '', $session_role_key);
+if ($session_role_key === '') {
+    $session_role_key = 'guest';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- Real-time Socket.IO Loader -->
     <script>
-        // Enable realtime client for all authenticated roles
-        window.ELMS_REALTIME_ENABLED = true;
+        // Realtime runtime settings (config/init.php)
+        window.ELMS_REALTIME_ENABLED = <?php echo ELMS_REALTIME_ENABLED ? 'true' : 'false'; ?>;
+        window.ELMS_REALTIME_SERVER_URL = <?php echo json_encode(ELMS_REALTIME_SERVER_URL); ?>;
+        window.ELMS_REALTIME_SERVER_PORT = <?php echo json_encode((int)ELMS_REALTIME_SERVER_PORT); ?>;
+        window.ELMS_REALTIME_SOCKET_PATH = <?php echo json_encode((string)ELMS_REALTIME_SOCKET_PATH); ?>;
+        window.USER_ID = <?php echo json_encode($session_user_id); ?>;
+        window.USER_ROLE = <?php echo json_encode($session_role_key); ?>;
+        window.USER_ROLE_ID = <?php echo json_encode($session_role_id); ?>;
     </script>
     <script src="/elms_system/assets/js/realtime_loader.js"></script>
     <script src="/elms_system/assets/js/realtime_client.js"></script>
@@ -189,7 +205,11 @@ if (!isset($_SESSION['user_id'])) {
         }
     </style>
 </head>
-<body data-user-role="<?php echo isset($_SESSION['role_id']) ? (int)$_SESSION['role_id'] : 0; ?>">
+<body
+    data-user-id="<?php echo $session_user_id; ?>"
+    data-user-role="<?php echo htmlspecialchars($session_role_key, ENT_QUOTES, 'UTF-8'); ?>"
+    data-user-role-id="<?php echo $session_role_id; ?>"
+>
     <div class="overlay" id="sidebarOverlay"></div>
     
     <div class="wrapper">

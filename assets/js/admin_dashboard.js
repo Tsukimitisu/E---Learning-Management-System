@@ -370,6 +370,20 @@ function deleteBranch(branchId, branchName) {
 }
 
 // ===== UTILITY FUNCTIONS =====
+function emitSuperAdminRealtime(data) {
+    if (typeof window.elmsEmitRealtime === 'function') {
+        window.elmsEmitRealtime('super_admin', data || {});
+        return;
+    }
+
+    if (window.elmsSocket && window.elmsSocket.connected) {
+        window.elmsSocket.emit('update_role', {
+            role: 'super_admin',
+            data: data || {}
+        });
+    }
+}
+
 function showAlert(message, type = 'info') {
     const alertContainer = document.getElementById('alertContainer');
     if (!alertContainer) {
@@ -393,6 +407,13 @@ function showAlert(message, type = 'info') {
         const el = document.getElementById(alertId);
         if (el) el.remove();
     }, 5000);
+
+    if (type === 'success') {
+        emitSuperAdminRealtime({
+            type: 'super_admin_action',
+            message: message
+        });
+    }
 }
 
 function formatNumber(num) {

@@ -104,6 +104,39 @@ try {
     $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
     $audit->bind_param("iss", $teacher_id, $action, $ip);
     $audit->execute();
+
+    // Resolve enrolled students for this subject in the active academic year.
+    $recipient_ids = [];
+    $recipient_stmt = $conn->prepare("
+        SELECT DISTINCT sse.student_id
+        FROM student_subject_enrollments sse
+        WHERE sse.subject_id = ?
+          AND sse.academic_year_id = ?
+          AND sse.status = 'enrolled'
+    ");
+
+    if ($recipient_stmt) {
+        $recipient_stmt->bind_param("ii", $subject_id, $current_ay_id);
+        $recipient_stmt->execute();
+        $recipient_result = $recipient_stmt->get_result();
+        while ($recipient_row = $recipient_result->fetch_assoc()) {
+            $recipient_ids[] = (int)$recipient_row['student_id'];
+        }
+    }
+
+    // Push realtime update to relevant students only; fallback to role broadcast.
+    $payload = [
+        'type' => 'material_uploaded',
+        'subject_id' => $subject_id,
+        'file_path' => $file_path,
+        'message' => 'A new learning material has been uploaded.'
+    ];
+
+    if (!empty($recipient_ids)) {
+        send_realtime_update('notification', $payload, null, $recipient_ids);
+    } else {
+        send_realtime_update('notification', $payload, 'student');
+    }
     
     echo json_encode(['status' => 'success', 'message' => 'Material uploaded successfully']);
 } catch (Exception $e) {

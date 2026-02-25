@@ -580,6 +580,22 @@ function assignCollegeCourse() {
 
 // ========== UTILITY FUNCTIONS ==========
 function showAlert(message, type = 'info') {
+    if (type === 'success') {
+        const payload = {
+            type: 'curriculum_updated',
+            message: message
+        };
+
+        if (typeof window.elmsEmitRealtime === 'function') {
+            window.elmsEmitRealtime('school_admin', payload);
+        } else if (window.elmsSocket && window.elmsSocket.connected) {
+            window.elmsSocket.emit('update_role', {
+                role: 'school_admin',
+                data: payload
+            });
+        }
+    }
+
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show" role="alert">
             ${message}

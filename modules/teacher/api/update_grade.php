@@ -189,6 +189,15 @@ try {
     $audit->bind_param("iss", $teacher_id, $action, $ip);
     $audit->execute();
 
+    // Push realtime update to the specific student.
+    send_realtime_update('notification', [
+        'type' => 'grade_updated',
+        'student_id' => $student_id,
+        'section_id' => $section_id,
+        'subject_id' => $subject_id,
+        'message' => 'A new grade has been posted.'
+    ], null, [$student_id]);
+
     // Get the updated version for optimistic locking
     $version_stmt = $conn->prepare("SELECT version FROM grades WHERE id = ?");
     $version_stmt->bind_param("i", $return_grade_id);

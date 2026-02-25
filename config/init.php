@@ -23,10 +23,48 @@ header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload"
 header_remove("X-Powered-By");
 header("Server: Website"); // Obfuscate server header if possible
 
+if (!function_exists('elms_env')) {
+    function elms_env($key, $default = null) {
+        $value = getenv($key);
+        if ($value === false || $value === null || $value === '') {
+            return $default;
+        }
+        return $value;
+    }
+}
+
+if (!function_exists('elms_env_bool')) {
+    function elms_env_bool($key, $default = false) {
+        $value = elms_env($key, null);
+        if ($value === null) {
+            return $default;
+        }
+
+        $normalized = strtolower(trim((string)$value));
+        return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+    }
+}
+
 // Define System Constants
 define('SITE_NAME', 'ELMS - Datamex');
-define('BASE_URL', 'http://localhost/elms_system/');
+$base_url = rtrim((string)elms_env('ELMS_BASE_URL', 'http://localhost/elms_system/'), '/') . '/';
+define('BASE_URL', $base_url);
 define('UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/elms_system/uploads/');
+
+$realtime_server_url = trim((string)elms_env('ELMS_REALTIME_SERVER_URL', ''));
+$realtime_broadcast_url = trim((string)elms_env('ELMS_REALTIME_BROADCAST_URL', ''));
+if ($realtime_broadcast_url === '' && $realtime_server_url !== '') {
+    $realtime_broadcast_url = rtrim($realtime_server_url, '/') . '/api/broadcast';
+}
+if ($realtime_broadcast_url === '') {
+    $realtime_broadcast_url = 'http://127.0.0.1:3000/api/broadcast';
+}
+
+define('ELMS_REALTIME_ENABLED', elms_env_bool('ELMS_REALTIME_ENABLED', true));
+define('ELMS_REALTIME_SERVER_URL', $realtime_server_url);
+define('ELMS_REALTIME_SERVER_PORT', (int)elms_env('ELMS_REALTIME_SERVER_PORT', '3000'));
+define('ELMS_REALTIME_SOCKET_PATH', (string)elms_env('ELMS_REALTIME_SOCKET_PATH', '/socket.io'));
+define('ELMS_REALTIME_BROADCAST_URL', $realtime_broadcast_url);
 
 // Define Role Constants
 define('ROLE_SUPER_ADMIN', 1);
@@ -69,6 +107,7 @@ if (isset($conn) && $conn && !$conn->connect_error) {
 
 // Include Helper Functions
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/realtime_helper.php';
 
 // Include RBAC System
 require_once __DIR__ . '/../includes/rbac.php';

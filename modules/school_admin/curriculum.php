@@ -199,6 +199,23 @@ function goBack() {
 }
 
 function showAlert(message, type) {
+    if (type === 'success') {
+        if (typeof window.elmsEmitRealtime === 'function') {
+            window.elmsEmitRealtime('school_admin', {
+                type: 'curriculum_updated',
+                message: message
+            });
+        } else if (window.elmsSocket && window.elmsSocket.connected) {
+            window.elmsSocket.emit('update_role', {
+                role: 'school_admin',
+                data: {
+                    type: 'curriculum_updated',
+                    message: message
+                }
+            });
+        }
+    }
+
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm" role="alert">
             ${message}

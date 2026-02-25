@@ -19,7 +19,7 @@ if ($material_id == 0) {
 try {
     // Verify material belongs to teacher's class
     $verify = $conn->prepare("
-        SELECT lm.file_path, lm.class_id
+        SELECT lm.file_path, lm.class_id, lm.subject_id
         FROM learning_materials lm
         INNER JOIN classes cl ON lm.class_id = cl.id
         WHERE lm.id = ? AND cl.teacher_id = ?
@@ -52,6 +52,13 @@ try {
     $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
     $audit->bind_param("iss", $teacher_id, $action, $ip);
     $audit->execute();
+
+    // Push realtime update to student clients.
+    send_realtime_update('update', [
+        'type' => 'material_deleted',
+        'material_id' => $material_id,
+        'subject_id' => (int)($material['subject_id'] ?? 0)
+    ], 'student');
     
     echo json_encode(['status' => 'success', 'message' => 'Material deleted successfully']);
 } catch (Exception $e) {

@@ -1,84 +1,95 @@
 /**
- * Real-Time Notification Polling System
- * Checks for new grades and materials every 3 seconds
+ * Push-only student notifications (no polling).
+ * Requires realtime_client.js + running Socket.IO server.
  */
+(function() {
+    const userRole = document.body.dataset.userRole || null;
+    const userRoleId = document.body.dataset.userRoleId || null;
+    const rawUserId = document.body.dataset.userId || window.USER_ID || null;
+    const userId = Number(rawUserId);
+    const isStudent = userRole === 'student' || userRoleId === '6' || window.location.pathname.includes('/student/');
 
-// Only run for student users
-const userRole = document.body.dataset.userRole || null;
-
-if (userRole === '6' || window.location.pathname.includes('/student/')) {
-    let lastCheckTime = Math.floor(Date.now() / 1000);
-
-    // Poll every 3 seconds
-    setInterval(checkForUpdates, 3000);
-
-    // Initial check
-    checkForUpdates();
-
-    // Listen for real-time update events
-    window.addEventListener('elms-realtime-update', function(e) {
-        checkForUpdates();
-    });
-
-    async function checkForUpdates() {
-        try {
-            const response = await fetch('../../api/check_updates.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `last_check=${lastCheckTime}`
-            });
-            
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                const totalUpdates = data.new_grades + data.new_materials;
-                
-                if (totalUpdates > 0) {
-                    showNotificationBadge(totalUpdates);
-                    
-                    // Optional: Show toast notification
-                    if (data.new_grades > 0) {
-                        showToast(`You have ${data.new_grades} new grade(s)!`, 'success');
-                    }
-                    if (data.new_materials > 0) {
-                        showToast(`${data.new_materials} new learning material(s) uploaded!`, 'info');
-                    }
-                } else {
-                    hideNotificationBadge();
-                }
-                
-                // Update last check time
-                lastCheckTime = data.current_time;
-            }
-        } catch (error) {
-            console.error('Notification check failed:', error);
-        }
+    if (!isStudent) {
+        return;
     }
-    
+
+    let unreadCount = 0;
+
+    function isForCurrentUser(payload) {
+        if (!payload || typeof payload !== 'object') return false;
+        if (!Number.isInteger(userId) || userId <= 0) return true;
+
+        if (payload.student_id !== undefined && payload.student_id !== null) {
+            return Number(payload.student_id) === userId;
+        }
+
+        if (Array.isArray(payload.user_ids) && payload.user_ids.length > 0) {
+            return payload.user_ids.map(Number).includes(userId);
+        }
+
+        return true;
+    }
+
+    function resolveNotificationPayload(eventName, eventData) {
+        if (!eventData || typeof eventData !== 'object') return null;
+
+        // Skip compatibility wrappers to avoid duplicate toasts.
+        if (eventName === 'update' && eventData.event && eventData.data) {
+            return null;
+        }
+
+        const payload = eventData.data && typeof eventData.data === 'object' ? eventData.data : eventData;
+        if (!payload || typeof payload !== 'object') return null;
+
+        if (!isForCurrentUser(payload)) return null;
+
+        if (payload.type === 'grade_updated') {
+            return {
+                increment: 1,
+                message: payload.message || 'A new grade has been posted.',
+                tone: 'success'
+            };
+        }
+
+        if (payload.type === 'material_uploaded') {
+            return {
+                increment: 1,
+                message: payload.message || 'A new learning material was uploaded.',
+                tone: 'info'
+            };
+        }
+
+        if (payload.type === 'material_deleted') {
+            return {
+                increment: 0,
+                message: payload.message || 'A learning material was removed.',
+                tone: 'danger'
+            };
+        }
+
+        return null;
+    }
+
     function showNotificationBadge(count) {
         const badge = document.getElementById('notificationBadge');
         const countSpan = document.getElementById('notificationCount');
-        
+
         if (badge && countSpan) {
             countSpan.textContent = count;
             badge.style.display = 'inline-block';
-            
-            // Add animation
             badge.classList.add('animate-pulse');
         }
     }
-    
+
     function hideNotificationBadge() {
         const badge = document.getElementById('notificationBadge');
         if (badge) {
             badge.style.display = 'none';
+            badge.classList.remove('animate-pulse');
         }
     }
-    
-    function showToast(message, type = 'info') {
-        // Check if toast container exists
+
+    function showToast(message, type) {
         let toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) {
             toastContainer = document.createElement('div');
@@ -86,10 +97,10 @@ if (userRole === '6' || window.location.pathname.includes('/student/')) {
             toastContainer.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999;';
             document.body.appendChild(toastContainer);
         }
-        
-        const toastId = 'toast_' + Date.now();
+
+        const toastId = 'toast_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         const bgColor = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : 'bg-info';
-        
+
         const toastHTML = `
             <div id="${toastId}" class="toast align-items-center text-white ${bgColor} border-0" role="alert">
                 <div class="d-flex">
@@ -100,21 +111,45 @@ if (userRole === '6' || window.location.pathname.includes('/student/')) {
                 </div>
             </div>
         `;
-        
+
         toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-        
+
         const toastElement = document.getElementById(toastId);
         const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
         toast.show();
-        
-        // Remove from DOM after hidden
-        toastElement.addEventListener('hidden.bs.toast', () => {
+
+        toastElement.addEventListener('hidden.bs.toast', function() {
             toastElement.remove();
         });
     }
-}
 
-// Add pulse animation CSS
+    window.addEventListener('elms-realtime-update', function(e) {
+        const detail = e.detail || {};
+        const notification = resolveNotificationPayload(detail.event, detail.data);
+
+        if (!notification) {
+            return;
+        }
+
+        if (notification.increment > 0) {
+            unreadCount += notification.increment;
+            showNotificationBadge(unreadCount);
+        }
+
+        if (notification.message) {
+            showToast(notification.message, notification.tone || 'info');
+        }
+    });
+
+    const notificationWrapper = document.querySelector('.notification-wrapper');
+    if (notificationWrapper) {
+        notificationWrapper.addEventListener('click', function() {
+            unreadCount = 0;
+            hideNotificationBadge();
+        });
+    }
+})();
+
 const style = document.createElement('style');
 style.textContent = `
     @keyframes pulse {
