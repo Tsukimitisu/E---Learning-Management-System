@@ -79,6 +79,7 @@ function getAvailableSections() {
             s.shs_strand_id as strand_id,
             s.year_level_id,
             s.shs_grade_level_id as grade_level_id,
+            CASE WHEN s.program_id IS NOT NULL THEN 'college' ELSE 'shs' END as subject_type,
             p.program_code,
             p.program_name,
             ss.strand_code,
@@ -87,7 +88,25 @@ function getAvailableSections() {
             sgl.grade_name,
             CONCAT(up.first_name, ' ', up.last_name) as adviser_name,
             (SELECT COUNT(*) FROM section_students WHERE section_id = s.id AND status = 'active') as current_enrolled,
-            (SELECT COUNT(*) FROM section_students WHERE section_id = s.id AND student_id = ? AND status = 'active') as is_enrolled
+            (SELECT COUNT(*) FROM section_students WHERE section_id = s.id AND student_id = ? AND status = 'active') as is_enrolled,
+            (
+                SELECT COUNT(*)
+                FROM student_subject_enrollments sse
+                INNER JOIN curriculum_subjects cs ON sse.subject_id = cs.id
+                WHERE sse.student_id = ? 
+                  AND sse.academic_year_id = ?
+                  AND sse.status = 'enrolled'
+                  AND (
+                      (s.program_id IS NOT NULL AND cs.program_id = s.program_id AND cs.year_level_id = s.year_level_id)
+                      OR
+                      (s.shs_strand_id IS NOT NULL AND cs.shs_strand_id = s.shs_strand_id AND cs.shs_grade_level_id = s.shs_grade_level_id)
+                  )
+                  AND (
+                      s.semester = 'summer'
+                      OR (s.semester = '1st' AND cs.semester = 1)
+                      OR (s.semester = '2nd' AND cs.semester = 2)
+                  )
+            ) as eligible_subject_count
         FROM sections s
         LEFT JOIN programs p ON s.program_id = p.id
         LEFT JOIN shs_strands ss ON s.shs_strand_id = ss.id
@@ -100,7 +119,7 @@ function getAvailableSections() {
     ";
     
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("iii", $student_id, $branch_id, $current_ay_id);
+    $stmt->bind_param("iiiii", $student_id, $student_id, $current_ay_id, $branch_id, $current_ay_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -108,6 +127,7 @@ function getAvailableSections() {
     while ($row = $result->fetch_assoc()) {
         $row['is_enrolled'] = (bool)$row['is_enrolled'];
         $row['is_full'] = $row['current_enrolled'] >= $row['max_capacity'];
+        $row['is_eligible'] = ((int)($row['eligible_subject_count'] ?? 0)) > 0;
         $sections[] = $row;
     }
     
@@ -184,6 +204,11 @@ function enrollStudent() {
     
     if ($section['current_enrolled'] >= $section['max_capacity']) {
         echo json_encode(['success' => false, 'message' => 'Section is full']);
+        return;
+    }
+
+    if (!hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_id)) {
+        echo json_encode(['success' => false, 'message' => 'Student has no enrolled subjects for this section. Assign only to sections with pending enrolled subjects.']);
         return;
     }
     
@@ -410,6 +435,11 @@ function bulkEnroll() {
             $skipped_students[] = $student_id;
             continue;
         }
+
+        if (!hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_id)) {
+            $skipped_students[] = $student_id;
+            continue;
+        }
         
         $stmt->bind_param("ii", $section_id, $student_id);
         $stmt->execute();
@@ -421,7 +451,7 @@ function bulkEnroll() {
     
     $message = "$enrolled_count students added to section";
     if (count($skipped_students) > 0) {
-        $message .= ". " . count($skipped_students) . " student(s) skipped (already assigned to a section).";
+        $message .= ". " . count($skipped_students) . " student(s) skipped (already assigned or no eligible subjects for selected section).";
     }
     
     echo json_encode(['success' => true, 'message' => $message]);
@@ -549,6 +579,11 @@ function bulkAssignToSection() {
                 $skipped_students[] = $student_id;
                 continue;
             }
+
+            if (!hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_id)) {
+                $skipped_students[] = $student_id;
+                continue;
+            }
             
             $stmt->bind_param("ii", $section_id, $student_id);
             if ($stmt->execute() && $stmt->affected_rows > 0) {
@@ -561,7 +596,7 @@ function bulkAssignToSection() {
         
         $message = "$assigned_count student(s) assigned to section successfully";
         if (count($skipped_students) > 0) {
-            $message .= ". " . count($skipped_students) . " student(s) skipped (already assigned to a section).";
+            $message .= ". " . count($skipped_students) . " student(s) skipped (already assigned or no eligible subjects for selected section).";
         }
         
         echo json_encode(['success' => true, 'message' => $message]);
@@ -654,7 +689,7 @@ function getSectionsByProgram() {
 
 // Get students filtered by program/strand (enrolled students in that program)
 function getStudentsByProgram() {
-    global $conn, $branch_id;
+    global $conn, $branch_id, $current_ay_id;
     
     $program_type = $_GET['program_type'] ?? '';
     $program_id = (int)($_GET['program_id'] ?? 0);
@@ -666,8 +701,36 @@ function getStudentsByProgram() {
     }
     
     $students = [];
-    
-    // Get students enrolled in the specified program/strand
+
+    if ($program_type === 'college') {
+        $eligibility_clause = "
+            AND EXISTS (
+                SELECT 1
+                FROM student_subject_enrollments sse
+                INNER JOIN curriculum_subjects cs ON cs.id = sse.subject_id
+                WHERE sse.student_id = u.id
+                  AND sse.academic_year_id = ?
+                  AND sse.status = 'enrolled'
+                  AND cs.program_id = ?
+                  " . ($year_level_id ? "AND cs.year_level_id = ?" : "") . "
+            )
+        ";
+    } else {
+        $eligibility_clause = "
+            AND EXISTS (
+                SELECT 1
+                FROM student_subject_enrollments sse
+                INNER JOIN curriculum_subjects cs ON cs.id = sse.subject_id
+                WHERE sse.student_id = u.id
+                  AND sse.academic_year_id = ?
+                  AND sse.status = 'enrolled'
+                  AND cs.shs_strand_id = ?
+                  " . ($year_level_id ? "AND cs.shs_grade_level_id = ?" : "") . "
+            )
+        ";
+    }
+
+    // Get students enrolled in the specified program/strand and with at least one pending subject.
     $query = "
         SELECT 
             u.id,
@@ -685,11 +748,16 @@ function getStudentsByProgram() {
         AND u.status = 'active'
         AND up.branch_id = ?
         AND st.course_id = ?
+        $eligibility_clause
         ORDER BY up.last_name, up.first_name
     ";
-    
+
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("ii", $branch_id, $program_id);
+    if ($year_level_id) {
+        $stmt->bind_param("iiiii", $branch_id, $program_id, $current_ay_id, $program_id, $year_level_id);
+    } else {
+        $stmt->bind_param("iiii", $branch_id, $program_id, $current_ay_id, $program_id);
+    }
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -773,7 +841,7 @@ function syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $curr
     $type_stmt->execute();
     $type_row = $type_stmt->get_result()->fetch_assoc();
     if (!empty($type_row['student_type'])) {
-        $student_type = $type_row['student_type'];
+        $student_type = normalizeStudentType($type_row['student_type']);
     }
 
     $upsert = $conn->prepare("
@@ -797,8 +865,77 @@ function syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $curr
     }
 }
 
+function hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_id) {
+    global $conn;
+
+    $section_stmt = $conn->prepare("
+        SELECT id, program_id, year_level_id, shs_strand_id, shs_grade_level_id, semester
+        FROM sections
+        WHERE id = ?
+        LIMIT 1
+    ");
+    $section_stmt->bind_param("i", $section_id);
+    $section_stmt->execute();
+    $section = $section_stmt->get_result()->fetch_assoc();
+    if (!$section) {
+        return false;
+    }
+
+    $semester = $section['semester'] ?? '1st';
+    $semester_num = 1;
+    if ($semester === '2nd') {
+        $semester_num = 2;
+    } elseif ($semester === 'summer') {
+        $semester_num = 3;
+    }
+
+    if (!empty($section['program_id'])) {
+        $subjects_stmt = $conn->prepare("
+            SELECT id
+            FROM curriculum_subjects
+            WHERE program_id = ? AND year_level_id = ? AND is_active = 1
+              AND (semester = ? OR ? = 3)
+        ");
+        $subjects_stmt->bind_param("iiii", $section['program_id'], $section['year_level_id'], $semester_num, $semester_num);
+    } else {
+        $subjects_stmt = $conn->prepare("
+            SELECT id
+            FROM curriculum_subjects
+            WHERE shs_strand_id = ? AND shs_grade_level_id = ? AND is_active = 1
+              AND (semester = ? OR ? = 3)
+        ");
+        $subjects_stmt->bind_param("iiii", $section['shs_strand_id'], $section['shs_grade_level_id'], $semester_num, $semester_num);
+    }
+    $subjects_stmt->execute();
+    $subjects_result = $subjects_stmt->get_result();
+
+    $subject_ids = [];
+    while ($row = $subjects_result->fetch_assoc()) {
+        $subject_ids[] = (int)$row['id'];
+    }
+    if (empty($subject_ids)) {
+        return false;
+    }
+
+    $eligibility_sql = "
+        SELECT COUNT(*) as cnt
+        FROM student_subject_enrollments
+        WHERE student_id = ? AND academic_year_id = ? AND status = 'enrolled'
+          AND subject_id IN (" . implode(',', array_fill(0, count($subject_ids), '?')) . ")
+    ";
+    $eligibility_stmt = $conn->prepare($eligibility_sql);
+    $eligibility_types = 'ii' . str_repeat('i', count($subject_ids));
+    $eligibility_params = array_merge([$student_id, $current_ay_id], $subject_ids);
+    $eligibility_stmt->bind_param($eligibility_types, ...$eligibility_params);
+    $eligibility_stmt->execute();
+    $eligibility_row = $eligibility_stmt->get_result()->fetch_assoc();
+
+    return ((int)($eligibility_row['cnt'] ?? 0)) > 0;
+}
+
 function ensureIrregularSupportSchema($conn) {
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+    $conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
     $conn->query("
@@ -807,6 +944,8 @@ function ensureIrregularSupportSchema($conn) {
             student_id INT(10) UNSIGNED NOT NULL,
             subject_id INT(10) UNSIGNED NOT NULL,
             completion_source VARCHAR(255) DEFAULT NULL,
+            previous_subject_name VARCHAR(255) DEFAULT NULL,
+            previous_grade VARCHAR(50) DEFAULT NULL,
             remarks TEXT DEFAULT NULL,
             recorded_by INT(10) UNSIGNED DEFAULT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -817,6 +956,8 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+    $conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_subject_name VARCHAR(255) DEFAULT NULL AFTER completion_source");
+    $conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_grade VARCHAR(50) DEFAULT NULL AFTER previous_subject_name");
 
     $conn->query("
         CREATE TABLE IF NOT EXISTS student_subject_enrollments (
@@ -839,4 +980,13 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+    $conn->query("ALTER TABLE student_subject_enrollments MODIFY COLUMN enrollment_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
+}
+
+function normalizeStudentType($student_type) {
+    $student_type = strtolower(trim((string)$student_type));
+    if (!in_array($student_type, ['regular', 'irregular', 'transferee'], true)) {
+        return 'regular';
+    }
+    return $student_type;
 }

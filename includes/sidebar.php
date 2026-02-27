@@ -76,6 +76,8 @@
         if ($_SESSION['role_id'] == ROLE_REGISTRAR) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-speedometer"></i> <span>Dashboard</span></a></li>
             <li><a href="students.php" class="<?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"><i class="bi bi-people-fill"></i> <span>Students</span></a></li>
+            <li><a href="program_enrollment.php" class="<?php echo ($current_page == 'program_enrollment.php') ? 'active' : ''; ?>"><i class="bi bi-mortarboard"></i> <span>Program Enrollment</span></a></li>
+            <li><a href="transferee_management.php" class="<?php echo ($current_page == 'transferee_management.php') ? 'active' : ''; ?>"><i class="bi bi-person-vcard"></i> <span>Transferee Management</span></a></li>
             <li><a href="tuition_fees.php" class="<?php echo ($current_page == 'tuition_fees.php') ? 'active' : ''; ?>"><i class="bi bi-cash-coin"></i> <span>Tuition Fees</span></a></li>
             <li><a href="certificates.php" class="<?php echo ($current_page == 'certificates.php') ? 'active' : ''; ?>"><i class="bi bi-patch-check"></i> <span>Certificates</span></a></li>
             <li><a href="payment_history.php" class="<?php echo ($current_page == 'payment_history.php') ? 'active' : ''; ?>"><i class="bi bi-receipt"></i> <span>Payment History</span></a></li>

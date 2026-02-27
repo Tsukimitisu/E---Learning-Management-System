@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Compatibility guard for environments where migrations are not yet applied.
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+    $conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
     $first_name = clean_input($_POST['first_name'] ?? '');

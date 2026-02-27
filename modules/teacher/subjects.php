@@ -31,6 +31,13 @@ foreach ($academic_years as $ay) {
     }
 }
 
+// Use subject-level student counts when available; fallback to section roster counts.
+$has_subject_enrollment_table = false;
+$check_table = $conn->query("SHOW TABLES LIKE 'student_subject_enrollments'");
+if ($check_table && $check_table->num_rows > 0) {
+    $has_subject_enrollment_table = true;
+}
+
 // Get teacher's assigned classes with all details
 $classes_query = $conn->prepare("
     SELECT 
@@ -79,32 +86,69 @@ while ($class = $classes_result->fetch_assoc()) {
     }
     
     // Get sections for this subject
+    if ($has_subject_enrollment_table) {
+        $student_count_sql = "
+            (SELECT COUNT(*)
+             FROM student_subject_enrollments sse
+             WHERE sse.section_id = s.id
+               AND sse.subject_id = ?
+               AND sse.academic_year_id = ?
+               AND sse.status = 'enrolled') as student_count
+        ";
+    } else {
+        $student_count_sql = "(SELECT COUNT(*) FROM section_students ss WHERE ss.section_id = s.id AND ss.status = 'active') as student_count";
+    }
+
     if (!empty($class['program_id'])) {
         $sections_query = $conn->prepare("
             SELECT s.id, s.section_name, s.room,
-                   (SELECT COUNT(*) FROM section_students ss WHERE ss.section_id = s.id AND ss.status = 'active') as student_count
+                   $student_count_sql
             FROM sections s
             WHERE s.program_id = ? AND s.year_level_id = ?
             AND s.semester = ? AND s.branch_id = ? AND s.academic_year_id = ?
             AND s.is_active = 1
             ORDER BY s.section_name
         ");
-        $sections_query->bind_param("iisii", 
-            $class['program_id'], $class['year_level_id'], $semester_str, $class['branch_id'], $selected_ay_id
-        );
+        if ($has_subject_enrollment_table) {
+            $sections_query->bind_param("iiiisii",
+                $class['subject_id'],
+                $selected_ay_id,
+                $class['program_id'],
+                $class['year_level_id'],
+                $semester_str,
+                $class['branch_id'],
+                $selected_ay_id
+            );
+        } else {
+            $sections_query->bind_param("iisii",
+                $class['program_id'], $class['year_level_id'], $semester_str, $class['branch_id'], $selected_ay_id
+            );
+        }
     } else {
         $sections_query = $conn->prepare("
             SELECT s.id, s.section_name, s.room,
-                   (SELECT COUNT(*) FROM section_students ss WHERE ss.section_id = s.id AND ss.status = 'active') as student_count
+                   $student_count_sql
             FROM sections s
             WHERE s.shs_strand_id = ? AND s.shs_grade_level_id = ?
             AND s.semester = ? AND s.branch_id = ? AND s.academic_year_id = ?
             AND s.is_active = 1
             ORDER BY s.section_name
         ");
-        $sections_query->bind_param("iisii", 
-            $class['shs_strand_id'], $class['shs_grade_level_id'], $semester_str, $class['branch_id'], $selected_ay_id
-        );
+        if ($has_subject_enrollment_table) {
+            $sections_query->bind_param("iiiisii",
+                $class['subject_id'],
+                $selected_ay_id,
+                $class['shs_strand_id'],
+                $class['shs_grade_level_id'],
+                $semester_str,
+                $class['branch_id'],
+                $selected_ay_id
+            );
+        } else {
+            $sections_query->bind_param("iisii",
+                $class['shs_strand_id'], $class['shs_grade_level_id'], $semester_str, $class['branch_id'], $selected_ay_id
+            );
+        }
     }
     $sections_query->execute();
     $sections = $sections_query->get_result()->fetch_all(MYSQLI_ASSOC);

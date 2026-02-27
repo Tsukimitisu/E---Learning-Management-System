@@ -5,11 +5,16 @@ ALTER TABLE students
 ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id,
 ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type;
 
+ALTER TABLE students
+MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular';
+
 CREATE TABLE IF NOT EXISTS student_completed_subjects (
     id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     student_id INT(10) UNSIGNED NOT NULL,
     subject_id INT(10) UNSIGNED NOT NULL,
     completion_source VARCHAR(255) DEFAULT NULL,
+    previous_subject_name VARCHAR(255) DEFAULT NULL,
+    previous_grade VARCHAR(50) DEFAULT NULL,
     remarks TEXT DEFAULT NULL,
     recorded_by INT(10) UNSIGNED DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -19,6 +24,10 @@ CREATE TABLE IF NOT EXISTS student_completed_subjects (
     KEY idx_subject (subject_id),
     KEY idx_recorded_by (recorded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE student_completed_subjects
+ADD COLUMN IF NOT EXISTS previous_subject_name VARCHAR(255) DEFAULT NULL AFTER completion_source,
+ADD COLUMN IF NOT EXISTS previous_grade VARCHAR(50) DEFAULT NULL AFTER previous_subject_name;
 
 CREATE TABLE IF NOT EXISTS student_subject_enrollments (
     id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -39,6 +48,9 @@ CREATE TABLE IF NOT EXISTS student_subject_enrollments (
     KEY idx_academic_year (academic_year_id),
     KEY idx_recorded_by (recorded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE student_subject_enrollments
+MODIFY COLUMN enrollment_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular';
 
 -- Optional backfill:
 -- For currently active section assignments, create subject-level enrollment rows

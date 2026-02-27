@@ -48,12 +48,18 @@ function enrollInProgram() {
     $program_type = $_POST['program_type'] ?? '';
     $program_id = (int)($_POST['program_id'] ?? 0);
     $year_level_id = (int)($_POST['year_level_id'] ?? 0);
+    $semester = normalizeSemester($_POST['semester'] ?? '1st');
     $student_type = normalizeStudentType($_POST['student_type'] ?? 'regular');
     $previous_school = clean_input($_POST['previous_school'] ?? '');
     $completed_subject_ids = parseIdList($_POST['completed_subject_ids'] ?? '[]');
+    $completed_subject_details = parseCompletedSubjectDetails($_POST['completed_subject_details'] ?? '{}');
 
     if (!$student_id || !$program_type || !$program_id || !$year_level_id) {
         echo json_encode(['success' => false, 'message' => 'All fields are required']);
+        return;
+    }
+    if ($current_ay_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'No active academic year. Please activate one before enrolling students.']);
         return;
     }
 
@@ -75,14 +81,16 @@ function enrollInProgram() {
             $program_type,
             $program_id,
             $year_level_id,
+            $semester,
             $student_type,
             $previous_school,
             $completed_subject_ids,
+            $completed_subject_details,
             (int)$_SESSION['user_id'],
             $current_ay_id
         );
 
-        $action_text = "Program enrollment: student {$student_id}, type {$student_type}, program {$program_id}, level {$year_level_id}, enrolled_subjects {$result['enrolled_count']}";
+        $action_text = "Program enrollment: student {$student_id}, type {$student_type}, program {$program_id}, level {$year_level_id}, semester {$semester}, enrolled_subjects {$result['enrolled_count']}";
         logAuditSimple($conn, $action_text);
 
         $conn->commit();
@@ -111,9 +119,11 @@ function enrollIrregularProgram() {
     $program_type = $_POST['program_type'] ?? '';
     $program_id = (int)($_POST['program_id'] ?? 0);
     $year_level_id = (int)($_POST['year_level_id'] ?? 0);
+    $semester = normalizeSemester($_POST['semester'] ?? '1st');
     $student_type = normalizeStudentType($_POST['student_type'] ?? 'irregular');
     $previous_school = clean_input($_POST['previous_school'] ?? '');
     $completed_subject_ids = parseIdList($_POST['completed_subject_ids'] ?? '[]');
+    $completed_subject_details = parseCompletedSubjectDetails($_POST['completed_subject_details'] ?? '{}');
 
     if (!in_array($student_type, ['irregular', 'transferee'], true)) {
         $student_type = 'irregular';
@@ -121,6 +131,15 @@ function enrollIrregularProgram() {
 
     if (!$student_id || !$program_type || !$program_id || !$year_level_id) {
         echo json_encode(['success' => false, 'message' => 'All fields are required']);
+        return;
+    }
+    if ($current_ay_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'No active academic year. Please activate one before enrolling students.']);
+        return;
+    }
+
+    if ($previous_school === '') {
+        echo json_encode(['success' => false, 'message' => 'Previous school is required for non-regular enrollment']);
         return;
     }
 
@@ -141,21 +160,23 @@ function enrollIrregularProgram() {
             $program_type,
             $program_id,
             $year_level_id,
+            $semester,
             $student_type,
             $previous_school,
             $completed_subject_ids,
+            $completed_subject_details,
             (int)$_SESSION['user_id'],
             $current_ay_id
         );
 
-        $action_text = "Irregular enrollment: student {$student_id}, type {$student_type}, program {$program_id}, level {$year_level_id}, enrolled_subjects {$result['enrolled_count']}, completed {$result['completed_count']}";
+        $action_text = "Non-regular enrollment: student {$student_id}, type {$student_type}, program {$program_id}, level {$year_level_id}, semester {$semester}, enrolled_subjects {$result['enrolled_count']}, completed {$result['completed_count']}";
         logAuditSimple($conn, $action_text);
 
         $conn->commit();
 
         echo json_encode([
             'success' => true,
-            'message' => "Irregular enrollment saved. {$result['enrolled_count']} subject(s) queued for current enrollment.",
+            'message' => ucfirst($student_type) . " enrollment saved. {$result['enrolled_count']} subject(s) queued for current enrollment.",
             'meta' => $result
         ]);
     } catch (Exception $e) {
@@ -170,11 +191,16 @@ function bulkEnrollProgram() {
     $program_type = $_POST['program_type'] ?? '';
     $program_id = (int)($_POST['program_id'] ?? 0);
     $year_level_id = (int)($_POST['year_level_id'] ?? 0);
+    $semester = normalizeSemester($_POST['semester'] ?? '1st');
     $student_ids = json_decode($_POST['student_ids'] ?? '[]', true);
     $student_type = normalizeStudentType($_POST['student_type'] ?? 'regular');
 
     if (!$program_type || !$program_id || !$year_level_id || empty($student_ids)) {
         echo json_encode(['success' => false, 'message' => 'All fields are required']);
+        return;
+    }
+    if ($current_ay_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'No active academic year. Please activate one before enrolling students.']);
         return;
     }
 
@@ -206,8 +232,10 @@ function bulkEnrollProgram() {
                 $program_type,
                 $program_id,
                 $year_level_id,
+                $semester,
                 $student_type,
                 '',
+                [],
                 [],
                 (int)$_SESSION['user_id'],
                 $current_ay_id
@@ -215,7 +243,7 @@ function bulkEnrollProgram() {
             $enrolled_count++;
         }
 
-        logAuditSimple($conn, "Bulk program enrollment: {$enrolled_count} student(s), program {$program_id}, level {$year_level_id}, type {$student_type}");
+        logAuditSimple($conn, "Bulk program enrollment: {$enrolled_count} student(s), program {$program_id}, level {$year_level_id}, semester {$semester}, type {$student_type}");
 
         $conn->commit();
         $message = "{$enrolled_count} student(s) enrolled successfully";
@@ -242,7 +270,11 @@ function getStudentInfo() {
             up.last_name,
             COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
             st.course_id,
-            st.student_type,
+            CASE
+                WHEN COALESCE(st.student_type, 'regular') = 'regular' THEN 'regular'
+                WHEN st.student_type = 'transferee' THEN 'transferee'
+                ELSE 'irregular'
+            END as student_type,
             st.previous_school,
             COALESCE(p.program_code, ss.strand_code) as program_code,
             COALESCE(p.program_name, ss.strand_name) as program_name
@@ -272,6 +304,7 @@ function getSubjectsForEnrollment() {
     $program_type = $_GET['program_type'] ?? '';
     $program_id = (int)($_GET['program_id'] ?? 0);
     $year_level_id = (int)($_GET['year_level_id'] ?? 0);
+    $semester = normalizeSemester($_GET['semester'] ?? '1st');
     $student_id = (int)($_GET['student_id'] ?? 0);
 
     if (!$program_type || !$program_id || !$year_level_id) {
@@ -279,7 +312,7 @@ function getSubjectsForEnrollment() {
         return;
     }
 
-    $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id);
+    $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, $semester);
     if (empty($subjects)) {
         echo json_encode(['success' => true, 'subjects' => []]);
         return;
@@ -294,7 +327,7 @@ function getSubjectsForEnrollment() {
 
     if ($student_id > 0 && verifyStudentInRegistrarBranch($student_id, $branch_id)) {
         $completed_sql = "
-            SELECT subject_id 
+            SELECT subject_id, previous_subject_name, previous_grade
             FROM student_completed_subjects 
             WHERE student_id = ? AND subject_id IN (" . placeholders(count($subject_ids)) . ")
         ";
@@ -305,7 +338,10 @@ function getSubjectsForEnrollment() {
         $completed_stmt->execute();
         $completed_result = $completed_stmt->get_result();
         while ($row = $completed_result->fetch_assoc()) {
-            $completed_map[(int)$row['subject_id']] = true;
+            $completed_map[(int)$row['subject_id']] = [
+                'previous_subject_name' => (string)($row['previous_subject_name'] ?? ''),
+                'previous_grade' => (string)($row['previous_grade'] ?? '')
+            ];
         }
 
         $enrolled_sql = "
@@ -330,6 +366,8 @@ function getSubjectsForEnrollment() {
     foreach ($subjects as $subject) {
         $sid = (int)$subject['id'];
         $subject['already_completed'] = isset($completed_map[$sid]);
+        $subject['previous_subject_name'] = $completed_map[$sid]['previous_subject_name'] ?? '';
+        $subject['previous_grade'] = $completed_map[$sid]['previous_grade'] ?? '';
         $subject['already_enrolled'] = isset($enrolled_map[$sid]);
         $payload[] = $subject;
     }
@@ -337,12 +375,27 @@ function getSubjectsForEnrollment() {
     echo json_encode(['success' => true, 'subjects' => $payload]);
 }
 
-function applyProgramEnrollment($student_id, $program_type, $program_id, $year_level_id, $student_type, $previous_school, $completed_subject_ids, $recorded_by, $current_ay_id) {
+function applyProgramEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $student_type, $previous_school, $completed_subject_ids, $completed_subject_details, $recorded_by, $current_ay_id) {
     global $conn;
 
-    $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id);
+    $semester = normalizeSemester($semester);
+    $student_type = normalizeStudentType($student_type);
+    $is_non_regular = in_array($student_type, ['irregular', 'transferee'], true);
+    if (!$is_non_regular) {
+        $previous_school = '';
+    }
+
+    if ($semester === '2nd') {
+        ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, '1st', $current_ay_id, $recorded_by);
+        $first_sem_outstanding = getSemesterOutstandingBalance($student_id, $current_ay_id, '1st');
+        if ($first_sem_outstanding > 0.009) {
+            throw new Exception('Cannot enroll to 2nd semester. First semester balance must be fully paid first. Outstanding: ' . number_format($first_sem_outstanding, 2));
+        }
+    }
+
+    $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, $semester);
     if (empty($subjects)) {
-        throw new Exception('No curriculum subjects found for selected level.');
+        throw new Exception('No curriculum subjects found for selected level and semester.');
     }
 
     $subject_ids = array_map(static function ($row) {
@@ -375,25 +428,101 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         throw new Exception('Failed to update student enrollment profile.');
     }
 
+    ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, $semester, $current_ay_id, $recorded_by);
+    upsertStudentTermEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $current_ay_id, $student_type, $previous_school, $recorded_by);
+
     // Normalize completed-subject list to selected curriculum only
     $valid_subject_set = array_flip($subject_ids);
     $completed_subject_ids = array_values(array_unique(array_filter(array_map('intval', $completed_subject_ids), static function ($id) use ($valid_subject_set) {
         return isset($valid_subject_set[$id]);
     })));
+    $completed_subject_lookup = array_flip($completed_subject_ids);
 
-    // Save completed-subject declarations for irregular/transferee
+    $normalized_details = [];
+    foreach ($completed_subject_details as $sid => $detail) {
+        $subject_id = (int)$sid;
+        if (!isset($valid_subject_set[$subject_id]) || !isset($completed_subject_lookup[$subject_id])) {
+            continue;
+        }
+        $previous_subject_name = trim((string)($detail['previous_subject_name'] ?? ''));
+        $previous_grade = trim((string)($detail['grade'] ?? ''));
+        $normalized_details[$subject_id] = [
+            'previous_subject_name' => substr($previous_subject_name, 0, 255),
+            'previous_grade' => substr($previous_grade, 0, 50)
+        ];
+    }
+
+    if ($is_non_regular) {
+        foreach ($completed_subject_ids as $sid) {
+            if (empty($normalized_details[$sid]['previous_grade'])) {
+                throw new Exception('Grade is required for each credited subject.');
+            }
+        }
+    }
+
+    // Save completed-subject declarations for non-regular students.
+    if ($is_non_regular) {
+        if (!empty($subject_ids)) {
+            if (!empty($completed_subject_ids)) {
+                $delete_unchecked_sql = "
+                    DELETE FROM student_completed_subjects
+                    WHERE student_id = ?
+                      AND subject_id IN (" . placeholders(count($subject_ids)) . ")
+                      AND subject_id NOT IN (" . placeholders(count($completed_subject_ids)) . ")
+                ";
+                $delete_unchecked_stmt = $conn->prepare($delete_unchecked_sql);
+                $delete_unchecked_types = 'i' . str_repeat('i', count($subject_ids)) . str_repeat('i', count($completed_subject_ids));
+                $delete_unchecked_params = array_merge([$student_id], $subject_ids, $completed_subject_ids);
+                $delete_unchecked_stmt->bind_param($delete_unchecked_types, ...$delete_unchecked_params);
+                $delete_unchecked_stmt->execute();
+            } else {
+                $delete_all_sql = "
+                    DELETE FROM student_completed_subjects
+                    WHERE student_id = ?
+                      AND subject_id IN (" . placeholders(count($subject_ids)) . ")
+                ";
+                $delete_all_stmt = $conn->prepare($delete_all_sql);
+                $delete_all_types = 'i' . str_repeat('i', count($subject_ids));
+                $delete_all_params = array_merge([$student_id], $subject_ids);
+                $delete_all_stmt->bind_param($delete_all_types, ...$delete_all_params);
+                $delete_all_stmt->execute();
+            }
+        }
+    }
+
+    if (!$is_non_regular && !empty($subject_ids)) {
+        $delete_all_sql = "
+            DELETE FROM student_completed_subjects
+            WHERE student_id = ?
+              AND subject_id IN (" . placeholders(count($subject_ids)) . ")
+        ";
+        $delete_all_stmt = $conn->prepare($delete_all_sql);
+        $delete_all_types = 'i' . str_repeat('i', count($subject_ids));
+        $delete_all_params = array_merge([$student_id], $subject_ids);
+        $delete_all_stmt->bind_param($delete_all_types, ...$delete_all_params);
+        $delete_all_stmt->execute();
+    }
+
     $completed_count = 0;
-    if (in_array($student_type, ['irregular', 'transferee'], true) && !empty($completed_subject_ids)) {
+    if ($is_non_regular && !empty($completed_subject_ids)) {
         $insert_completed = $conn->prepare("
-            INSERT INTO student_completed_subjects (student_id, subject_id, completion_source, recorded_by)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO student_completed_subjects
+                (student_id, subject_id, completion_source, previous_subject_name, previous_grade, remarks, recorded_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 completion_source = VALUES(completion_source),
+                previous_subject_name = VALUES(previous_subject_name),
+                previous_grade = VALUES(previous_grade),
+                remarks = VALUES(remarks),
                 recorded_by = VALUES(recorded_by)
         ");
         $source = $previous_school ?: 'Previous school';
+        $remarks = 'Completed in previous school';
         foreach ($completed_subject_ids as $sid) {
-            $insert_completed->bind_param("iisi", $student_id, $sid, $source, $recorded_by);
+            $detail = $normalized_details[$sid] ?? ['previous_subject_name' => '', 'previous_grade' => ''];
+            $previous_subject_name = $detail['previous_subject_name'];
+            $previous_grade = $detail['previous_grade'];
+            $insert_completed->bind_param("iissssi", $student_id, $sid, $source, $previous_subject_name, $previous_grade, $remarks, $recorded_by);
             $insert_completed->execute();
             $completed_count++;
         }
@@ -484,6 +613,7 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
     }
 
     return [
+        'semester' => $semester,
         'student_type' => $student_type,
         'total_subjects' => count($subject_ids),
         'completed_count' => count($completed_map),
@@ -492,25 +622,30 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
     ];
 }
 
-function getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id) {
+function getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, $semester = '1st') {
     global $conn;
+
+    $semester = normalizeSemester($semester);
+    $semester_num = ($semester === '2nd') ? 2 : (($semester === 'summer') ? 3 : 1);
 
     if ($program_type === 'college') {
         $stmt = $conn->prepare("
             SELECT id, subject_code, subject_title, units, semester
             FROM curriculum_subjects
             WHERE program_id = ? AND year_level_id = ? AND is_active = 1
+              AND (semester = ? OR ? = 3)
             ORDER BY semester, subject_code
         ");
-        $stmt->bind_param("ii", $program_id, $year_level_id);
+        $stmt->bind_param("iiii", $program_id, $year_level_id, $semester_num, $semester_num);
     } else {
         $stmt = $conn->prepare("
             SELECT id, subject_code, subject_title, units, semester
             FROM curriculum_subjects
             WHERE shs_strand_id = ? AND shs_grade_level_id = ? AND is_active = 1
+              AND (semester = ? OR ? = 3)
             ORDER BY semester, subject_code
         ");
-        $stmt->bind_param("ii", $program_id, $year_level_id);
+        $stmt->bind_param("iiii", $program_id, $year_level_id, $semester_num, $semester_num);
     }
 
     $stmt->execute();
@@ -561,6 +696,161 @@ function parseIdList($raw) {
     })));
 }
 
+function parseCompletedSubjectDetails($raw) {
+    $details = json_decode((string)$raw, true);
+    if (!is_array($details)) {
+        return [];
+    }
+
+    $normalized = [];
+    foreach ($details as $subject_id => $payload) {
+        $sid = (int)$subject_id;
+        if ($sid <= 0 || !is_array($payload)) {
+            continue;
+        }
+        $normalized[$sid] = [
+            'previous_subject_name' => trim((string)($payload['previous_subject_name'] ?? '')),
+            'grade' => trim((string)($payload['grade'] ?? ''))
+        ];
+    }
+
+    return $normalized;
+}
+
+function normalizeSemester($semester) {
+    $semester = strtolower(trim((string)$semester));
+    if (!in_array($semester, ['1st', '2nd', 'summer'], true)) {
+        return '1st';
+    }
+    return $semester;
+}
+
+function getSemesterOutstandingBalance($student_id, $academic_year_id, $semester) {
+    global $conn;
+
+    $semester = normalizeSemester($semester);
+    $student_id = (int)$student_id;
+    $academic_year_id = (int)$academic_year_id;
+
+    $fees_stmt = $conn->prepare("
+        SELECT COALESCE(SUM(amount), 0) as total_fees
+        FROM student_fees
+        WHERE student_id = ? AND academic_year_id = ? AND semester = ?
+    ");
+    $fees_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $fees_stmt->execute();
+    $fees_total = (float)($fees_stmt->get_result()->fetch_assoc()['total_fees'] ?? 0);
+
+    $paid_stmt = $conn->prepare("
+        SELECT COALESCE(SUM(amount), 0) as total_paid
+        FROM payments
+        WHERE student_id = ? AND academic_year_id = ? AND semester = ? AND status = 'verified'
+    ");
+    $paid_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $paid_stmt->execute();
+    $paid_total = (float)($paid_stmt->get_result()->fetch_assoc()['total_paid'] ?? 0);
+
+    return max(0, round($fees_total - $paid_total, 2));
+}
+
+function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, $semester, $academic_year_id, $recorded_by) {
+    global $conn;
+
+    $student_id = (int)$student_id;
+    $program_type = $program_type === 'shs' ? 'shs' : 'college';
+    $program_id = (int)$program_id;
+    $year_level_id = (int)$year_level_id;
+    $academic_year_id = (int)$academic_year_id;
+    $recorded_by = (int)$recorded_by;
+    $semester = normalizeSemester($semester);
+
+    // Tuition fee configuration currently maps to college programs only.
+    if ($program_type !== 'college') {
+        return;
+    }
+
+    $existing_stmt = $conn->prepare("
+        SELECT id FROM student_fees
+        WHERE student_id = ?
+          AND academic_year_id = ?
+          AND semester = ?
+          AND (fee_type IN ('Tuition Fee', 'Tuition') OR description = 'Tuition Fee')
+        LIMIT 1
+    ");
+    $existing_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $existing_stmt->execute();
+    if ($existing_stmt->get_result()->num_rows > 0) {
+        return;
+    }
+
+    $tuition_stmt = $conn->prepare("
+        SELECT tuition_fee
+        FROM program_tuition_fees
+        WHERE program_id = ? AND is_active = 1
+          AND semester = ?
+          AND (year_level_id = ? OR year_level_id IS NULL)
+          AND (academic_year_id = ? OR academic_year_id IS NULL)
+        ORDER BY
+            CASE WHEN year_level_id = ? THEN 0 ELSE 1 END,
+            CASE WHEN academic_year_id = ? THEN 0 ELSE 1 END,
+            id DESC
+        LIMIT 1
+    ");
+    $tuition_stmt->bind_param("isiiii", $program_id, $semester, $year_level_id, $academic_year_id, $year_level_id, $academic_year_id);
+    $tuition_stmt->execute();
+    $tuition_row = $tuition_stmt->get_result()->fetch_assoc();
+    if (!$tuition_row) {
+        return;
+    }
+
+    $tuition_fee = (float)($tuition_row['tuition_fee'] ?? 0);
+    if ($tuition_fee <= 0) {
+        return;
+    }
+
+    $description = "Auto-assessed tuition for {$semester} semester enrollment";
+    $insert_fee = $conn->prepare("
+        INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
+        VALUES (?, 'Tuition Fee', ?, ?, ?, ?, ?, NOW())
+    ");
+    $insert_fee->bind_param("idissi", $student_id, $tuition_fee, $academic_year_id, $semester, $description, $recorded_by);
+    $insert_fee->execute();
+}
+
+function upsertStudentTermEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $academic_year_id, $student_type, $previous_school, $recorded_by) {
+    global $conn;
+
+    $student_id = (int)$student_id;
+    $program_id = (int)$program_id;
+    $year_level_id = (int)$year_level_id;
+    $academic_year_id = (int)$academic_year_id;
+    $recorded_by = (int)$recorded_by;
+    $semester = normalizeSemester($semester);
+    $student_type = normalizeStudentType($student_type);
+    $program_type = $program_type === 'shs' ? 'shs' : 'college';
+    $previous_school = trim((string)$previous_school);
+    if ($student_type === 'regular') {
+        $previous_school = '';
+    }
+
+    $stmt = $conn->prepare("
+        INSERT INTO student_term_enrollments
+            (student_id, program_type, program_id, year_level_id, academic_year_id, semester, student_type, previous_school, status, recorded_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'enrolled', ?)
+        ON DUPLICATE KEY UPDATE
+            program_type = VALUES(program_type),
+            program_id = VALUES(program_id),
+            year_level_id = VALUES(year_level_id),
+            student_type = VALUES(student_type),
+            previous_school = VALUES(previous_school),
+            status = 'enrolled',
+            recorded_by = VALUES(recorded_by),
+            updated_at = NOW()
+    ");
+    $stmt->bind_param("isiiisssi", $student_id, $program_type, $program_id, $year_level_id, $academic_year_id, $semester, $student_type, $previous_school, $recorded_by);
+    $stmt->execute();
+}
+
 function normalizeStudentType($student_type) {
     $student_type = strtolower(trim((string)$student_type));
     if (!in_array($student_type, ['regular', 'irregular', 'transferee'], true)) {
@@ -605,6 +895,7 @@ function ensureIrregularSupportSchema($conn) {
     // Keep idempotent and lightweight for compatibility in environments
     // where migrations haven't been applied yet.
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+    $conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
     $conn->query("
@@ -613,6 +904,8 @@ function ensureIrregularSupportSchema($conn) {
             student_id INT(10) UNSIGNED NOT NULL,
             subject_id INT(10) UNSIGNED NOT NULL,
             completion_source VARCHAR(255) DEFAULT NULL,
+            previous_subject_name VARCHAR(255) DEFAULT NULL,
+            previous_grade VARCHAR(50) DEFAULT NULL,
             remarks TEXT DEFAULT NULL,
             recorded_by INT(10) UNSIGNED DEFAULT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -623,6 +916,8 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+    $conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_subject_name VARCHAR(255) DEFAULT NULL AFTER completion_source");
+    $conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_grade VARCHAR(50) DEFAULT NULL AFTER previous_subject_name");
 
     $conn->query("
         CREATE TABLE IF NOT EXISTS student_subject_enrollments (
@@ -645,5 +940,30 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+    $conn->query("ALTER TABLE student_subject_enrollments MODIFY COLUMN enrollment_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
+
+    $conn->query("
+        CREATE TABLE IF NOT EXISTS student_term_enrollments (
+            id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            student_id INT(10) UNSIGNED NOT NULL,
+            program_type ENUM('college','shs') NOT NULL DEFAULT 'college',
+            program_id INT(10) UNSIGNED NOT NULL,
+            year_level_id INT(10) UNSIGNED NOT NULL,
+            academic_year_id INT(10) UNSIGNED NOT NULL,
+            semester ENUM('1st','2nd','summer') NOT NULL DEFAULT '1st',
+            student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular',
+            previous_school VARCHAR(255) DEFAULT NULL,
+            status ENUM('enrolled','completed','cancelled') NOT NULL DEFAULT 'enrolled',
+            recorded_by INT(10) UNSIGNED DEFAULT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_student_term (student_id, academic_year_id, semester),
+            KEY idx_student_ay (student_id, academic_year_id),
+            KEY idx_program_level (program_id, year_level_id),
+            KEY idx_recorded_by (recorded_by)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $conn->query("ALTER TABLE student_term_enrollments MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
 }
 

@@ -46,12 +46,22 @@ if (!$subject) {
 $semester_map = [1 => '1st', 2 => '2nd', 3 => 'summer'];
 $semester_str = $semester_map[$subject['semester']] ?? '1st';
 
+$has_subject_enrollment_table = false;
+$check_table = $conn->query("SHOW TABLES LIKE 'student_subject_enrollments'");
+if ($check_table && $check_table->num_rows > 0) {
+    $has_subject_enrollment_table = true;
+}
+
+$student_count_sql = $has_subject_enrollment_table
+    ? "(SELECT COUNT(*) FROM student_subject_enrollments sse WHERE sse.section_id = s.id AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status = 'enrolled') as student_count"
+    : "(SELECT COUNT(*) FROM section_students ss WHERE ss.section_id = s.id AND ss.status = 'active') as student_count";
+
 // Get sections for this subject's year level and semester
 // Build dynamic query based on program type (college vs SHS)
 $sections_sql = "
     SELECT s.*, 
            CONCAT(up.first_name, ' ', up.last_name) as adviser_name,
-           (SELECT COUNT(*) FROM section_students ss WHERE ss.section_id = s.id AND ss.status = 'active') as student_count
+           $student_count_sql
     FROM sections s
     LEFT JOIN users u ON s.adviser_id = u.id
     LEFT JOIN user_profiles up ON u.id = up.user_id
@@ -66,24 +76,48 @@ if (!empty($subject['program_id'])) {
     $sections_sql .= " AND s.program_id = ? AND s.year_level_id = ?";
     $sections_sql .= " ORDER BY s.section_name";
     $sections_query = $conn->prepare($sections_sql);
-    $sections_query->bind_param("iisii", 
-        $subject['branch_id'], 
-        $current_ay_id, 
-        $semester_str,
-        $subject['program_id'],
-        $subject['year_level_id']
-    );
+    if ($has_subject_enrollment_table) {
+        $sections_query->bind_param("iiiisii",
+            $subject_id,
+            $current_ay_id,
+            $subject['branch_id'],
+            $current_ay_id,
+            $semester_str,
+            $subject['program_id'],
+            $subject['year_level_id']
+        );
+    } else {
+        $sections_query->bind_param("iisii",
+            $subject['branch_id'],
+            $current_ay_id,
+            $semester_str,
+            $subject['program_id'],
+            $subject['year_level_id']
+        );
+    }
 } else {
     $sections_sql .= " AND s.shs_strand_id = ? AND s.shs_grade_level_id = ?";
     $sections_sql .= " ORDER BY s.section_name";
     $sections_query = $conn->prepare($sections_sql);
-    $sections_query->bind_param("iisii", 
-        $subject['branch_id'], 
-        $current_ay_id, 
-        $semester_str,
-        $subject['shs_strand_id'],
-        $subject['shs_grade_level_id']
-    );
+    if ($has_subject_enrollment_table) {
+        $sections_query->bind_param("iiiisii",
+            $subject_id,
+            $current_ay_id,
+            $subject['branch_id'],
+            $current_ay_id,
+            $semester_str,
+            $subject['shs_strand_id'],
+            $subject['shs_grade_level_id']
+        );
+    } else {
+        $sections_query->bind_param("iisii",
+            $subject['branch_id'],
+            $current_ay_id,
+            $semester_str,
+            $subject['shs_strand_id'],
+            $subject['shs_grade_level_id']
+        );
+    }
 }
 
 $sections_query->execute();

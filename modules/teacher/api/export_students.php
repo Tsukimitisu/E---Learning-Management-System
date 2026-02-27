@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
 
 // Compatibility guard for student type label support.
 $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+$conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
 $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
 $teacher_id = $_SESSION['user_id'];
@@ -66,7 +67,11 @@ if ($subject_id > 0 && $has_subject_enrollment_table) {
             up.first_name,
             up.last_name,
             COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
-            COALESCE(st.student_type, 'regular') as student_type,
+            CASE
+                WHEN COALESCE(st.student_type, 'regular') = 'regular' THEN 'regular'
+                WHEN st.student_type = 'transferee' THEN 'transferee'
+                ELSE 'irregular'
+            END as student_type,
             sse.status
         FROM student_subject_enrollments sse
         INNER JOIN users u ON sse.student_id = u.id
@@ -88,7 +93,11 @@ if ($subject_id > 0 && $has_subject_enrollment_table) {
             up.first_name,
             up.last_name,
             COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
-            COALESCE(st.student_type, 'regular') as student_type,
+            CASE
+                WHEN COALESCE(st.student_type, 'regular') = 'regular' THEN 'regular'
+                WHEN st.student_type = 'transferee' THEN 'transferee'
+                ELSE 'irregular'
+            END as student_type,
             ss.status
         FROM section_students ss
         INNER JOIN users u ON ss.student_id = u.id
@@ -131,7 +140,7 @@ while ($student = $students->fetch_assoc()) {
         $student['last_name'],
         $student['first_name'],
         $student['email'],
-        ucfirst($student['student_type'] ?? 'regular'),
+        ucfirst((string)($student['student_type'] ?? 'regular')),
         ucfirst($student['status'])
     ]);
 }

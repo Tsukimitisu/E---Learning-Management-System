@@ -395,6 +395,7 @@ function renderSections() {
     const search = document.getElementById('searchSubject').value.toLowerCase();
     
     let filteredSections = allSections.filter(section => {
+        const isEligible = section.is_eligible === true || section.is_eligible === 1 || section.is_eligible === '1';
         if (programType && section.subject_type !== programType) return false;
         if (programValue) {
             const [type, id] = programValue.split('_');
@@ -402,7 +403,7 @@ function renderSections() {
             if (type === 'shs' && section.strand_id != id) return false;
         }
         if (yearLevel && (section.year_level_id != yearLevel && section.grade_level_id != yearLevel)) return false;
-        if (availability === 'available' && (section.is_enrolled || section.is_full)) return false;
+        if (availability === 'available' && (section.is_enrolled || section.is_full || !isEligible)) return false;
         if (availability === 'enrolled' && !section.is_enrolled) return false;
         if (search) {
             const searchStr = `${section.program_code || ''} ${section.program_name || ''} ${section.strand_code || ''} ${section.strand_name || ''} ${section.section_name || ''}`.toLowerCase();
@@ -426,10 +427,11 @@ function renderSections() {
         const capacityPercent = Math.round((section.current_enrolled / section.max_capacity) * 100);
         const capColor = capacityPercent >= 90 ? 'bg-high' : capacityPercent >= 70 ? 'bg-medium' : 'bg-low';
         const isFull = section.is_full && !section.is_enrolled;
+        const isEligible = section.is_eligible === true || section.is_eligible === 1 || section.is_eligible === '1';
         
         html += `
-            <div class="section-card-modern ${section.is_enrolled ? 'enrolled' : ''} ${isFull ? 'full' : ''}" 
-                 onclick="${isFull ? '' : `toggleEnrollment(${section.id}, ${section.is_enrolled})`}">
+            <div class="section-card-modern ${section.is_enrolled ? 'enrolled' : ''} ${isFull ? 'full' : ''} ${(!isEligible && !section.is_enrolled) ? 'opacity-75' : ''}" 
+                 onclick="${(isFull || (!isEligible && !section.is_enrolled)) ? '' : `toggleEnrollment(${section.id}, ${section.is_enrolled})`}">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-start">
@@ -441,7 +443,9 @@ function renderSections() {
                             <div>
                                 ${section.is_enrolled 
                                     ? '<span class="badge bg-success shadow-sm"><i class="bi bi-check-circle me-1"></i> Registered</span>'
-                                    : isFull ? '<span class="badge bg-danger">Full</span>' : '<span class="badge bg-light text-muted border">Available</span>'
+                                    : isFull ? '<span class="badge bg-danger">Full</span>'
+                                    : !isEligible ? '<span class="badge bg-secondary">No Eligible Subjects</span>'
+                                    : '<span class="badge bg-light text-muted border">Available</span>'
                                 }
                             </div>
                         </div>

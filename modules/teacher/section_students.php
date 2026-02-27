@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
 
 // Compatibility guard for student type label support.
 $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+$conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
 $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
 $teacher_id = $_SESSION['user_id'];
@@ -73,21 +74,18 @@ if ($check_table && $check_table->num_rows > 0) {
 
 $use_subject_roster = false;
 if ($has_subject_enrollment_table) {
-    $roster_check = $conn->prepare("
-        SELECT COUNT(*) as cnt
-        FROM student_subject_enrollments
-        WHERE section_id = ? AND subject_id = ? AND academic_year_id = ? AND status = 'enrolled'
-    ");
-    $roster_check->bind_param("iii", $section_id, $subject_id, $current_ay_id);
-    $roster_check->execute();
-    $use_subject_roster = (($roster_check->get_result()->fetch_assoc()['cnt'] ?? 0) > 0);
+    $use_subject_roster = true;
 }
 
 if ($use_subject_roster) {
     $students_query = $conn->prepare("
         SELECT u.id, up.first_name, up.last_name, u.email,
                COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
-               COALESCE(st.student_type, 'regular') as student_type,
+               CASE
+                   WHEN COALESCE(st.student_type, 'regular') = 'regular' THEN 'regular'
+                   WHEN st.student_type = 'transferee' THEN 'transferee'
+                   ELSE 'irregular'
+               END as student_type,
                up.contact_no as phone,
                CONCAT(up.first_name, ' ', up.last_name) as name,
                sse.created_at as enrolled_at
@@ -103,7 +101,11 @@ if ($use_subject_roster) {
     $students_query = $conn->prepare("
         SELECT u.id, up.first_name, up.last_name, u.email,
                COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
-               COALESCE(st.student_type, 'regular') as student_type,
+               CASE
+                   WHEN COALESCE(st.student_type, 'regular') = 'regular' THEN 'regular'
+                   WHEN st.student_type = 'transferee' THEN 'transferee'
+                   ELSE 'irregular'
+               END as student_type,
                up.contact_no as phone,
                CONCAT(up.first_name, ' ', up.last_name) as name,
                ss.enrolled_at
@@ -211,7 +213,7 @@ include '../../includes/header.php';
                                 <div class="fw-bold text-dark">
                                     <?php echo htmlspecialchars($student['name']); ?>
                                     <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
-                                        <span class="badge bg-warning text-dark ms-2"><?php echo ucfirst($student['student_type']); ?></span>
+                                        <span class="badge bg-warning text-dark ms-2"><?php echo ucfirst($student['student_type'] ?? 'irregular'); ?> Student</span>
                                     <?php endif; ?>
                                 </div>
                             </div>
