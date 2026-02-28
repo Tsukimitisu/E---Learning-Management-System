@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 19, 2026 at 05:55 PM
+-- Generation Time: Feb 28, 2026 at 06:18 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -43,8 +43,9 @@ CREATE TABLE `academic_years` (
 --
 
 INSERT INTO `academic_years` (`id`, `year_name`, `start_date`, `end_date`, `is_active`, `status`, `created_at`, `updated_at`) VALUES
-(1, '2025-2026', NULL, NULL, 1, 'current', '2026-01-19 15:13:43', '2026-01-19 15:14:32'),
-(2, '2026-2027', '2026-07-19', '2027-04-19', 0, 'completed', '2026-01-19 15:14:12', '2026-01-19 15:14:32');
+(1, '2025-2026', NULL, NULL, 1, 'current', '2026-01-19 15:13:43', '2026-01-31 13:22:58'),
+(2, '2026-2027', '2026-07-19', '2027-04-19', 0, 'completed', '2026-01-19 15:14:12', '2026-01-31 13:22:58'),
+(3, '2027-2028', '2026-02-03', '2026-02-03', 0, 'upcoming', '2026-02-03 03:50:37', '2026-02-03 03:50:37');
 
 -- --------------------------------------------------------
 
@@ -67,7 +68,7 @@ CREATE TABLE `active_sessions` (
 --
 
 INSERT INTO `active_sessions` (`id`, `session_id`, `user_id`, `ip_address`, `user_agent`, `last_activity`, `created_at`) VALUES
-(13, 'm835hk9vjnmmfe1aa13l9qlt82', 4, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-20 00:50:22', '2026-01-19 16:50:19');
+(4639, 'a5g225ejco9s7a6tug9f5rhdfj', 6, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-01 01:16:20', '2026-02-28 17:15:31');
 
 -- --------------------------------------------------------
 
@@ -94,7 +95,8 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`id`, `title`, `content`, `target_audience`, `priority`, `school_id`, `branch_id`, `created_by`, `is_active`, `created_at`, `expires_at`) VALUES
-(1, 'Hatdog', 'Masarap', 'all', 'normal', NULL, 1, 205, 1, '2026-01-17 01:11:37', NULL);
+(1, 'Hatdog', 'Masarap', 'all', 'normal', NULL, 1, 205, 1, '2026-01-17 01:11:37', NULL),
+(2, 'Happy Holidays', 'Hello Good Morning', 'all', 'low', NULL, NULL, 204, 1, '2026-01-30 15:05:56', '2026-01-30 23:05:00');
 
 -- --------------------------------------------------------
 
@@ -134,6 +136,13 @@ CREATE TABLE `assessments` (
   `created_by` int(10) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `assessments`
+--
+
+INSERT INTO `assessments` (`id`, `class_id`, `title`, `assessment_type`, `max_score`, `scheduled_date`, `duration_minutes`, `instructions`, `created_by`, `created_at`) VALUES
+(1, 4, 'Activity Programming', 'activity', 100.00, '0000-00-00', NULL, 'make a triangle using c#', 100, '2026-02-11 03:57:40');
 
 -- --------------------------------------------------------
 
@@ -186,13 +195,6 @@ CREATE TABLE `attendance` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `attendance`
---
-
-INSERT INTO `attendance` (`id`, `section_id`, `subject_id`, `class_id`, `student_id`, `attendance_date`, `status`, `time_in`, `time_out`, `remarks`, `recorded_by`, `created_at`) VALUES
-(1, NULL, NULL, 2, 203, '2026-01-17', 'present', NULL, NULL, '', 100, '2026-01-16 17:05:46');
-
 -- --------------------------------------------------------
 
 --
@@ -220,8 +222,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (5, 6, 'User logged out', '::1', NULL, '2026-01-16 13:18:37'),
 (6, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-16 13:18:48'),
 (7, 100, 'User logged out', '::1', NULL, '2026-01-16 13:26:52'),
-(8, 203, 'User logged in - Student', '::1', NULL, '2026-01-16 13:26:56'),
-(9, 203, 'User logged out', '::1', NULL, '2026-01-16 13:32:35'),
+(8, NULL, 'User logged in - Student', '::1', NULL, '2026-01-16 13:26:56'),
+(9, NULL, 'User logged out', '::1', NULL, '2026-01-16 13:32:35'),
 (10, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-16 13:32:41'),
 (11, 204, 'User logged out', '::1', NULL, '2026-01-16 13:33:21'),
 (12, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-16 13:41:09'),
@@ -236,8 +238,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (21, 204, 'User logged out', '::1', NULL, '2026-01-16 14:19:24'),
 (22, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-16 14:19:31'),
 (23, 4, 'User logged out', '::1', NULL, '2026-01-16 14:19:54'),
-(24, 203, 'User logged in - Student', '::1', NULL, '2026-01-16 14:20:02'),
-(25, 203, 'User logged out', '::1', NULL, '2026-01-16 14:21:16'),
+(24, NULL, 'User logged in - Student', '::1', NULL, '2026-01-16 14:20:02'),
+(25, NULL, 'User logged out', '::1', NULL, '2026-01-16 14:21:16'),
 (26, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-16 14:21:34'),
 (27, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-16 16:32:39'),
 (28, 205, 'User logged out', '::1', NULL, '2026-01-16 16:39:49'),
@@ -261,8 +263,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (46, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-17 01:11:12'),
 (47, 205, 'Created branch announcement: Hatdog', '::1', NULL, '2026-01-17 01:11:37'),
 (48, 205, 'User logged out', '::1', NULL, '2026-01-17 01:11:43'),
-(49, 203, 'User logged in - Student', '::1', NULL, '2026-01-17 01:11:51'),
-(50, 203, 'User logged out', '::1', NULL, '2026-01-17 01:12:53'),
+(49, NULL, 'User logged in - Student', '::1', NULL, '2026-01-17 01:11:51'),
+(50, NULL, 'User logged out', '::1', NULL, '2026-01-17 01:12:53'),
 (51, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-17 01:13:00'),
 (52, 100, 'User logged out', '::1', NULL, '2026-01-17 01:38:26'),
 (53, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-17 01:38:31'),
@@ -272,8 +274,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (57, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-17 02:31:35'),
 (58, 4, 'User logged out', '::1', NULL, '2026-01-17 02:31:56'),
 (59, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-17 02:32:06'),
-(60, 203, 'User logged in - Student', '::1', NULL, '2026-01-17 09:43:38'),
-(61, 203, 'User logged out', '::1', NULL, '2026-01-17 09:43:58'),
+(60, NULL, 'User logged in - Student', '::1', NULL, '2026-01-17 09:43:38'),
+(61, NULL, 'User logged out', '::1', NULL, '2026-01-17 09:43:58'),
 (62, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-17 09:44:48'),
 (63, 100, 'User logged out', '::1', NULL, '2026-01-17 09:45:18'),
 (64, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-17 09:46:35'),
@@ -309,8 +311,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (94, 205, 'User logged out', '::1', NULL, '2026-01-18 15:45:07'),
 (95, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-18 15:45:12'),
 (96, 6, 'User logged out', '::1', NULL, '2026-01-18 16:03:09'),
-(97, 203, 'User logged in - Student', '::1', NULL, '2026-01-18 16:03:17'),
-(98, 203, 'User logged out', '::1', NULL, '2026-01-18 16:03:32'),
+(97, NULL, 'User logged in - Student', '::1', NULL, '2026-01-18 16:03:17'),
+(98, NULL, 'User logged out', '::1', NULL, '2026-01-18 16:03:32'),
 (99, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-18 16:08:10'),
 (100, 6, 'Generated enrollment certificate for Pedro Garcia (2025-0001)', '::1', NULL, '2026-01-18 16:09:26'),
 (101, 6, 'Generated enrollment certificate for Pedro Garcia (2025-0001)', '::1', NULL, '2026-01-18 16:10:04'),
@@ -399,15 +401,15 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (184, 210, 'User logged out', '::1', NULL, '2026-01-18 19:31:33'),
 (185, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-18 19:31:38'),
 (186, 204, 'User logged out', '::1', NULL, '2026-01-18 19:32:24'),
-(187, 203, 'User logged in - Student', '::1', NULL, '2026-01-18 19:47:12'),
-(188, 203, 'User logged out', '::1', NULL, '2026-01-18 20:07:38'),
+(187, NULL, 'User logged in - Student', '::1', NULL, '2026-01-18 19:47:12'),
+(188, NULL, 'User logged out', '::1', NULL, '2026-01-18 20:07:38'),
 (189, 210, 'User logged in - Branch Admin', '::1', NULL, '2026-01-18 20:07:50'),
 (190, 210, 'User logged out', '::1', NULL, '2026-01-18 20:11:02'),
 (191, 211, 'User logged in - Registrar', '::1', NULL, '2026-01-18 20:11:13'),
 (192, 211, 'Generated enrollment certificate for Maria Garcia (2025-1001)', '::1', NULL, '2026-01-18 20:13:02'),
 (193, 211, 'User logged out', '::1', NULL, '2026-01-18 20:13:32'),
-(194, 203, 'User logged in - Student', '::1', NULL, '2026-01-18 20:13:39'),
-(195, 203, 'User logged out', '::1', NULL, '2026-01-18 20:14:04'),
+(194, NULL, 'User logged in - Student', '::1', NULL, '2026-01-18 20:13:39'),
+(195, NULL, 'User logged out', '::1', NULL, '2026-01-18 20:14:04'),
 (196, 211, 'User logged in - Registrar', '::1', NULL, '2026-01-18 20:14:12'),
 (197, 211, 'User logged out', '::1', NULL, '2026-01-18 20:38:52'),
 (198, 210, 'User logged in - Branch Admin', '::1', NULL, '2026-01-18 20:39:03'),
@@ -437,8 +439,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (222, 205, 'User logged out', '::1', NULL, '2026-01-18 21:20:28'),
 (223, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-18 21:20:35'),
 (224, 204, 'User logged out', '::1', NULL, '2026-01-18 21:20:55'),
-(225, 203, 'User logged in - Student', '::1', NULL, '2026-01-18 21:21:07'),
-(226, 203, 'User logged out', '::1', NULL, '2026-01-18 21:22:04'),
+(225, NULL, 'User logged in - Student', '::1', NULL, '2026-01-18 21:21:07'),
+(226, NULL, 'User logged out', '::1', NULL, '2026-01-18 21:22:04'),
 (227, 211, 'User logged in - Registrar', '::1', NULL, '2026-01-18 21:22:49'),
 (228, 211, 'User logged out', '::1', NULL, '2026-01-18 21:28:50'),
 (229, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-18 21:28:57'),
@@ -459,8 +461,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (244, 6, 'User logged out', '::1', NULL, '2026-01-19 02:45:18'),
 (245, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-19 02:45:33'),
 (246, 100, 'User logged out', '::1', NULL, '2026-01-19 02:48:46'),
-(247, 203, 'User logged in - Student', '::1', NULL, '2026-01-19 02:48:55'),
-(248, 203, 'User logged out', '::1', NULL, '2026-01-19 02:50:58'),
+(247, NULL, 'User logged in - Student', '::1', NULL, '2026-01-19 02:48:55'),
+(248, NULL, 'User logged out', '::1', NULL, '2026-01-19 02:50:58'),
 (249, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-19 02:52:11'),
 (250, 4, 'User logged out', '::1', NULL, '2026-01-19 02:52:23'),
 (251, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-19 02:52:29'),
@@ -503,20 +505,20 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (288, 204, 'User logged out', '::1', NULL, '2026-01-19 14:56:59'),
 (289, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-19 14:57:04'),
 (290, 6, 'User logged out', '::1', NULL, '2026-01-19 14:58:09'),
-(291, 203, 'User logged in - Student', '::1', NULL, '2026-01-19 14:58:13'),
-(292, 203, 'User logged out', '::1', NULL, '2026-01-19 14:59:33'),
+(291, NULL, 'User logged in - Student', '::1', NULL, '2026-01-19 14:58:13'),
+(292, NULL, 'User logged out', '::1', NULL, '2026-01-19 14:59:33'),
 (293, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-19 15:03:00'),
 (294, 100, 'User logged out', '::1', NULL, '2026-01-19 15:04:52'),
 (295, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-19 15:04:58'),
 (296, 205, 'User logged out', '::1', NULL, '2026-01-19 15:06:35'),
-(297, 203, 'User logged in - Student', '::1', NULL, '2026-01-19 15:06:42'),
-(298, 203, 'User logged out', '::1', NULL, '2026-01-19 15:06:56'),
+(297, NULL, 'User logged in - Student', '::1', NULL, '2026-01-19 15:06:42'),
+(298, NULL, 'User logged out', '::1', NULL, '2026-01-19 15:06:56'),
 (299, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-19 15:07:01'),
 (300, 205, 'User logged out', '::1', NULL, '2026-01-19 15:07:09'),
 (301, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-19 15:07:14'),
 (302, 100, 'User logged out', '::1', NULL, '2026-01-19 15:11:43'),
-(303, 203, 'User logged in - Student', '::1', NULL, '2026-01-19 15:11:49'),
-(304, 203, 'User logged out', '::1', NULL, '2026-01-19 15:12:14'),
+(303, NULL, 'User logged in - Student', '::1', NULL, '2026-01-19 15:11:49'),
+(304, NULL, 'User logged out', '::1', NULL, '2026-01-19 15:12:14'),
 (305, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-19 15:12:23'),
 (306, 205, 'User logged out', '::1', NULL, '2026-01-19 15:16:05'),
 (307, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-19 15:16:10'),
@@ -544,7 +546,647 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (329, 6, 'User logged out', '::1', NULL, '2026-01-19 16:33:43'),
 (330, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-19 16:46:03'),
 (331, 4, 'User logged out', '::1', NULL, '2026-01-19 16:47:04'),
-(332, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-19 16:50:18');
+(332, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-19 16:50:18'),
+(333, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-20 14:21:14'),
+(334, 204, 'User logged out', '::1', NULL, '2026-01-20 14:24:18'),
+(335, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-20 14:24:24'),
+(336, 4, 'User logged out', '::1', NULL, '2026-01-20 14:25:09'),
+(337, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-20 14:25:14'),
+(338, 205, 'User logged out', '::1', NULL, '2026-01-20 14:26:35'),
+(339, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-20 14:27:08'),
+(340, 100, 'User logged out', '::1', NULL, '2026-01-20 14:35:00'),
+(341, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-20 14:35:20'),
+(342, 204, 'User logged out', '::1', NULL, '2026-01-21 03:08:35'),
+(343, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-21 03:08:50'),
+(344, 4, 'User logged out', '::1', NULL, '2026-01-21 03:12:31'),
+(345, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-21 03:13:14'),
+(346, 204, 'User logged out', '::1', NULL, '2026-01-21 03:15:57'),
+(347, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-21 03:16:06'),
+(348, 205, 'User logged out', '::1', NULL, '2026-01-21 03:20:11'),
+(349, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-21 03:20:23'),
+(350, 6, 'User logged out', '::1', NULL, '2026-01-21 03:23:40'),
+(351, 100, 'User logged in - Teacher', '::1', NULL, '2026-01-21 03:23:50'),
+(352, 100, 'Uploaded material: material_subj4_1768965999_6970476fc42e5.pdf for subject ID 4', '::1', NULL, '2026-01-21 03:26:39'),
+(353, 100, 'User logged out', '::1', NULL, '2026-01-21 03:27:30'),
+(354, NULL, 'User logged in - Student', '::1', NULL, '2026-01-21 03:27:42'),
+(355, NULL, 'User logged out', '::1', NULL, '2026-01-21 03:27:55'),
+(356, 6, 'User logged in - Registrar', '::1', NULL, '2026-01-21 03:28:00'),
+(357, 6, 'User logged out', '::1', NULL, '2026-01-21 03:32:32'),
+(358, NULL, 'User logged in - Student', '::1', NULL, '2026-01-21 03:32:43'),
+(359, NULL, 'User logged in - Student', '::1', NULL, '2026-01-21 03:38:47'),
+(360, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-22 16:01:15'),
+(361, 205, 'User logged out', '::1', NULL, '2026-01-22 16:02:16'),
+(362, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-22 16:02:27'),
+(363, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-24 06:41:38'),
+(364, 4, 'User logged out', '::1', NULL, '2026-01-24 06:41:55'),
+(365, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-24 07:57:13'),
+(366, 204, 'Deactivated branch administrator ID: 210', '::1', NULL, '2026-01-24 07:57:30'),
+(367, 204, 'Updated branch admin assignment for user ID 210 to branch ID 2', '::1', NULL, '2026-01-24 07:57:36'),
+(368, 204, 'Updated branch admin assignment for user ID 210 to branch ID 2', '::1', NULL, '2026-01-24 07:57:42'),
+(369, 204, 'Deactivated branch administrator ID: 210', '::1', NULL, '2026-01-24 07:57:46'),
+(370, 204, 'Created branch administrator: James Andrei Revilla (jamessenpai9@gmail.com)', '::1', NULL, '2026-01-24 07:58:17'),
+(371, 204, 'Created program: BSOA - Bachelor of Science in Organization Administration', '::1', NULL, '2026-01-24 08:00:47'),
+(372, 204, 'User logged out', '::1', NULL, '2026-01-24 08:39:44'),
+(373, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-24 09:29:15'),
+(374, 205, 'User logged out', '::1', NULL, '2026-01-24 09:38:32'),
+(375, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-24 09:40:38'),
+(376, 205, 'Locked prelim records for class ID 4', '::1', NULL, '2026-01-24 09:43:18'),
+(377, 205, 'Unlocked prelim records for class ID 4', '::1', NULL, '2026-01-24 09:43:23'),
+(378, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-30 14:27:51'),
+(379, 4, 'Scheduled maintenance: First back up test', '::1', NULL, '2026-01-30 14:36:51'),
+(380, 4, 'Enabled maintenance mode', '::1', NULL, '2026-01-30 14:36:59'),
+(381, 4, 'Disabled maintenance mode', '::1', NULL, '2026-01-30 14:37:04'),
+(382, 4, 'User logged out', '::1', NULL, '2026-01-30 14:39:24'),
+(383, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-30 14:39:30'),
+(384, 204, 'User logged out', '::1', NULL, '2026-01-30 14:43:55'),
+(385, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-30 14:44:01'),
+(386, 4, 'User logged out', '::1', NULL, '2026-01-30 14:55:30'),
+(387, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-30 14:55:38'),
+(388, 204, 'User logged out', '::1', NULL, '2026-01-30 14:55:51'),
+(389, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-30 14:55:56'),
+(390, 205, 'User logged out', '::1', NULL, '2026-01-30 14:56:09'),
+(391, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-30 14:56:18'),
+(392, 204, 'Created announcement: Happy Holidays', '::1', NULL, '2026-01-30 15:05:56'),
+(393, 204, 'Created program: AWERFDS - sdfsdf', '::1', NULL, '2026-01-30 15:23:43'),
+(394, 204, 'User logged out', '::1', NULL, '2026-01-30 15:46:17'),
+(395, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-30 15:46:23'),
+(396, 205, 'User logged out', '::1', NULL, '2026-01-30 15:47:28'),
+(397, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-30 15:49:00'),
+(398, 204, 'Created branch: Fairview Branch', '::1', NULL, '2026-01-30 16:44:31'),
+(399, 204, 'Created branch: Fairview Branch', '::1', NULL, '2026-01-30 16:54:53'),
+(400, 204, 'Deleted branch: VALENZUELA BRANCH (ID: 3)', '::1', NULL, '2026-01-30 16:56:00'),
+(401, 204, 'Created branch: Fairview Branch', '::1', NULL, '2026-01-30 16:56:25'),
+(402, 204, 'Created branch: Fairview Branch', '::1', NULL, '2026-01-30 16:58:53'),
+(403, 204, 'Created program: AWERFDS - sdfsdf', '::1', NULL, '2026-01-30 17:17:32'),
+(404, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-31 07:23:34'),
+(405, 204, 'Created program: AWERFDS - sdfsdf', '::1', NULL, '2026-01-31 07:33:38'),
+(406, 204, 'Updated program: AWERFDS - Ewan ko', '::1', NULL, '2026-01-31 07:34:47'),
+(407, 204, 'User logged out', '::1', NULL, '2026-01-31 08:04:52'),
+(408, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-31 08:04:58'),
+(409, 204, 'User logged out', '::1', NULL, '2026-01-31 08:22:31'),
+(410, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-31 08:22:37'),
+(411, 204, 'Updated program: BSCS - Bachelor of Science in Computer Science', '::1', NULL, '2026-01-31 08:26:36'),
+(412, 204, 'Updated program: BSCS - Bachelor of Science in Computer Science', '::1', NULL, '2026-01-31 08:26:59'),
+(413, 204, 'User logged out', '::1', NULL, '2026-01-31 08:38:21'),
+(414, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 08:38:30'),
+(415, 4, 'User logged out', '::1', NULL, '2026-01-31 08:39:32'),
+(416, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 08:39:43'),
+(417, 4, 'User logged out', '::1', NULL, '2026-01-31 08:41:54'),
+(418, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 08:42:01'),
+(419, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 08:42:04'),
+(420, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 08:42:07'),
+(421, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 08:42:14'),
+(422, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 08:42:23'),
+(423, 4, 'User logged out', '::1', NULL, '2026-01-31 08:47:41'),
+(424, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 08:48:08'),
+(425, 4, 'User logged out', '::1', NULL, '2026-01-31 08:48:36'),
+(426, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 08:48:44'),
+(427, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 08:48:58'),
+(428, 4, 'User logged out', '::1', NULL, '2026-01-31 08:53:15'),
+(429, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 08:53:24'),
+(430, NULL, 'User logged out', '::1', NULL, '2026-01-31 08:53:31'),
+(431, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 08:54:16'),
+(432, 4, 'User logged out', '::1', NULL, '2026-01-31 09:01:42'),
+(433, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 09:01:48'),
+(434, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 09:01:54'),
+(435, 4, 'User logged out', '::1', NULL, '2026-01-31 09:36:51'),
+(436, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 09:36:58'),
+(437, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 09:37:00'),
+(438, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 09:37:01'),
+(439, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 09:37:03'),
+(440, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 09:39:09'),
+(441, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 09:39:20'),
+(442, 4, 'User logged out', '::1', NULL, '2026-01-31 09:45:09'),
+(443, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 09:50:06'),
+(444, 4, 'User logged out', '::1', NULL, '2026-01-31 10:09:54'),
+(445, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:10:09'),
+(446, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:10:10'),
+(447, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:10:11'),
+(448, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:10:12'),
+(449, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:36'),
+(450, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:45'),
+(451, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:46'),
+(452, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:51'),
+(453, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:52'),
+(454, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:53'),
+(455, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:53'),
+(456, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:53'),
+(457, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:54'),
+(458, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:54'),
+(459, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:54'),
+(460, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:54'),
+(461, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:54'),
+(462, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:55'),
+(463, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:55'),
+(464, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:55'),
+(465, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:55'),
+(466, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:56'),
+(467, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:56'),
+(468, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:56'),
+(469, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:56'),
+(470, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:56'),
+(471, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:57'),
+(472, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:13:57'),
+(473, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:14:28'),
+(474, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:15:08'),
+(475, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:18:34'),
+(476, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:19:15'),
+(477, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:19:25'),
+(478, 4, 'User logged out', '::1', NULL, '2026-01-31 10:24:24'),
+(479, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:30'),
+(480, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:31'),
+(481, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:32'),
+(482, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:32'),
+(483, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:33'),
+(484, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:33'),
+(485, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:33'),
+(486, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:35'),
+(487, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:36'),
+(488, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:37'),
+(489, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:38'),
+(490, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:38'),
+(491, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:38'),
+(492, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:38'),
+(493, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:24:39'),
+(494, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:26:48'),
+(495, 4, 'User logged out', '::1', NULL, '2026-01-31 10:27:34'),
+(496, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:27:45'),
+(497, 4, 'User logged out', '::1', NULL, '2026-01-31 10:27:50'),
+(498, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:27:55'),
+(499, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:28:00'),
+(500, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:28:05'),
+(501, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:28:06'),
+(502, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:28:07'),
+(503, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:28:08'),
+(504, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:29:09'),
+(505, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:32:01'),
+(506, 4, 'User logged out', '::1', NULL, '2026-01-31 10:32:15'),
+(507, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:20'),
+(508, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:26'),
+(509, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:27'),
+(510, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:28'),
+(511, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:29'),
+(512, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:29'),
+(513, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:29'),
+(514, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:29'),
+(515, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:32:29'),
+(516, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:18'),
+(517, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:19'),
+(518, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:20'),
+(519, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:20'),
+(520, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:46'),
+(521, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:48'),
+(522, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:33:48'),
+(523, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:33:59'),
+(524, 4, 'User logged out', '::1', NULL, '2026-01-31 10:38:13'),
+(525, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:38:22'),
+(526, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:39:47'),
+(527, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:39:59'),
+(528, 4, 'User logged out', '::1', NULL, '2026-01-31 10:41:19'),
+(529, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:24'),
+(530, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:26'),
+(531, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:27'),
+(532, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:27'),
+(533, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:28'),
+(534, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:28'),
+(535, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:28'),
+(536, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:29'),
+(537, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:29'),
+(538, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:29'),
+(539, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:29'),
+(540, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:30'),
+(541, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:30'),
+(542, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:30'),
+(543, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:30'),
+(544, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:30'),
+(545, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:30'),
+(546, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:31'),
+(547, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:31'),
+(548, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:31'),
+(549, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:31'),
+(550, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:31'),
+(551, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:32'),
+(552, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:32'),
+(553, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:32'),
+(554, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:32'),
+(555, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:32'),
+(556, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:32'),
+(557, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(558, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(559, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(560, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(561, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(562, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(563, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:41:33'),
+(564, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:45:14'),
+(565, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:45:19'),
+(566, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:24'),
+(567, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:25'),
+(568, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:26'),
+(569, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:28'),
+(570, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:29'),
+(571, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:33'),
+(572, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:33'),
+(573, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:34'),
+(574, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:34'),
+(575, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:34'),
+(576, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:34'),
+(577, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:35'),
+(578, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:35'),
+(579, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:35'),
+(580, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:35'),
+(581, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:35'),
+(582, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:36'),
+(583, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:36'),
+(584, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:36'),
+(585, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:45:37'),
+(586, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:45:48'),
+(587, 4, 'User logged out', '::1', NULL, '2026-01-31 10:46:11'),
+(588, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:46:16'),
+(589, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:46:22'),
+(590, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:46:56'),
+(591, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:47:00'),
+(592, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:03'),
+(593, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:05'),
+(594, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:06'),
+(595, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:07'),
+(596, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:08'),
+(597, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:08'),
+(598, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:08'),
+(599, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:09'),
+(600, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:09'),
+(601, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:09'),
+(602, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:09'),
+(603, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:09'),
+(604, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:13'),
+(605, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:47:16'),
+(606, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:48:50'),
+(607, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:48:50'),
+(608, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:49:02'),
+(609, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:49:04'),
+(610, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:49:05'),
+(611, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:49:05'),
+(612, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:49:06'),
+(613, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:49:10'),
+(614, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:49:10'),
+(615, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:49:10'),
+(616, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:52:17'),
+(617, 4, 'User logged out', '::1', NULL, '2026-01-31 10:53:07'),
+(618, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:53:13'),
+(619, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:53:16'),
+(620, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:53:20'),
+(621, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:53:22'),
+(622, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:53:23'),
+(623, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:53:23'),
+(624, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:53:36'),
+(625, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:53:37'),
+(626, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:53:38'),
+(627, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:53:38'),
+(628, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:57:22'),
+(629, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:57:25'),
+(630, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:57:33'),
+(631, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:57:36'),
+(632, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:57:42'),
+(633, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:58:36'),
+(634, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:58:38'),
+(635, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:58:38'),
+(636, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:58:49'),
+(637, 4, 'User logged out', '::1', NULL, '2026-01-31 10:59:02'),
+(638, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 10:59:07'),
+(639, NULL, 'User logged out', '::1', NULL, '2026-01-31 10:59:10'),
+(640, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:59:15'),
+(641, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:59:17'),
+(642, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 10:59:19'),
+(643, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 10:59:19'),
+(644, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 10:59:32');
+INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `timestamp`) VALUES
+(645, 4, 'User logged out', '::1', NULL, '2026-01-31 11:00:16'),
+(646, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 11:00:22'),
+(647, NULL, 'User logged out', '::1', NULL, '2026-01-31 11:00:26'),
+(648, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:00:32'),
+(649, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:00:34'),
+(650, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:00:36'),
+(651, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:00:37'),
+(652, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 11:00:37'),
+(653, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:01:23'),
+(654, 4, 'User logged out', '::1', NULL, '2026-01-31 11:02:38'),
+(655, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:02:43'),
+(656, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:02:44'),
+(657, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:02:45'),
+(658, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:02:46'),
+(659, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 11:02:46'),
+(660, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:03:01'),
+(661, 4, 'User logged out', '::1', NULL, '2026-01-31 11:03:20'),
+(662, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:03:24'),
+(663, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 11:03:24'),
+(664, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:04:33'),
+(665, NULL, 'Account locked due to failed login attempts', '::1', NULL, '2026-01-31 11:04:33'),
+(666, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:05:07'),
+(667, 4, 'User logged out', '::1', NULL, '2026-01-31 11:05:22'),
+(668, 4, 'Failed login attempt', '::1', NULL, '2026-01-31 11:05:25'),
+(669, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:05:31'),
+(670, 4, 'User logged out', '::1', NULL, '2026-01-31 11:05:37'),
+(671, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 11:05:41'),
+(672, NULL, 'User logged out', '::1', NULL, '2026-01-31 11:05:45'),
+(673, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:05:51'),
+(674, NULL, 'User logged in - Student', '::1', NULL, '2026-01-31 11:08:32'),
+(675, NULL, 'User logged out', '::1', NULL, '2026-01-31 11:08:35'),
+(676, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:08:47'),
+(677, 4, 'User logged out', '::1', NULL, '2026-01-31 11:10:00'),
+(678, NULL, 'Failed login attempt', '::1', NULL, '2026-01-31 11:10:05'),
+(679, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:10:35'),
+(680, 4, 'User logged out', '::1', NULL, '2026-01-31 11:11:46'),
+(681, 4, 'User logged in - Super Admin', '::1', NULL, '2026-01-31 11:11:56'),
+(682, 4, 'User logged out', '::1', NULL, '2026-01-31 13:17:28'),
+(683, 204, 'User logged in - School Admin', '::1', NULL, '2026-01-31 13:17:35'),
+(684, 204, 'User logged out', '::1', NULL, '2026-01-31 13:18:34'),
+(685, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-01-31 13:18:39'),
+(686, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-01 23:37:52'),
+(687, 4, 'User logged out', '::1', NULL, '2026-02-01 23:39:43'),
+(688, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-01 23:39:53'),
+(689, 204, 'User logged out', '::1', NULL, '2026-02-01 23:42:38'),
+(690, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-01 23:42:47'),
+(691, 4, 'User logged out', '::1', NULL, '2026-02-01 23:43:00'),
+(692, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-01 23:43:15'),
+(693, 204, 'User logged out', '::1', NULL, '2026-02-01 23:44:54'),
+(694, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-02 00:40:52'),
+(695, 4, 'User logged in - Super Admin', '192.168.254.104', NULL, '2026-02-03 03:14:00'),
+(696, 204, 'User logged in - School Admin', '192.168.254.106', NULL, '2026-02-03 03:14:44'),
+(697, 204, 'User logged out', '192.168.254.106', NULL, '2026-02-03 03:18:57'),
+(698, 4, 'User logged in - Super Admin', '192.168.254.106', NULL, '2026-02-03 03:19:04'),
+(699, 4, 'User logged out', '192.168.254.106', NULL, '2026-02-03 03:24:10'),
+(700, 4, 'User logged in - Super Admin', '192.168.254.106', NULL, '2026-02-03 03:24:17'),
+(701, 4, 'User logged out', '192.168.254.106', NULL, '2026-02-03 03:25:09'),
+(702, 205, 'User logged in - Branch Admin', '192.168.254.106', NULL, '2026-02-03 03:25:15'),
+(703, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 03:42:00'),
+(704, 205, 'User logged out', '::1', NULL, '2026-02-03 03:42:55'),
+(705, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-03 03:43:38'),
+(706, 6, 'User logged out', '::1', NULL, '2026-02-03 03:45:11'),
+(707, 205, 'Failed login attempt', '::1', NULL, '2026-02-03 03:45:17'),
+(708, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 03:45:24'),
+(709, 205, 'User logged out', '::1', NULL, '2026-02-03 03:48:52'),
+(710, NULL, 'User logged in - Student', '::1', NULL, '2026-02-03 03:48:57'),
+(711, NULL, 'User logged out', '::1', NULL, '2026-02-03 03:49:28'),
+(712, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 03:49:33'),
+(713, 205, 'User logged out', '::1', NULL, '2026-02-03 04:52:59'),
+(714, NULL, 'Failed login attempt', '::1', NULL, '2026-02-03 04:53:05'),
+(715, NULL, 'User logged in - Student', '::1', NULL, '2026-02-03 04:53:12'),
+(716, NULL, 'User logged out', '::1', NULL, '2026-02-03 04:56:17'),
+(717, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 04:56:25'),
+(718, 205, 'User logged out', '::1', NULL, '2026-02-03 05:07:41'),
+(719, NULL, 'User logged in - Student', '::1', NULL, '2026-02-03 05:07:47'),
+(720, NULL, 'User logged out', '::1', NULL, '2026-02-03 05:08:22'),
+(721, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 05:08:30'),
+(722, 205, 'User logged out', '::1', NULL, '2026-02-03 05:25:54'),
+(723, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-03 05:26:02'),
+(724, 6, 'User logged out', '::1', NULL, '2026-02-03 05:28:43'),
+(725, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 05:28:48'),
+(726, 205, 'User logged out', '::1', NULL, '2026-02-03 05:31:20'),
+(727, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-03 05:31:26'),
+(728, 6, 'User logged out', '::1', NULL, '2026-02-03 05:32:19'),
+(729, NULL, 'Failed login attempt', '::1', NULL, '2026-02-03 05:32:23'),
+(730, NULL, 'User logged in - Student', '::1', NULL, '2026-02-03 05:33:33'),
+(731, NULL, 'User logged out', '::1', NULL, '2026-02-03 05:39:55'),
+(732, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 05:40:01'),
+(733, 205, 'User logged out', '::1', NULL, '2026-02-03 05:47:10'),
+(734, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-03 05:47:17'),
+(735, 4, 'User logged out', '::1', NULL, '2026-02-03 05:48:09'),
+(736, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-03 05:48:16'),
+(737, 204, 'User logged out', '::1', NULL, '2026-02-03 05:50:10'),
+(738, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-03 05:50:15'),
+(739, 204, 'User logged out', '::1', NULL, '2026-02-03 05:53:28'),
+(740, 205, 'Failed login attempt', '::1', NULL, '2026-02-03 05:53:41'),
+(741, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 05:53:43'),
+(742, 205, 'User logged out', '::1', NULL, '2026-02-03 06:03:32'),
+(743, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-03 06:03:39'),
+(744, 204, 'Updated program: BSHM - Bachelor of Science in Hospitality Management', '::1', NULL, '2026-02-03 06:13:06'),
+(745, 204, 'Updated program: BSHM - Bachelor of Science in Hospitality Management', '::1', NULL, '2026-02-03 06:13:16'),
+(746, 204, 'User logged out', '::1', NULL, '2026-02-03 06:14:34'),
+(747, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 06:14:40'),
+(748, 205, 'User logged out', '::1', NULL, '2026-02-03 06:15:49'),
+(749, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-03 06:16:00'),
+(750, 204, 'User logged out', '::1', NULL, '2026-02-03 06:18:57'),
+(751, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-03 06:19:03'),
+(752, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-04 13:10:20'),
+(753, 4, 'User logged out', '::1', NULL, '2026-02-04 13:10:36'),
+(754, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-04 13:11:04'),
+(755, 100, 'User logged out', '::1', NULL, '2026-02-04 13:12:59'),
+(756, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 08:26:36'),
+(757, 204, 'Deleted branch: Fairview Branch (ID: 8)', '::1', NULL, '2026-02-05 08:27:32'),
+(758, 204, 'User logged out', '::1', NULL, '2026-02-05 08:27:53'),
+(759, 205, 'Failed login attempt', '::1', NULL, '2026-02-05 08:27:58'),
+(760, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 08:28:06'),
+(761, 205, 'User logged out', '::1', NULL, '2026-02-05 08:30:18'),
+(762, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 08:30:23'),
+(763, 204, 'User logged out', '::1', NULL, '2026-02-05 08:35:38'),
+(764, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 08:35:45'),
+(765, 205, 'User logged out', '::1', NULL, '2026-02-05 08:36:37'),
+(766, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 08:36:43'),
+(767, 204, 'User logged out', '::1', NULL, '2026-02-05 08:43:27'),
+(768, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 08:43:35'),
+(769, 205, 'User logged out', '::1', NULL, '2026-02-05 08:44:54'),
+(770, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 08:44:58'),
+(771, 204, 'Created branch: Fairview Branch', '::1', NULL, '2026-02-05 08:45:52'),
+(772, 204, 'Updated branch: Fairview Branch (ID: 9)', '::1', NULL, '2026-02-05 08:53:08'),
+(773, 204, 'User logged out', '::1', NULL, '2026-02-05 09:07:08'),
+(774, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 09:07:17'),
+(775, 205, 'User logged out', '::1', NULL, '2026-02-05 09:13:19'),
+(776, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 09:13:26'),
+(777, 6, 'User logged out', '::1', NULL, '2026-02-05 10:06:44'),
+(778, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 10:06:52'),
+(779, 4, 'User logged out', '::1', NULL, '2026-02-05 10:07:07'),
+(780, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:07:14'),
+(781, 6, 'Created student account for James Revilla (2026-0002) - Program ID: 1', '::1', NULL, '2026-02-05 10:10:41'),
+(782, 6, 'User logged out', '::1', NULL, '2026-02-05 10:21:52'),
+(783, 226, 'User logged in - Student', '::1', NULL, '2026-02-05 10:21:57'),
+(784, 226, 'User logged out', '::1', NULL, '2026-02-05 10:23:59'),
+(785, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:24:07'),
+(786, 6, 'User logged out', '::1', NULL, '2026-02-05 10:26:34'),
+(787, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 10:26:41'),
+(788, 4, 'User logged out', '::1', NULL, '2026-02-05 10:27:42'),
+(789, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:27:53'),
+(790, 6, 'User logged out', '::1', NULL, '2026-02-05 10:29:02'),
+(791, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 10:29:14'),
+(792, 204, 'User logged out', '::1', NULL, '2026-02-05 10:29:27'),
+(793, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 10:29:32'),
+(794, 205, 'User logged out', '::1', NULL, '2026-02-05 10:29:49'),
+(795, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 10:29:54'),
+(796, 204, 'User logged out', '::1', NULL, '2026-02-05 10:30:30'),
+(797, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:30:36'),
+(798, 6, 'User logged out', '::1', NULL, '2026-02-05 10:33:41'),
+(799, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 10:33:46'),
+(800, 205, 'User logged out', '::1', NULL, '2026-02-05 10:46:52'),
+(801, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:46:59'),
+(802, 6, 'Created student account for James Andrei Revilla (2026-0003) - Program ID: 5', '::1', NULL, '2026-02-05 10:51:25'),
+(803, 6, 'User logged out', '::1', NULL, '2026-02-05 10:51:44'),
+(804, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 10:51:51'),
+(805, 205, 'User logged out', '::1', NULL, '2026-02-05 11:16:53'),
+(806, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 11:16:59'),
+(807, 4, 'User logged out', '::1', NULL, '2026-02-05 11:17:17'),
+(808, 224, 'Failed login attempt', '::1', NULL, '2026-02-05 11:17:21'),
+(809, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 11:20:57'),
+(810, 4, 'User logged out', '::1', NULL, '2026-02-05 11:21:22'),
+(811, 224, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 11:21:27'),
+(812, 224, 'User logged out', '::1', NULL, '2026-02-05 11:22:02'),
+(813, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 11:22:07'),
+(814, 205, 'User logged out', '::1', NULL, '2026-02-05 11:22:26'),
+(815, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-05 11:23:55'),
+(816, 100, 'User logged out', '::1', NULL, '2026-02-05 11:24:38'),
+(817, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 11:24:42'),
+(818, 205, 'User logged out', '::1', NULL, '2026-02-05 11:26:17'),
+(819, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-05 11:26:25'),
+(820, 100, 'User logged out', '::1', NULL, '2026-02-05 11:29:44'),
+(821, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 11:29:49'),
+(822, 4, 'User logged out', '::1', NULL, '2026-02-05 11:30:02'),
+(823, 216, 'Failed login attempt', '::1', NULL, '2026-02-05 11:30:06'),
+(824, 216, 'Failed login attempt', '::1', NULL, '2026-02-05 11:30:15'),
+(825, 216, 'Failed login attempt', '::1', NULL, '2026-02-05 11:30:21'),
+(826, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 11:30:26'),
+(827, 4, 'User logged out', '::1', NULL, '2026-02-05 11:30:59'),
+(828, 216, 'User logged in - Teacher', '::1', NULL, '2026-02-05 11:31:03'),
+(829, 216, 'User logged out', '::1', NULL, '2026-02-05 11:31:47'),
+(830, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 11:31:52'),
+(831, 4, 'User logged out', '::1', NULL, '2026-02-05 11:32:02'),
+(832, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-05 11:32:07'),
+(833, 204, 'User logged out', '::1', NULL, '2026-02-05 11:32:28'),
+(834, 210, 'Failed login attempt', '::1', NULL, '2026-02-05 11:32:32'),
+(835, 210, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 11:32:35'),
+(836, 210, 'User logged out', '::1', NULL, '2026-02-05 12:22:45'),
+(837, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 12:22:58'),
+(838, 6, 'User logged out', '::1', NULL, '2026-02-05 13:21:54'),
+(839, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-05 13:21:59'),
+(840, 100, 'User logged out', '::1', NULL, '2026-02-05 14:07:18'),
+(841, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-05 14:07:27'),
+(842, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-06 03:25:00'),
+(843, 4, 'User logged out', '::1', NULL, '2026-02-06 03:36:01'),
+(844, 4, 'Failed login attempt', '::1', NULL, '2026-02-10 15:46:42'),
+(845, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-10 15:47:01'),
+(846, 4, 'User logged out', '::1', NULL, '2026-02-10 15:47:36'),
+(847, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-10 15:47:41'),
+(848, 204, 'User logged out', '::1', NULL, '2026-02-10 15:48:10'),
+(849, 6, 'Failed login attempt', '::1', NULL, '2026-02-10 15:48:18'),
+(850, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-10 15:48:23'),
+(851, 6, 'User logged out', '::1', NULL, '2026-02-10 15:49:08'),
+(852, 205, 'Failed login attempt', '::1', NULL, '2026-02-10 15:49:17'),
+(853, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 15:49:20'),
+(854, 205, 'User logged out', '::1', NULL, '2026-02-10 15:53:29'),
+(855, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 15:53:34'),
+(856, 100, 'User logged out', '::1', NULL, '2026-02-10 15:55:06'),
+(857, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 15:55:11'),
+(858, 226, 'User logged out', '::1', NULL, '2026-02-10 15:57:41'),
+(859, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 15:57:49'),
+(860, 100, 'User logged out', '::1', NULL, '2026-02-10 15:58:01'),
+(861, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 15:58:07'),
+(862, 205, 'User logged out', '::1', NULL, '2026-02-10 16:04:45'),
+(863, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 16:04:52'),
+(864, 226, 'User logged out', '::1', NULL, '2026-02-10 16:04:57'),
+(865, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:05:05'),
+(866, 100, 'User logged out', '::1', NULL, '2026-02-10 16:08:32'),
+(867, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 16:13:21'),
+(868, 205, 'User logged out', '::1', NULL, '2026-02-10 16:13:34'),
+(869, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-10 16:13:40'),
+(870, 6, 'User logged out', '::1', NULL, '2026-02-10 16:14:51'),
+(871, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 16:14:55'),
+(872, 205, 'User logged out', '::1', NULL, '2026-02-10 16:17:58'),
+(873, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:18:10'),
+(874, 100, 'User logged out', '::1', NULL, '2026-02-10 16:18:29'),
+(875, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 16:18:34'),
+(876, 205, 'User logged out', '::1', NULL, '2026-02-10 16:19:05'),
+(877, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:19:14'),
+(878, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-10 16:22:34'),
+(879, 100, 'User logged out', '::1', NULL, '2026-02-10 16:22:53'),
+(880, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 16:22:57'),
+(881, 226, 'User logged out', '::1', NULL, '2026-02-10 16:23:08'),
+(882, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-10 16:23:22'),
+(883, 4, 'User logged out', '::1', NULL, '2026-02-10 16:23:38'),
+(884, 231, 'User logged in - Student', '::1', NULL, '2026-02-10 16:23:41'),
+(885, 231, 'User logged out', '::1', NULL, '2026-02-10 16:24:52'),
+(886, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 16:24:56'),
+(887, 226, 'User logged out', '::1', NULL, '2026-02-10 16:29:51'),
+(888, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:30:02'),
+(889, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-11 03:43:14'),
+(890, 4, 'User logged out', '::1', NULL, '2026-02-11 03:43:47'),
+(891, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-11 03:43:54'),
+(892, 205, 'User logged out', '::1', NULL, '2026-02-11 03:44:00'),
+(893, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-11 03:44:05'),
+(894, 204, 'Updated branch: Caloocan Branch (ID: 4)', '::1', NULL, '2026-02-11 03:45:17'),
+(895, 204, 'User logged out', '::1', NULL, '2026-02-11 03:45:31'),
+(896, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-11 03:45:37'),
+(897, 205, 'User logged out', '::1', NULL, '2026-02-11 03:48:42'),
+(898, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-11 03:48:50'),
+(899, 6, 'Created student account for Eugine Almira (2026-0004) - Program ID: 2', '::1', NULL, '2026-02-11 03:52:25'),
+(900, 6, 'User logged out', '::1', NULL, '2026-02-11 03:53:32'),
+(901, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-11 03:53:41'),
+(902, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-11 03:56:33'),
+(903, 100, 'Created assessment: Activity Programming', '::1', NULL, '2026-02-11 03:57:40'),
+(904, 100, 'User logged out', '::1', NULL, '2026-02-11 03:57:54'),
+(905, 226, 'User logged in - Student', '::1', NULL, '2026-02-11 03:58:04'),
+(906, 4, 'Failed login attempt', '::1', NULL, '2026-02-16 04:33:22'),
+(907, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-16 04:33:26'),
+(908, 4, 'User logged out', '::1', NULL, '2026-02-16 04:33:51'),
+(909, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-16 04:34:01'),
+(910, 204, 'User logged out', '::1', NULL, '2026-02-16 04:35:27'),
+(911, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-17 06:24:04'),
+(912, 205, 'User logged out', '::1', NULL, '2026-02-17 06:36:52'),
+(913, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:36:57'),
+(914, 226, 'User logged out', '::1', NULL, '2026-02-17 06:38:16'),
+(915, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-17 06:38:25'),
+(916, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-17 06:40:12'),
+(917, 100, 'User logged out', '::1', NULL, '2026-02-17 06:40:27'),
+(918, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:40:30'),
+(919, 226, 'User logged out', '::1', NULL, '2026-02-17 06:41:30'),
+(920, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-17 06:41:37'),
+(921, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 5', '::1', NULL, '2026-02-17 06:42:31'),
+(922, 100, 'User logged out', '::1', NULL, '2026-02-17 06:42:39'),
+(923, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:42:45'),
+(924, 226, 'User logged out', '::1', NULL, '2026-02-17 06:44:04'),
+(925, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-17 06:44:15'),
+(926, 100, 'User logged out', '::1', NULL, '2026-02-17 06:44:52'),
+(927, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:44:56'),
+(928, 226, 'User logged out', '::1', NULL, '2026-02-17 07:07:42'),
+(929, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-17 07:22:47'),
+(930, 6, 'User logged out', '::1', NULL, '2026-02-17 07:23:20'),
+(931, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 07:25:43'),
+(932, 226, 'User logged out', '::1', NULL, '2026-02-17 07:26:21'),
+(933, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 07:26:27'),
+(934, 226, 'User logged out', '::1', NULL, '2026-02-17 07:26:35'),
+(935, 6, 'Failed login attempt', '::1', NULL, '2026-02-17 07:26:42'),
+(936, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-17 07:26:47'),
+(937, 6, 'User logged out', '::1', NULL, '2026-02-17 07:37:34'),
+(938, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-17 07:37:39'),
+(939, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-24 13:30:41'),
+(940, 6, 'User logged out', '::1', NULL, '2026-02-24 13:31:35'),
+(941, 204, 'Failed login attempt', '::1', NULL, '2026-02-24 13:31:41'),
+(942, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-24 13:31:49'),
+(943, 204, 'User logged out', '::1', NULL, '2026-02-24 13:32:59'),
+(944, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-24 13:43:07'),
+(945, 6, 'User logged out', '::1', NULL, '2026-02-24 13:43:48'),
+(946, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-24 13:43:54'),
+(947, 4, 'User logged out', '::1', NULL, '2026-02-24 13:46:37'),
+(948, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-24 13:46:50'),
+(949, 205, 'User logged out', '::1', NULL, '2026-02-24 14:35:20'),
+(950, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-24 14:35:28'),
+(951, 6, 'User logged out', '::1', NULL, '2026-02-24 17:05:45'),
+(952, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-24 17:06:35'),
+(953, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-24 17:07:40'),
+(954, 4, 'User logged out', '::1', NULL, '2026-02-24 17:07:44'),
+(955, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-24 17:07:50'),
+(956, 6, 'User logged out', '::1', NULL, '2026-02-24 17:09:03'),
+(957, 226, 'User logged in - Student', '::1', NULL, '2026-02-24 17:09:09'),
+(958, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-24 17:10:15'),
+(959, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-25 19:40:41'),
+(960, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-27 07:35:23'),
+(961, 6, 'User logged out', '::1', NULL, '2026-02-27 08:28:04'),
+(962, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-27 08:28:11'),
+(963, 205, 'User logged out', '::1', NULL, '2026-02-27 10:11:29'),
+(964, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-27 10:11:39'),
+(965, 204, 'Created program: ACT - Associate Computer Technology', '::1', NULL, '2026-02-27 10:21:13'),
+(966, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-27 14:13:57'),
+(967, 4, 'User logged out', '::1', NULL, '2026-02-27 14:14:54'),
+(968, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-27 14:15:01'),
+(969, 204, 'User logged out', '::1', NULL, '2026-02-27 14:16:12'),
+(970, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-27 14:16:20'),
+(971, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-28 17:15:31');
 
 -- --------------------------------------------------------
 
@@ -566,8 +1208,8 @@ CREATE TABLE `branches` (
 INSERT INTO `branches` (`id`, `school_id`, `name`, `address`) VALUES
 (1, 1, 'Main Campus', 'Manila'),
 (2, 2, 'VALENZUELA BRANCH', ''),
-(3, 2, 'VALENZUELA BRANCH', ''),
-(4, 2, 'CALOOCAN BRANCH', '');
+(4, 2, 'Caloocan Branch', ''),
+(9, 1, 'Fairview Branch', 'fairview city');
 
 -- --------------------------------------------------------
 
@@ -586,15 +1228,6 @@ CREATE TABLE `certificates_issued` (
   `issued_by` int(10) UNSIGNED NOT NULL,
   `issued_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `certificates_issued`
---
-
-INSERT INTO `certificates_issued` (`id`, `student_id`, `certificate_type`, `reference_no`, `purpose`, `academic_year`, `semester`, `issued_by`, `issued_at`) VALUES
-(1, 200, 'enrollment', 'EC-20260119-0200', 'For Employment', '2025-2026', 2, 6, '2026-01-18 16:09:26'),
-(3, 200, 'enrollment', 'EC-20260119-0200-4618', 'For Employment', '2025-2026', 2, 6, '2026-01-18 16:12:53'),
-(4, 203, 'enrollment', 'EC-20260119-0203-5981', 'For Employment', '2025-2026', 1, 211, '2026-01-18 20:13:02');
 
 -- --------------------------------------------------------
 
@@ -681,10 +1314,7 @@ CREATE TABLE `curriculum_subjects` (
 --
 
 INSERT INTO `curriculum_subjects` (`id`, `subject_code`, `subject_title`, `units`, `lecture_hours`, `lab_hours`, `subject_type`, `program_id`, `year_level_id`, `shs_strand_id`, `shs_grade_level_id`, `semester`, `prerequisites`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
-(2, 'STEM-101', 'BIOLOGY', 3.0, 0, 0, 'shs_core', NULL, NULL, NULL, 1, 1, '', 1, 204, '2026-01-18 13:24:54', '2026-01-18 13:24:54'),
-(3, 'BSIT-102', 'Introduction to Computing', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-01-18 13:29:09', '2026-01-18 13:29:09'),
-(4, 'BSIT-101', 'Object Oriented Programming', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-01-18 17:22:24', '2026-01-18 17:22:24'),
-(5, 'BSIT-103', 'Funcamentals of Programming', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-01-19 02:41:21', '2026-01-19 10:55:23');
+(10, 'STEM-102', 'BIOLOGY', 3.0, 3, 3, 'shs_core', NULL, NULL, 1, 1, 1, 'Stem 1001', 1, 204, '2026-02-05 08:35:28', '2026-02-05 08:43:24');
 
 -- --------------------------------------------------------
 
@@ -713,7 +1343,31 @@ INSERT INTO `email_logs` (`id`, `recipient_email`, `subject`, `template_type`, `
 (3, 'revillajamesandrei4@gmail.com', 'ELMS Test Email', 'test', 'failed', 'SMTP Error: Could not authenticate.', 4, '2026-01-19 16:16:14'),
 (4, 'revillajamesandrei4@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-19 16:16:51'),
 (5, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-01-19 16:28:19'),
-(6, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-01-19 16:34:37');
+(6, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-01-19 16:34:37'),
+(7, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:10:50'),
+(8, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:10:57'),
+(9, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:03'),
+(10, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:07'),
+(11, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:12'),
+(12, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:16'),
+(13, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:24'),
+(14, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:30'),
+(15, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:38'),
+(16, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:11:42'),
+(17, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:12:11'),
+(18, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:12:15'),
+(19, 'rainielcrtz@gmail.com', 'ELMS Test Email', 'test', 'sent', NULL, 4, '2026-01-21 03:12:19'),
+(20, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-01-24 08:52:08'),
+(21, 'you@example.com', 'ELMS - Datamex - SMTP Test Message', 'smtp_test', 'sent', NULL, NULL, '2026-01-30 14:25:08'),
+(22, 'you@example.com', 'ELMS - Datamex - SMTP Test Message', 'smtp_test', 'sent', NULL, 204, '2026-01-31 07:23:57'),
+(23, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-03 05:32:35'),
+(24, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-02-05 10:10:46'),
+(25, 'revillajamesandrei4@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-02-05 10:51:30'),
+(26, 'jamessenpai9@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-05 11:17:31'),
+(27, 'yujinjae05@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-02-11 03:52:32'),
+(28, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'failed', 'Email domain does not exist', NULL, '2026-02-16 04:36:19'),
+(29, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-17 07:07:52'),
+(30, 'revillajamesandrei4@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-18 00:12:38');
 
 -- --------------------------------------------------------
 
@@ -730,19 +1384,6 @@ CREATE TABLE `enrollments` (
   `payment_amount` decimal(10,2) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `enrollments`
---
-
-INSERT INTO `enrollments` (`id`, `student_id`, `class_id`, `status`, `payment_verified`, `payment_amount`, `created_at`) VALUES
-(1, 201, 1, 'approved', 0, NULL, '2026-01-16 13:09:47'),
-(2, 203, 1, 'approved', 0, NULL, '2026-01-16 13:26:44'),
-(3, 203, 2, 'approved', 0, NULL, '2026-01-16 13:26:44'),
-(5, 202, 1, 'approved', 0, NULL, '2026-01-16 17:39:48'),
-(6, 200, 1, 'approved', 0, NULL, '2026-01-16 17:39:59'),
-(8, 200, 4, 'approved', 0, NULL, '2026-01-18 17:09:28'),
-(9, 203, 4, 'approved', 0, NULL, '2026-01-18 17:45:26');
 
 -- --------------------------------------------------------
 
@@ -773,10 +1414,8 @@ CREATE TABLE `grades` (
 --
 
 INSERT INTO `grades` (`id`, `student_id`, `section_id`, `subject_id`, `academic_year_id`, `semester`, `class_id`, `prelim`, `midterm`, `prefinal`, `final`, `final_grade`, `remarks`, `notes`, `version`) VALUES
-(1, 203, NULL, NULL, NULL, NULL, 1, NULL, 89.00, NULL, 88.00, 88.40, '0', NULL, 1),
-(2, 203, NULL, NULL, NULL, NULL, 4, NULL, 0.00, NULL, 0.00, 0.00, 'FAILED', NULL, 1),
-(6, 203, 1, 4, NULL, NULL, NULL, NULL, 0.00, NULL, 0.00, 90.00, 'PASSED', '', 1),
-(7, 201, 1, 4, NULL, NULL, NULL, NULL, 0.00, NULL, 0.00, 90.00, 'PASSED', '', 1);
+(8, 226, 1, 3, 1, NULL, NULL, 90.00, 99.00, 0.00, 0.00, 94.50, 'PASSED', 'Ang Galing', 4),
+(9, 226, 1, 5, 1, NULL, NULL, 85.00, 0.00, 0.00, 0.00, 85.00, 'PASSED', '', 1);
 
 -- --------------------------------------------------------
 
@@ -811,6 +1450,13 @@ CREATE TABLE `grade_locks` (
   `unlock_request` tinyint(1) DEFAULT 0,
   `unlock_reason` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `grade_locks`
+--
+
+INSERT INTO `grade_locks` (`id`, `class_id`, `grading_period`, `is_locked`, `locked_by`, `locked_at`, `unlock_request`, `unlock_reason`) VALUES
+(1, 4, 'prelim', 0, NULL, NULL, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -862,7 +1508,8 @@ INSERT INTO `learning_materials` (`id`, `section_id`, `subject_id`, `class_id`, 
 (1, NULL, NULL, 1, 'materials/material_1_1768583054_696a6f8e7b5e0.pptx', '2026-01-16 17:04:14', NULL),
 (2, NULL, NULL, 1, 'materials/material_1_1768583063_696a6f9773a42.pptx', '2026-01-16 17:04:23', NULL),
 (3, NULL, NULL, 3, 'materials/material_3_1768584379_696a74bb48747.pptx', '2026-01-16 17:26:19', NULL),
-(10, NULL, 4, NULL, 'materials/material_subj4_1768761931_696d2a4b39360.pptx', '2026-01-18 18:45:31', 100);
+(10, NULL, 4, NULL, 'materials/material_subj4_1768761931_696d2a4b39360.pptx', '2026-01-18 18:45:31', 100),
+(11, NULL, 4, NULL, 'materials/material_subj4_1768965999_6970476fc42e5.pdf', '2026-01-21 03:26:39', 100);
 
 -- --------------------------------------------------------
 
@@ -893,7 +1540,214 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (8, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-19 16:14:38'),
 (9, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-19 16:27:27'),
 (10, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-19 16:46:03'),
-(11, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-19 16:50:18');
+(11, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-19 16:50:18'),
+(12, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-20 14:21:13'),
+(13, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-20 14:24:24'),
+(14, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-20 14:25:14'),
+(15, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-20 14:27:08'),
+(16, 'school@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 0, '2026-01-20 14:35:06'),
+(17, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-20 14:35:20'),
+(18, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:08:50'),
+(19, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:12:57'),
+(20, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:13:14'),
+(21, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:16:06'),
+(22, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:20:23'),
+(23, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:23:48'),
+(24, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:23:50'),
+(26, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-21 03:28:00'),
+(29, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-22 16:01:15'),
+(30, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-22 16:02:27'),
+(31, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-24 06:41:38'),
+(32, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-24 07:57:13'),
+(33, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-24 09:29:15'),
+(34, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-24 09:40:38'),
+(35, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 14:27:51'),
+(36, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 14:39:30'),
+(37, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 14:44:01'),
+(38, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 14:55:38'),
+(39, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 14:55:56'),
+(40, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 14:56:18'),
+(41, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 15:46:22'),
+(42, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-30 15:49:00'),
+(43, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 07:23:34'),
+(44, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 08:04:58'),
+(45, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:22:37'),
+(46, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:38:30'),
+(47, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:39:36'),
+(48, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:39:43'),
+(52, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:42:23'),
+(56, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:48:07'),
+(58, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:48:58'),
+(61, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 08:54:16'),
+(63, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 09:01:54'),
+(68, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 09:39:20'),
+(69, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 09:50:06'),
+(73, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:19:25'),
+(74, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:26:48'),
+(75, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:27:45'),
+(80, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:32:01'),
+(81, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:33:59'),
+(82, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:39:59'),
+(104, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 10:45:48'),
+(128, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 10:52:17'),
+(141, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 10:58:49'),
+(146, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 10:59:32'),
+(152, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:01:23'),
+(157, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:03:01'),
+(160, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:05:07'),
+(161, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:05:25'),
+(162, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:05:31'),
+(169, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:08:47'),
+(171, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:10:35'),
+(172, 'admin@elms.com', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-01-31 11:11:56'),
+(173, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 13:17:35'),
+(174, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-01-31 13:18:39'),
+(175, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-01 23:37:52'),
+(176, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 1, '2026-02-01 23:39:53'),
+(177, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-01 23:42:47'),
+(178, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-01 23:43:15'),
+(179, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-02 00:40:52'),
+(180, 'admin@elms.com', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 1, '2026-02-03 03:14:00'),
+(181, 'schooladmin@elms.com', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:14:44'),
+(182, 'admin@elms.com', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:19:04'),
+(183, 'admin@elms.com', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:24:17'),
+(184, 'branchadmin@elms.com', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:25:15'),
+(185, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:42:00'),
+(186, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:43:38'),
+(187, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:45:17'),
+(188, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:45:24'),
+(190, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 03:49:33'),
+(193, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 04:56:25'),
+(195, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 1, '2026-02-03 05:08:30'),
+(196, 'registrar@elms.com', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 1, '2026-02-03 05:26:02'),
+(197, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:28:48'),
+(198, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:31:26'),
+(201, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:40:01'),
+(202, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:47:17'),
+(203, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:48:16'),
+(204, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:50:15'),
+(205, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:53:41'),
+(206, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 05:53:43'),
+(207, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 06:03:39'),
+(208, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 06:14:40'),
+(209, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 06:16:00'),
+(210, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-03 06:19:03'),
+(211, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-04 13:10:20'),
+(212, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-04 13:11:04'),
+(213, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:26:36'),
+(214, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:27:58'),
+(215, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:28:06'),
+(216, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:30:22'),
+(217, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:35:45'),
+(218, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:36:43'),
+(219, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 1, '2026-02-05 08:43:35'),
+(220, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 08:44:58'),
+(221, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 09:07:17'),
+(222, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 09:13:26'),
+(223, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:06:52'),
+(224, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:07:14'),
+(225, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:21:57'),
+(226, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:24:07'),
+(227, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:26:41'),
+(228, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:27:53'),
+(229, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:29:14'),
+(230, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:29:32'),
+(231, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:29:54'),
+(232, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:30:36'),
+(233, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:33:46'),
+(234, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:46:59'),
+(235, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:51:51'),
+(236, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:16:59'),
+(237, 'jamessenpai9@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:17:21'),
+(238, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:20:57'),
+(239, 'jamessenpai9@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:21:27'),
+(240, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:22:07'),
+(241, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:23:55'),
+(242, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:24:42'),
+(243, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:26:25'),
+(244, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:29:49'),
+(245, 'senpai@teacher.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:30:06'),
+(246, 'senpai@teacher.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:30:15'),
+(247, 'senpai@teacher.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:30:21'),
+(248, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:30:26'),
+(249, 'senpai@teacher.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:31:03'),
+(250, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:31:52'),
+(251, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:32:07'),
+(252, 'sample@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:32:32'),
+(253, 'sample@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 11:32:35'),
+(254, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 12:22:58'),
+(255, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 13:21:59'),
+(256, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 14:07:27'),
+(257, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-06 03:25:00'),
+(258, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:46:42'),
+(259, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:47:01'),
+(260, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:47:41'),
+(261, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:48:18'),
+(262, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:48:23'),
+(263, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:49:17'),
+(264, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:49:20'),
+(265, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:53:34'),
+(266, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:55:11'),
+(267, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:57:49'),
+(268, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:58:07'),
+(269, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:04:52'),
+(270, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:05:05'),
+(271, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:13:21'),
+(272, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:13:40'),
+(273, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:14:55'),
+(274, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:18:10'),
+(275, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:18:34'),
+(276, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:19:14'),
+(277, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:22:57'),
+(278, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:23:22'),
+(279, 'revillajamesandrei4@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:23:41'),
+(280, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:24:56'),
+(281, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:30:02'),
+(282, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:43:14'),
+(283, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:43:54'),
+(284, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:44:05'),
+(285, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:45:37'),
+(286, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:48:50'),
+(287, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:53:41'),
+(288, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:58:04'),
+(289, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-16 04:33:22'),
+(290, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-16 04:33:26'),
+(291, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-16 04:34:01'),
+(292, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:24:04'),
+(293, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:36:57'),
+(294, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:38:25'),
+(295, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:40:30'),
+(296, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:41:37'),
+(297, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:42:45'),
+(298, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:44:15'),
+(299, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:44:56'),
+(300, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:22:47'),
+(301, 'student@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-17 07:25:23'),
+(302, 'student@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-17 07:25:30'),
+(303, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:25:43'),
+(304, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:26:27'),
+(305, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:26:42'),
+(306, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:26:47'),
+(307, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:37:39'),
+(308, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 13:30:41'),
+(309, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 13:31:41'),
+(310, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 13:31:49'),
+(311, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 13:43:07'),
+(312, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 13:43:54'),
+(313, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 13:46:50'),
+(314, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 14:35:28'),
+(315, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 17:06:35'),
+(316, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 1, '2026-02-24 17:07:40'),
+(317, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 17:07:50'),
+(318, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 17:09:09'),
+(319, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 19:40:41'),
+(320, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 07:35:23'),
+(321, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 08:28:10'),
+(322, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 10:11:39'),
+(323, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 14:13:57'),
+(324, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 14:15:01'),
+(325, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 14:16:20'),
+(326, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-28 17:15:31');
 
 -- --------------------------------------------------------
 
@@ -932,7 +1786,10 @@ CREATE TABLE `password_resets` (
 --
 
 INSERT INTO `password_resets` (`id`, `user_id`, `token`, `expires_at`, `used`, `created_at`) VALUES
-(1, 221, 'ce748a374a217c0e8f95dbdccb2ddee9a2d974374005320adbb665220c9b4d7b', '2026-01-20 01:34:32', 0, '2026-01-19 16:34:32');
+(4, 224, 'c4fc97b88e4f9f77876502004f1362626e15ce998b7ca7b88ea2fab3f423512d', '2026-02-05 20:17:27', 0, '2026-02-05 11:17:27'),
+(5, 226, 'aa3fc2fb5f54cf4ab92cbe3c2c519a51b2025c1c44bb29647b032ff3abe751ed', '2026-02-16 13:36:19', 1, '2026-02-16 04:36:19'),
+(6, 226, 'ba961478a7634befc08c9d2a20074c94327e7f7ff717756ac484bbbe1dc24db6', '2026-02-17 16:07:48', 0, '2026-02-17 07:07:48'),
+(7, 231, '3f6c399d9950e2d182b8bb89755b0085405ff6ee086b63084b2b25f8fde1b95f', '2026-02-18 09:12:32', 0, '2026-02-18 00:12:32');
 
 -- --------------------------------------------------------
 
@@ -947,9 +1804,11 @@ CREATE TABLE `payments` (
   `student_id` int(10) UNSIGNED NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `payment_type` varchar(100) DEFAULT NULL,
+  `other_type_description` varchar(255) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `academic_year_id` int(10) UNSIGNED DEFAULT NULL,
   `semester` enum('1st','2nd','summer') DEFAULT NULL,
+  `term` enum('prelim','midterm','prefinals','finals','full','downpayment') DEFAULT NULL,
   `branch_id` int(10) UNSIGNED DEFAULT NULL,
   `recorded_by` int(10) UNSIGNED DEFAULT NULL,
   `payment_method` enum('cash','bank_transfer','online','check') DEFAULT 'cash',
@@ -965,8 +1824,11 @@ CREATE TABLE `payments` (
 -- Dumping data for table `payments`
 --
 
-INSERT INTO `payments` (`id`, `reference_no`, `or_number`, `student_id`, `amount`, `payment_type`, `description`, `academic_year_id`, `semester`, `branch_id`, `recorded_by`, `payment_method`, `status`, `verified_by`, `verified_at`, `rejection_reason`, `proof_file`, `created_at`) VALUES
-(1, 'PAY-20260119-1174', '2024-0127', 203, 4500.00, 'Enrollment', '', 1, '1st', 2, 211, '', 'verified', 211, '2026-01-19 04:31:55', NULL, NULL, '2026-01-18 20:31:55');
+INSERT INTO `payments` (`id`, `reference_no`, `or_number`, `student_id`, `amount`, `payment_type`, `other_type_description`, `description`, `academic_year_id`, `semester`, `term`, `branch_id`, `recorded_by`, `payment_method`, `status`, `verified_by`, `verified_at`, `rejection_reason`, `proof_file`, `created_at`) VALUES
+(4, 'PAY-20260205-9103', NULL, 226, 3500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-02-05 10:10:41'),
+(5, 'PAY-20260205-3825', NULL, 231, 4500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-02-05 10:51:25'),
+(6, 'PAY-20260211-4898', NULL, 232, 3500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-02-11 03:52:25'),
+(7, 'PAY-20260227-7517', '2024-0127', 232, 5000.00, 'Tuition', '', '', 1, '1st', 'full', 1, 6, 'cash', 'verified', 6, '2026-02-27 16:07:26', NULL, NULL, '2026-02-27 08:07:26');
 
 -- --------------------------------------------------------
 
@@ -990,9 +1852,8 @@ CREATE TABLE `programs` (
 
 INSERT INTO `programs` (`id`, `program_code`, `program_name`, `degree_level`, `school_id`, `is_active`, `created_at`) VALUES
 (1, 'BSIT', 'Bachelor of Science in Information Technology', 'Bachelor', 1, 1, '2026-01-16 13:28:17'),
-(2, 'BSCS', 'Bachelor of Science in Computer Science', 'Bachelor', 1, 1, '2026-01-16 13:28:17'),
-(3, 'BSIS', 'Bachelor of Science in Information Systems', 'Bachelor', 1, 1, '2026-01-16 13:28:17'),
-(5, 'BSHM', 'Bachelor of Science in Hospitality Management', 'Bachelor', 2, 1, '2026-01-18 13:51:57');
+(5, 'BSHM', 'Bachelor of Science in Hospitality Management', 'Bachelor', 2, 1, '2026-01-18 13:51:57'),
+(10, 'ACT', 'Associate Computer Technology', 'Associate', 2, 1, '2026-02-27 10:21:13');
 
 -- --------------------------------------------------------
 
@@ -1009,6 +1870,39 @@ CREATE TABLE `program_courses` (
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `program_tuition_fees`
+--
+
+CREATE TABLE `program_tuition_fees` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `program_id` int(10) UNSIGNED NOT NULL,
+  `year_level_id` int(10) UNSIGNED DEFAULT NULL,
+  `semester` enum('1st','2nd','summer') DEFAULT '1st',
+  `tuition_fee` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `misc_fee` decimal(10,2) DEFAULT 0.00,
+  `lab_fee` decimal(10,2) DEFAULT 0.00,
+  `other_fees` decimal(10,2) DEFAULT 0.00,
+  `total_fee` decimal(10,2) GENERATED ALWAYS AS (`tuition_fee` + `misc_fee` + `lab_fee` + `other_fees`) STORED,
+  `academic_year_id` int(10) UNSIGNED DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `program_tuition_fees`
+--
+
+INSERT INTO `program_tuition_fees` (`id`, `program_id`, `year_level_id`, `semester`, `tuition_fee`, `misc_fee`, `lab_fee`, `other_fees`, `academic_year_id`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, '1st', 8700.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 09:52:56', '2026-02-05 09:52:56'),
+(2, 5, 13, '1st', 9000.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 10:28:18', '2026-02-05 10:28:18'),
+(3, 6, 17, '1st', 9500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 10:30:49', '2026-02-05 10:30:49'),
+(4, 2, 5, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-11 03:50:37', '2026-02-11 03:50:37'),
+(5, 1, 2, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-27 07:35:57', '2026-02-27 07:35:57');
 
 -- --------------------------------------------------------
 
@@ -1035,15 +1929,12 @@ INSERT INTO `program_year_levels` (`id`, `program_id`, `year_level`, `year_name`
 (2, 1, 2, '2nd Year', 2, 1, '2026-01-17 15:39:11'),
 (3, 1, 3, '3rd Year', 2, 1, '2026-01-17 15:39:11'),
 (4, 1, 4, '4th Year', 2, 1, '2026-01-17 15:39:11'),
-(5, 2, 1, '1st Year', 2, 1, '2026-01-17 15:39:11'),
-(6, 2, 2, '2nd Year', 2, 1, '2026-01-17 15:39:11'),
-(7, 2, 3, '3rd Year', 2, 1, '2026-01-17 15:39:11'),
-(8, 2, 4, '4th Year', 2, 1, '2026-01-17 15:39:11'),
-(9, 3, 1, '1st Year', 2, 1, '2026-01-17 15:39:11'),
-(10, 3, 2, '2nd Year', 2, 1, '2026-01-17 15:39:11'),
-(11, 3, 3, '3rd Year', 2, 1, '2026-01-17 15:39:11'),
-(12, 3, 4, '4th Year', 2, 1, '2026-01-17 15:39:11'),
-(13, 5, 1, '1st Year', 2, 1, '2026-01-18 13:54:04');
+(13, 5, 1, '1st Year', 2, 1, '2026-01-18 13:54:04'),
+(18, 5, 2, '2nd year', 2, 1, '2026-02-27 10:18:59'),
+(19, 5, 3, '3rd year', 2, 1, '2026-02-27 10:19:29'),
+(20, 5, 4, '4th', 2, 1, '2026-02-27 10:19:43'),
+(21, 10, 1, '1st Year', 2, 1, '2026-02-27 10:21:28'),
+(22, 10, 2, '2nd year', 2, 1, '2026-02-27 10:21:41');
 
 -- --------------------------------------------------------
 
@@ -1135,7 +2026,9 @@ INSERT INTO `sections` (`id`, `section_name`, `program_id`, `year_level_id`, `sh
 (2, 'BSIT 1 B', 1, 1, NULL, NULL, '1st', 1, 1, 40, '', NULL, 1, '2026-01-18 17:57:09', '2026-01-18 17:57:09'),
 (3, 'BSIT 1 A', 1, 1, NULL, NULL, '1st', 1, 2, 40, '', NULL, 1, '2026-01-18 20:39:19', '2026-01-18 20:39:19'),
 (4, 'BSIT 1 B', 1, 1, NULL, NULL, '1st', 1, 2, 40, '', NULL, 1, '2026-01-18 20:39:24', '2026-01-18 20:39:24'),
-(5, 'BSIT 1 C', 1, 1, NULL, NULL, '1st', 1, 1, 40, '', NULL, 1, '2026-01-19 02:40:11', '2026-01-19 02:40:11');
+(5, 'BSIT 1 C', 1, 1, NULL, NULL, '1st', 1, 1, 40, '', NULL, 1, '2026-01-19 02:40:11', '2026-01-19 02:40:11'),
+(6, 'BSCS 1A', 2, 5, NULL, NULL, '1st', 1, 1, 40, '', 216, 1, '2026-01-31 13:19:24', '2026-01-31 13:19:24'),
+(7, 'Ilang ilang', NULL, NULL, 2, 3, '1st', 1, 1, 40, '', NULL, 1, '2026-02-03 03:28:12', '2026-02-03 03:28:12');
 
 -- --------------------------------------------------------
 
@@ -1156,12 +2049,7 @@ CREATE TABLE `section_students` (
 --
 
 INSERT INTO `section_students` (`id`, `section_id`, `student_id`, `enrolled_at`, `status`) VALUES
-(1, 1, 203, '2026-01-18 21:19:57', ''),
-(2, 2, 203, '2026-01-18 21:19:59', ''),
-(3, 2, 200, '2026-01-19 02:42:32', 'active'),
-(4, 5, 202, '2026-01-19 02:42:36', 'active'),
-(5, 1, 201, '2026-01-19 02:42:38', 'active'),
-(6, 2, 218, '2026-01-19 02:42:39', 'active');
+(33, 1, 226, '2026-02-10 16:18:46', 'active');
 
 -- --------------------------------------------------------
 
@@ -1179,6 +2067,395 @@ CREATE TABLE `security_logs` (
   `severity` enum('low','medium','high','critical') DEFAULT 'low',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `security_logs`
+--
+
+INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_agent`, `details`, `severity`, `created_at`) VALUES
+(1, NULL, 'login_failed', '::1', NULL, 'User login failed', 'medium', '2026-01-31 08:47:47'),
+(2, NULL, 'login_failed', '::1', NULL, 'User login failed', 'medium', '2026-01-31 08:47:54'),
+(3, NULL, 'login_failed', '::1', NULL, 'User login failed', 'medium', '2026-01-31 08:47:55'),
+(4, 4, 'login_success', '::1', NULL, 'User login successful', '', '2026-01-31 08:48:07'),
+(5, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 08:48:44'),
+(6, NULL, 'login_failed', '::1', NULL, 'User login failed', 'medium', '2026-01-31 08:48:47'),
+(7, 4, 'login_success', '::1', NULL, 'User login successful', '', '2026-01-31 08:48:58'),
+(8, NULL, 'login_success', '::1', NULL, 'User login successful', '', '2026-01-31 08:53:24'),
+(9, NULL, 'login_failed', '::1', NULL, 'User login failed', 'medium', '2026-01-31 08:53:37'),
+(10, 4, 'login_success', '::1', NULL, 'User login successful', '', '2026-01-31 08:54:16'),
+(11, NULL, 'login_failed', '::1', NULL, 'User login failed', 'medium', '2026-01-31 09:01:48'),
+(12, 4, 'login_success', '::1', NULL, 'User login successful', '', '2026-01-31 09:01:54'),
+(13, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 09:36:58'),
+(14, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 09:37:00'),
+(15, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 09:37:01'),
+(16, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 09:37:03'),
+(17, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 09:39:09'),
+(18, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 09:39:20'),
+(19, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 09:50:06'),
+(20, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:10:09'),
+(21, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:10:10'),
+(22, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:10:11'),
+(23, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:10:12'),
+(24, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:36'),
+(25, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:45'),
+(26, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:46'),
+(27, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:51'),
+(28, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:52'),
+(29, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:53'),
+(30, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:53'),
+(31, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:53'),
+(32, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:54'),
+(33, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:54'),
+(34, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:54'),
+(35, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:54'),
+(36, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:54'),
+(37, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:55'),
+(38, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:55'),
+(39, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:55'),
+(40, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:55'),
+(41, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:56'),
+(42, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:56'),
+(43, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:56'),
+(44, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:56'),
+(45, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:56'),
+(46, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:57'),
+(47, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:13:57'),
+(48, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:14:28'),
+(49, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:15:08'),
+(50, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:18:34'),
+(51, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:19:15'),
+(52, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:19:25'),
+(53, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:30'),
+(54, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:31'),
+(55, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:32'),
+(56, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:32'),
+(57, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:33'),
+(58, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:33'),
+(59, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:33'),
+(60, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:35'),
+(61, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:36'),
+(62, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:37'),
+(63, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:38'),
+(64, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:38'),
+(65, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:38'),
+(66, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:38'),
+(67, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:24:39'),
+(68, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:26:48'),
+(69, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:27:45'),
+(70, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:27:55'),
+(71, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:28:05'),
+(72, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:28:06'),
+(73, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:28:07'),
+(74, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:28:08'),
+(75, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:29:09'),
+(76, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:32:01'),
+(77, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:20'),
+(78, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:26'),
+(79, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:27'),
+(80, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:28'),
+(81, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:29'),
+(82, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:29'),
+(83, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:29'),
+(84, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:29'),
+(85, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:32:29'),
+(86, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:18'),
+(87, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:19'),
+(88, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:20'),
+(89, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:20'),
+(90, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:46'),
+(91, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:48'),
+(92, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:33:48'),
+(93, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:33:59'),
+(94, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:38:22'),
+(95, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:39:47'),
+(96, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:39:59'),
+(97, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:24'),
+(98, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:26'),
+(99, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:27'),
+(100, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:27'),
+(101, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:28'),
+(102, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:28'),
+(103, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:28'),
+(104, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:29'),
+(105, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:29'),
+(106, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:29'),
+(107, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:29'),
+(108, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:30'),
+(109, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:30'),
+(110, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:30'),
+(111, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:30'),
+(112, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:30'),
+(113, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:30'),
+(114, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:31'),
+(115, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:31'),
+(116, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:31'),
+(117, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:31'),
+(118, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:31'),
+(119, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:32'),
+(120, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:32'),
+(121, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:32'),
+(122, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:32'),
+(123, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:32'),
+(124, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:32'),
+(125, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(126, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(127, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(128, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(129, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(130, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(131, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:41:33'),
+(132, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:45:14'),
+(133, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:24'),
+(134, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:25'),
+(135, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:26'),
+(136, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:28'),
+(137, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:29'),
+(138, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:33'),
+(139, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:33'),
+(140, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:34'),
+(141, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:34'),
+(142, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:34'),
+(143, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:34'),
+(144, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:35'),
+(145, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:35'),
+(146, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:35'),
+(147, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:35'),
+(148, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:35'),
+(149, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:36'),
+(150, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:36'),
+(151, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:36'),
+(152, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:45:37'),
+(153, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:45:48'),
+(154, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:46:16'),
+(155, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 10:46:56'),
+(156, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:03'),
+(157, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:05'),
+(158, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:06'),
+(159, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:07'),
+(160, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:08'),
+(161, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:08'),
+(162, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:08'),
+(163, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:09'),
+(164, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:09'),
+(165, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:09'),
+(166, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:09'),
+(167, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:09'),
+(168, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:13'),
+(169, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:47:16'),
+(170, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:48:50'),
+(171, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:48:50'),
+(172, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:49:02'),
+(173, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:49:04'),
+(174, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:49:05'),
+(175, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:49:05'),
+(176, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:49:06'),
+(177, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:49:10'),
+(178, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:49:10'),
+(179, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:49:10'),
+(180, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:52:17'),
+(181, NULL, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:53:13'),
+(182, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:53:20'),
+(183, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:53:22'),
+(184, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:53:23'),
+(185, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:53:23'),
+(186, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:53:36'),
+(187, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:53:37'),
+(188, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:53:38'),
+(189, NULL, 'account_locked', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'Account locked due to failed login attempts', 'high', '2026-01-31 10:53:38'),
+(190, NULL, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:57:22'),
+(191, NULL, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:57:33'),
+(192, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:57:42'),
+(193, NULL, '', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '{\"attempts\":1,\"max_attempts\":3,\"lock_count\":0}', 'low', '2026-01-31 10:57:42'),
+(194, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:58:36'),
+(195, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:58:38'),
+(196, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 10:58:38'),
+(197, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:58:49'),
+(198, NULL, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:59:07'),
+(199, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:59:15'),
+(200, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:59:17'),
+(201, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 10:59:19'),
+(202, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 10:59:19'),
+(203, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 10:59:32'),
+(204, NULL, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:00:22'),
+(205, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:00:32'),
+(206, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:00:34'),
+(207, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:00:36'),
+(208, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:00:37'),
+(209, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 11:00:37'),
+(210, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:01:23'),
+(211, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:02:43'),
+(212, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:02:44'),
+(213, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:02:45'),
+(214, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:02:46'),
+(215, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 11:02:46'),
+(216, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:03:01'),
+(217, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:03:24'),
+(218, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 11:03:24'),
+(219, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:04:33'),
+(220, NULL, 'account_locked', '::1', NULL, 'Account locked due to failed login attempts', 'high', '2026-01-31 11:04:33'),
+(221, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:05:07'),
+(222, 4, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:05:25'),
+(223, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:05:31'),
+(224, NULL, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:05:41'),
+(225, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:05:51'),
+(226, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-01-31 11:10:05'),
+(227, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:10:35'),
+(228, 4, 'login_success', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-01-31 11:11:56'),
+(229, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 13:17:35'),
+(230, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-01-31 13:18:39'),
+(231, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-01 23:37:52'),
+(232, 204, 'login_success', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 'User login successful', '', '2026-02-01 23:39:53'),
+(233, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-01 23:42:47'),
+(234, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-01 23:43:15'),
+(235, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-02 00:40:52'),
+(236, 4, 'login_success', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-02-03 03:14:00');
+INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_agent`, `details`, `severity`, `created_at`) VALUES
+(237, 204, 'login_success', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:14:44'),
+(238, 4, 'login_success', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:19:04'),
+(239, 4, 'login_success', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:24:17'),
+(240, 205, 'login_success', '192.168.254.106', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:25:15'),
+(241, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:42:00'),
+(242, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:43:38'),
+(243, 205, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-03 03:45:17'),
+(244, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:45:24'),
+(245, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:48:57'),
+(246, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 03:49:33'),
+(247, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-03 04:53:05'),
+(248, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 04:53:12'),
+(249, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 04:56:25'),
+(250, NULL, 'login_success', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 'User login successful', '', '2026-02-03 05:07:47'),
+(251, 205, 'login_success', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 'User login successful', '', '2026-02-03 05:08:30'),
+(252, 6, 'login_success', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 'User login successful', '', '2026-02-03 05:26:02'),
+(253, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:28:48'),
+(254, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:31:26'),
+(255, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-03 05:32:23'),
+(256, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:33:33'),
+(257, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:40:01'),
+(258, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:47:17'),
+(259, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:48:16'),
+(260, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:50:15'),
+(261, 205, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-03 05:53:41'),
+(262, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 05:53:43'),
+(263, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 06:03:39'),
+(264, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 06:14:40'),
+(265, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 06:16:00'),
+(266, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-03 06:19:03'),
+(267, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-04 13:10:20'),
+(268, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-04 13:11:04'),
+(269, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 08:26:36'),
+(270, 205, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-05 08:27:58'),
+(271, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 08:28:06'),
+(272, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 08:30:22'),
+(273, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 08:35:45'),
+(274, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 08:36:43'),
+(275, 205, 'login_success', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', 'User login successful', '', '2026-02-05 08:43:35'),
+(276, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 08:44:58'),
+(277, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 09:07:17'),
+(278, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 09:13:26'),
+(279, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:06:52'),
+(280, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:07:14'),
+(281, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:21:57'),
+(282, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:24:07'),
+(283, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:26:41'),
+(284, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:27:53'),
+(285, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:29:14'),
+(286, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:29:32'),
+(287, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:29:54'),
+(288, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:30:36'),
+(289, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:33:46'),
+(290, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:46:59'),
+(291, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:51:51'),
+(292, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:16:59'),
+(293, 224, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-05 11:17:21'),
+(294, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:20:57'),
+(295, 224, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:21:27'),
+(296, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:22:07'),
+(297, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:23:55'),
+(298, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:24:42'),
+(299, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:26:25'),
+(300, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:29:49'),
+(301, 216, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-05 11:30:06'),
+(302, 216, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-05 11:30:15'),
+(303, 216, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-05 11:30:21'),
+(304, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:30:26'),
+(305, 216, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:31:03'),
+(306, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:31:52'),
+(307, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:32:07'),
+(308, 210, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-05 11:32:32'),
+(309, 210, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 11:32:35'),
+(310, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 12:22:58'),
+(311, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 13:21:59'),
+(312, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 14:07:27'),
+(313, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-06 03:25:00'),
+(314, 4, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-10 15:46:42'),
+(315, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:47:01'),
+(316, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:47:41'),
+(317, 6, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-10 15:48:18'),
+(318, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:48:23'),
+(319, 205, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-10 15:49:17'),
+(320, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:49:20'),
+(321, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:53:34'),
+(322, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:55:11'),
+(323, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:57:49'),
+(324, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:58:07'),
+(325, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:04:52'),
+(326, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:05:05'),
+(327, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:13:21'),
+(328, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:13:40'),
+(329, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:14:55'),
+(330, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:18:10'),
+(331, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:18:34'),
+(332, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:19:14'),
+(333, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:22:57'),
+(334, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:23:22'),
+(335, 231, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:23:41'),
+(336, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:24:56'),
+(337, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:30:02'),
+(338, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:43:14'),
+(339, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:43:54'),
+(340, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:44:05'),
+(341, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:45:37'),
+(342, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:48:50'),
+(343, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:53:41'),
+(344, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:58:04'),
+(345, 4, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-16 04:33:22'),
+(346, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-16 04:33:26'),
+(347, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-16 04:34:01'),
+(348, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:24:04'),
+(349, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:36:57'),
+(350, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:38:25'),
+(351, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:40:30'),
+(352, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:41:37'),
+(353, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:42:45'),
+(354, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:44:15'),
+(355, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:44:56'),
+(356, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:22:47'),
+(357, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-17 07:25:23'),
+(358, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-17 07:25:30'),
+(359, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:25:43'),
+(360, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:26:27'),
+(361, 6, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-17 07:26:42'),
+(362, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:26:47'),
+(363, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:37:39'),
+(364, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 13:30:41'),
+(365, 204, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-24 13:31:41'),
+(366, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 13:31:49'),
+(367, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 13:43:07'),
+(368, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 13:43:54'),
+(369, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 13:46:50'),
+(370, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 14:35:28'),
+(371, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:06:35'),
+(372, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 'User login successful', '', '2026-02-24 17:07:40'),
+(373, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:07:50'),
+(374, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:09:09'),
+(375, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-25 19:40:41'),
+(376, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 07:35:23'),
+(377, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 08:28:10'),
+(378, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 10:11:39'),
+(379, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 14:13:57'),
+(380, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 14:15:01'),
+(381, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 14:16:20'),
+(382, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-28 17:15:31');
 
 -- --------------------------------------------------------
 
@@ -1200,14 +2477,14 @@ CREATE TABLE `security_settings` (
 --
 
 INSERT INTO `security_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_by`, `updated_at`) VALUES
-(1, 'max_login_attempts', '5', 'Maximum failed login attempts before lockout', NULL, '2026-01-19 15:29:52'),
-(2, 'lockout_duration', '15', 'Account lockout duration in minutes', NULL, '2026-01-19 15:29:52'),
-(3, 'password_min_length', '8', 'Minimum password length', NULL, '2026-01-19 15:29:52'),
-(4, 'password_require_uppercase', '1', 'Require uppercase letter in password', NULL, '2026-01-19 15:29:52'),
-(5, 'password_require_lowercase', '1', 'Require lowercase letter in password', NULL, '2026-01-19 15:29:52'),
-(6, 'password_require_number', '1', 'Require number in password', NULL, '2026-01-19 15:29:52'),
-(7, 'password_require_special', '0', 'Require special character in password', NULL, '2026-01-19 15:29:52'),
-(8, 'session_timeout', '60', 'Session timeout in minutes', NULL, '2026-01-19 15:29:52'),
+(1, 'max_login_attempts', '5', 'Maximum failed login attempts before lockout', 4, '2026-02-03 03:23:09'),
+(2, 'lockout_duration', '2', 'Account lockout duration in minutes', 4, '2026-01-31 11:03:16'),
+(3, 'password_min_length', '8', 'Minimum password length', 4, '2026-01-31 08:39:28'),
+(4, 'password_require_uppercase', '1', 'Require uppercase letter in password', 4, '2026-01-31 08:39:28'),
+(5, 'password_require_lowercase', '1', 'Require lowercase letter in password', 4, '2026-01-31 08:39:28'),
+(6, 'password_require_number', '1', 'Require number in password', 4, '2026-01-31 08:39:28'),
+(7, 'password_require_special', '0', 'Require special character in password', 4, '2026-01-31 08:39:28'),
+(8, 'session_timeout', '60', 'Session timeout in minutes', 4, '2026-01-31 08:39:28'),
 (9, 'enable_2fa', '0', 'Enable two-factor authentication', NULL, '2026-01-19 15:29:52'),
 (10, 'enable_google_login', '1', 'Enable Google OAuth login', NULL, '2026-01-19 15:29:52'),
 (11, 'google_client_id', '', 'Google OAuth Client ID', NULL, '2026-01-19 15:29:52'),
@@ -1219,7 +2496,7 @@ INSERT INTO `security_settings` (`id`, `setting_key`, `setting_value`, `descript
 (17, 'smtp_from_email', '', 'From email address', 4, '2026-01-19 16:16:41'),
 (18, 'smtp_from_name', 'DATAMEX COLLEGE OF SAINT ADELINE', 'From name for emails', 4, '2026-01-19 16:24:35'),
 (19, 'enable_email_verification', '1', 'Require email verification for new accounts', NULL, '2026-01-19 15:29:52'),
-(20, 'password_reset_expiry', '60', 'Password reset link expiry in minutes', NULL, '2026-01-19 15:29:52');
+(20, 'password_reset_expiry', '60', 'Password reset link expiry in minutes', 4, '2026-01-31 08:39:28');
 
 -- --------------------------------------------------------
 
@@ -1327,20 +2604,37 @@ INSERT INTO `shs_tracks` (`id`, `track_name`, `track_code`, `written_work_weight
 CREATE TABLE `students` (
   `user_id` int(10) UNSIGNED NOT NULL,
   `student_no` varchar(20) NOT NULL,
-  `course_id` int(10) UNSIGNED DEFAULT NULL
+  `course_id` int(10) UNSIGNED DEFAULT NULL,
+  `student_type` enum('regular','irregular','transferee') NOT NULL DEFAULT 'regular',
+  `previous_school` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`user_id`, `student_no`, `course_id`) VALUES
-(200, '2025-0001', 1),
-(201, '2025-0002', 2),
-(202, '2025-0003', 1),
-(203, '2025-1001', 1),
-(218, '2026-0001', 1),
-(221, '2026-0002', 1);
+INSERT INTO `students` (`user_id`, `student_no`, `course_id`, `student_type`, `previous_school`) VALUES
+(226, '2026-0002', 1, 'regular', NULL),
+(231, '2026-0003', 5, 'regular', NULL),
+(232, '2026-0004', 2, 'regular', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_completed_subjects`
+--
+
+CREATE TABLE `student_completed_subjects` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `student_id` int(10) UNSIGNED NOT NULL,
+  `subject_id` int(10) UNSIGNED NOT NULL,
+  `completion_source` varchar(255) DEFAULT NULL,
+  `previous_subject_name` varchar(255) DEFAULT NULL,
+  `previous_grade` varchar(50) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `recorded_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1366,7 +2660,11 @@ CREATE TABLE `student_fees` (
 --
 
 INSERT INTO `student_fees` (`id`, `student_id`, `fee_type`, `amount`, `academic_year_id`, `semester`, `description`, `due_date`, `created_by`, `created_at`) VALUES
-(1, 203, 'Tuition Fee', 11600.00, 1, '1st', '', NULL, 211, '2026-01-18 20:31:19');
+(1, 203, 'Tuition Fee', 11600.00, 1, '1st', '', NULL, 211, '2026-01-18 20:31:19'),
+(2, 221, 'Tuition Fee', 11100.00, 1, '1st', '', NULL, 6, '2026-01-21 03:21:50'),
+(3, 226, 'Tuition', 8700.00, 1, '1st', 'Tuition Fee', NULL, 6, '2026-02-05 10:10:41'),
+(4, 231, 'Tuition', 9000.00, 1, '1st', 'Tuition Fee', NULL, 6, '2026-02-05 10:51:25'),
+(5, 232, 'Tuition', 8500.00, 1, '1st', 'Tuition Fee', NULL, 6, '2026-02-11 03:52:25');
 
 -- --------------------------------------------------------
 
@@ -1423,6 +2721,55 @@ INSERT INTO `student_promotions` (`id`, `student_id`, `from_academic_year_id`, `
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_subject_enrollments`
+--
+
+CREATE TABLE `student_subject_enrollments` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `student_id` int(10) UNSIGNED NOT NULL,
+  `subject_id` int(10) UNSIGNED NOT NULL,
+  `section_id` int(11) DEFAULT NULL,
+  `academic_year_id` int(10) UNSIGNED NOT NULL,
+  `status` enum('enrolled','completed','dropped') NOT NULL DEFAULT 'enrolled',
+  `enrollment_type` enum('regular','irregular','transferee') NOT NULL DEFAULT 'regular',
+  `recorded_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `student_subject_enrollments`
+--
+
+INSERT INTO `student_subject_enrollments` (`id`, `student_id`, `subject_id`, `section_id`, `academic_year_id`, `status`, `enrollment_type`, `recorded_by`, `created_at`, `updated_at`) VALUES
+(1, 226, 3, 1, 1, 'enrolled', 'regular', NULL, '2026-02-27 07:34:54', '2026-02-27 07:34:54'),
+(2, 226, 5, 1, 1, 'enrolled', 'regular', NULL, '2026-02-27 07:34:54', '2026-02-27 07:34:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_term_enrollments`
+--
+
+CREATE TABLE `student_term_enrollments` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `student_id` int(10) UNSIGNED NOT NULL,
+  `program_type` enum('college','shs') NOT NULL DEFAULT 'college',
+  `program_id` int(10) UNSIGNED NOT NULL,
+  `year_level_id` int(10) UNSIGNED NOT NULL,
+  `academic_year_id` int(10) UNSIGNED NOT NULL,
+  `semester` enum('1st','2nd','summer') NOT NULL DEFAULT '1st',
+  `student_type` enum('regular','irregular','transferee') NOT NULL DEFAULT 'regular',
+  `previous_school` varchar(255) DEFAULT NULL,
+  `status` enum('enrolled','completed','cancelled') NOT NULL DEFAULT 'enrolled',
+  `recorded_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `subjects`
 --
 
@@ -1471,6 +2818,13 @@ CREATE TABLE `system_maintenance` (
   `created_by` int(10) UNSIGNED NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `system_maintenance`
+--
+
+INSERT INTO `system_maintenance` (`id`, `title`, `description`, `start_time`, `end_time`, `is_active`, `affected_modules`, `created_by`, `created_at`) VALUES
+(1, 'First back up test', '', '2026-01-30 22:36:00', '2026-01-30 22:36:00', 0, NULL, 4, '2026-01-30 14:36:51');
 
 -- --------------------------------------------------------
 
@@ -1522,7 +2876,7 @@ CREATE TABLE `system_settings` (
 
 INSERT INTO `system_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `category`, `description`, `updated_by`, `updated_at`) VALUES
 (1, 'site_name', 'ELMS - Datamex', 'string', 'general', 'System Name', NULL, '2026-01-16 16:35:05'),
-(2, 'maintenance_mode', '0', 'boolean', 'system', 'Enable Maintenance Mode', 4, '2026-01-18 19:06:38'),
+(2, 'maintenance_mode', '0', 'boolean', 'system', 'Enable Maintenance Mode', 4, '2026-01-30 14:37:04'),
 (3, 'session_timeout', '3600', 'number', 'security', 'Session Timeout (seconds)', NULL, '2026-01-16 16:35:05'),
 (4, 'max_login_attempts', '5', 'number', 'security', 'Maximum Login Attempts', NULL, '2026-01-16 16:35:05'),
 (5, 'password_min_length', '8', 'number', 'security', 'Minimum Password Length', 4, '2026-01-18 19:06:18'),
@@ -1568,28 +2922,28 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `status` enum('active','inactive') DEFAULT 'active',
   `last_login` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `lock_count` int(11) NOT NULL DEFAULT 0,
+  `last_locked_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password`, `status`, `last_login`, `created_at`) VALUES
-(4, 'admin@elms.com', '$2y$10$HT./ovUEHrcCRGbLzjSHquhagQeVxD9iK59//YEDUfntP5pn3o3m2', 'active', '2026-01-20 00:50:18', '2026-01-16 12:57:04'),
-(6, 'registrar@elms.com', '$2y$10$emmb9dv7qdUCsPWfW0Ey4u3YLcA6h99ym0DrPa1dAo8n0bV0PUeSe', 'active', '2026-01-20 00:27:27', '2026-01-16 13:06:58'),
-(100, 'teacher@elms.com', '$2y$10$gS8DWoSFQX9iUAZ4r2jCvucHbM0Swd7iGB.5uG1pxlBkiKSXZf22O', 'active', '2026-01-20 00:04:23', '2026-01-16 13:08:50'),
-(200, 'student1@elms.com', '$2y$10$rTenfOlur5ca6J9a5kdMiO25ZBT7cavQ.WOutUYAp5rEryIG9epbG', 'active', NULL, '2026-01-16 13:08:50'),
-(201, 'student2@elms.com', '$2y$10$rTenfOlur5ca6J9a5kdMiO25ZBT7cavQ.WOutUYAp5rEryIG9epbG', 'active', NULL, '2026-01-16 13:08:50'),
-(202, 'student3@elms.com', '$2y$10$rTenfOlur5ca6J9a5kdMiO25ZBT7cavQ.WOutUYAp5rEryIG9epbG', 'active', NULL, '2026-01-16 13:08:50'),
-(203, 'student@elms.com', '$2y$10$KFgcfrgq5cpjkBkheHuI1Owhqc054pQv/Ukbec8GTiCoiBGxgErxK', 'active', '2026-01-19 23:11:49', '2026-01-16 13:26:44'),
-(204, 'schooladmin@elms.com', '$2y$10$QA38bQbDvhQwo/.BHioND.p1Y06Oy0rcHTXOC7i4FnhmwqLyVZGcu', 'active', '2026-01-19 23:53:08', '2026-01-16 13:32:27'),
-(205, 'branchadmin@elms.com', '$2y$10$Bic2FhHZbHvu3AvS8601HO0UXxxyyvi01LGZh3iIW35AmKC8kFB0i', 'active', '2026-01-19 23:47:22', '2026-01-16 16:32:28'),
-(210, 'sample@elms.com', '$2y$10$7Xri9SoPDxk2v/ybP78NduUbh8rspsEBnffz.OksDEdm4llPiRpWu', 'active', '2026-01-19 04:45:25', '2026-01-18 19:14:15'),
-(211, 'rev@registrar.com', '$2y$10$GM/9k7ytk1UmmRMd2/FkgOgA9CdZN5RupGr5iCzCCv5FKhp0zy2Rq', 'active', '2026-01-19 18:06:01', '2026-01-18 20:10:51'),
-(216, 'senpai@teacher.com', '$2y$10$zoyJYBXikgTZUlgVVbL/T.uYXKmVFeqctzpFPyyr8D1CBUDjok/TO', 'active', NULL, '2026-01-18 20:47:29'),
-(218, 'test.student1768771580@example.com', '$2y$10$tMk2oQWTGcl1dPYTsCU3EOs5FwkTKqzhElcNwtEAIJan9Cit8yWOK', 'active', NULL, '2026-01-18 21:26:20'),
-(221, 'Jamesrev235@gmail.com', '$2y$10$HQWA1riVpeoBxhGeBR3YRu9xq7/wjuqc5gAsl3symX2bAs4iWwQOK', 'active', NULL, '2026-01-19 16:28:15');
+INSERT INTO `users` (`id`, `email`, `password`, `status`, `last_login`, `created_at`, `lock_count`, `last_locked_at`) VALUES
+(4, 'admin@elms.com', '$2y$10$HT./ovUEHrcCRGbLzjSHquhagQeVxD9iK59//YEDUfntP5pn3o3m2', 'active', '2026-02-27 22:13:57', '2026-01-16 12:57:04', 0, NULL),
+(6, 'registrar@elms.com', '$2y$10$emmb9dv7qdUCsPWfW0Ey4u3YLcA6h99ym0DrPa1dAo8n0bV0PUeSe', 'active', '2026-03-01 01:15:31', '2026-01-16 13:06:58', 0, NULL),
+(100, 'teacher@elms.com', '$2y$10$gS8DWoSFQX9iUAZ4r2jCvucHbM0Swd7iGB.5uG1pxlBkiKSXZf22O', 'active', '2026-02-25 01:07:40', '2026-01-16 13:08:50', 0, NULL),
+(204, 'schooladmin@elms.com', '$2y$10$QA38bQbDvhQwo/.BHioND.p1Y06Oy0rcHTXOC7i4FnhmwqLyVZGcu', 'active', '2026-02-27 22:15:01', '2026-01-16 13:32:27', 0, NULL),
+(205, 'branchadmin@elms.com', '$2y$10$Bic2FhHZbHvu3AvS8601HO0UXxxyyvi01LGZh3iIW35AmKC8kFB0i', 'active', '2026-02-27 22:16:20', '2026-01-16 16:32:28', 0, NULL),
+(210, 'sample@elms.com', '$2y$10$7Xri9SoPDxk2v/ybP78NduUbh8rspsEBnffz.OksDEdm4llPiRpWu', 'active', '2026-02-05 19:32:35', '2026-01-18 19:14:15', 0, NULL),
+(211, 'rev@registrar.com', '$2y$10$GM/9k7ytk1UmmRMd2/FkgOgA9CdZN5RupGr5iCzCCv5FKhp0zy2Rq', 'active', '2026-01-19 18:06:01', '2026-01-18 20:10:51', 0, NULL),
+(216, 'senpai@teacher.com', '$2y$10$U8SYILHG/24ZXUUTUpyC3.HbI3W8tbsOicY7/zfM.Z29MkUfwWQk.', 'active', '2026-02-05 19:31:03', '2026-01-18 20:47:29', 0, NULL),
+(224, 'jamessenpai9@gmail.com', '$2y$10$i8fTVxxUibMVx8M5I6oDEecc7AMZMedGS4Hrac2wQeVAJop/Z4Sxi', 'active', '2026-02-05 19:21:27', '2026-01-24 07:58:17', 0, NULL),
+(226, 'Jamesrev235@gmail.com', '$2y$10$dgNmtItewKFQvvrOCZ8ryuCBht7KWDUkOvuI5dVMqU6/bw1aBbIGq', 'active', '2026-02-25 01:09:09', '2026-02-05 10:10:41', 0, NULL),
+(231, 'revillajamesandrei4@gmail.com', '$2y$10$J879eXG0p8ftGYWxNdRcMOEdoYPHEj18XX1ks6SS3Iw/MoS9Ql3pm', 'active', '2026-02-11 00:23:41', '2026-02-05 10:51:25', 0, NULL),
+(232, 'yujinjae05@gmail.com', '$2y$10$K9I9q5/hgEAfnoavXQwSz.T9B.RhWt3i.IaK7kj3X0.iUsHqP1z4q', 'active', NULL, '2026-02-11 03:52:25', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -1613,18 +2967,16 @@ CREATE TABLE `user_profiles` (
 INSERT INTO `user_profiles` (`user_id`, `first_name`, `last_name`, `contact_no`, `address`, `branch_id`) VALUES
 (4, 'Super', 'Administrator', '09123456789', 'Datamex HQ', NULL),
 (6, 'Maria', 'Santos', '09171234567', 'Registrar Office', 1),
-(100, 'Juan', 'Dela Cruz', NULL, NULL, NULL),
-(200, 'Pedro', 'Garcia', NULL, NULL, 1),
-(201, 'Ana', 'Reyes', NULL, NULL, 1),
-(202, 'Jose', 'Martinez', NULL, NULL, 1),
-(203, 'Maria', 'Garcia', '09181234567', 'Student Residence', 1),
+(100, 'Juan', 'Dela Cruz', NULL, NULL, 1),
 (204, 'Academic', 'Dean', '09191234567', NULL, NULL),
 (205, 'Branch', 'Coordinator', '09201234567', NULL, 1),
-(210, 'James', 'Andrei Revilla', NULL, NULL, 2),
+(210, 'James', 'Andrei Revilla', '', '', 2),
 (211, 'James', 'Revs', '0906281723', NULL, 2),
-(216, 'Senpai', 'James', NULL, '', 2),
-(218, 'Test', 'Student', '09987654321', 'Test Address', 1),
-(221, 'James', 'Revilla', '0906281723', 'Malabon City', 1);
+(216, 'Senpai', 'James', '', '', 2),
+(224, 'James', 'Andrei Revilla', '09181234567', 'Dyan Lng Sa TAbi', 4),
+(226, 'James', 'Revilla', '09181234567', 'dyan lng', 1),
+(231, 'James Andrei', 'Revilla', '0906281723', 'Dyan lng', 1),
+(232, 'Eugine', 'Almira', '093426387462', 'Dyan lng sa tabi', 1);
 
 -- --------------------------------------------------------
 
@@ -1645,17 +2997,15 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (4, 1),
 (6, 4),
 (100, 5),
-(200, 6),
-(201, 6),
-(202, 6),
-(203, 6),
 (204, 2),
 (205, 3),
 (210, 3),
 (211, 4),
 (216, 5),
-(218, 6),
-(221, 6);
+(224, 3),
+(226, 6),
+(231, 6),
+(232, 6);
 
 --
 -- Indexes for dumped tables
@@ -1892,6 +3242,14 @@ ALTER TABLE `program_courses`
   ADD KEY `fk_pc_yearlevel` (`year_level_id`);
 
 --
+-- Indexes for table `program_tuition_fees`
+--
+ALTER TABLE `program_tuition_fees`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_program` (`program_id`),
+  ADD KEY `idx_year_level` (`year_level_id`);
+
+--
 -- Indexes for table `program_year_levels`
 --
 ALTER TABLE `program_year_levels`
@@ -1990,6 +3348,16 @@ ALTER TABLE `students`
   ADD KEY `idx_course` (`course_id`);
 
 --
+-- Indexes for table `student_completed_subjects`
+--
+ALTER TABLE `student_completed_subjects`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_student_subject` (`student_id`,`subject_id`),
+  ADD KEY `idx_student` (`student_id`),
+  ADD KEY `idx_subject` (`subject_id`),
+  ADD KEY `idx_recorded_by` (`recorded_by`);
+
+--
 -- Indexes for table `student_fees`
 --
 ALTER TABLE `student_fees`
@@ -2013,6 +3381,28 @@ ALTER TABLE `student_promotions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_student_promotion` (`student_id`),
   ADD KEY `idx_academic_year` (`from_academic_year_id`,`to_academic_year_id`);
+
+--
+-- Indexes for table `student_subject_enrollments`
+--
+ALTER TABLE `student_subject_enrollments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_student_subject_ay` (`student_id`,`subject_id`,`academic_year_id`),
+  ADD KEY `idx_student_status` (`student_id`,`status`),
+  ADD KEY `idx_subject_status` (`subject_id`,`status`),
+  ADD KEY `idx_section_subject_status` (`section_id`,`subject_id`,`status`),
+  ADD KEY `idx_academic_year` (`academic_year_id`),
+  ADD KEY `idx_recorded_by` (`recorded_by`);
+
+--
+-- Indexes for table `student_term_enrollments`
+--
+ALTER TABLE `student_term_enrollments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_student_term` (`student_id`,`academic_year_id`,`semester`),
+  ADD KEY `idx_student_ay` (`student_id`,`academic_year_id`),
+  ADD KEY `idx_program_level` (`program_id`,`year_level_id`),
+  ADD KEY `idx_recorded_by` (`recorded_by`);
 
 --
 -- Indexes for table `subjects`
@@ -2096,19 +3486,19 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `academic_years`
 --
 ALTER TABLE `academic_years`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `active_sessions`
 --
 ALTER TABLE `active_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4648;
 
 --
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `api_keys`
@@ -2120,7 +3510,7 @@ ALTER TABLE `api_keys`
 -- AUTO_INCREMENT for table `assessments`
 --
 ALTER TABLE `assessments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `assessment_scores`
@@ -2144,13 +3534,13 @@ ALTER TABLE `attendance`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=333;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=972;
 
 --
 -- AUTO_INCREMENT for table `branches`
 --
 ALTER TABLE `branches`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `certificates_issued`
@@ -2174,13 +3564,13 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `curriculum_subjects`
 --
 ALTER TABLE `curriculum_subjects`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `email_logs`
 --
 ALTER TABLE `email_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
@@ -2192,7 +3582,7 @@ ALTER TABLE `enrollments`
 -- AUTO_INCREMENT for table `grades`
 --
 ALTER TABLE `grades`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `grade_components`
@@ -2204,7 +3594,7 @@ ALTER TABLE `grade_components`
 -- AUTO_INCREMENT for table `grade_locks`
 --
 ALTER TABLE `grade_locks`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `grading_terms`
@@ -2216,13 +3606,13 @@ ALTER TABLE `grading_terms`
 -- AUTO_INCREMENT for table `learning_materials`
 --
 ALTER TABLE `learning_materials`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=327;
 
 --
 -- AUTO_INCREMENT for table `oauth_tokens`
@@ -2234,19 +3624,19 @@ ALTER TABLE `oauth_tokens`
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `programs`
 --
 ALTER TABLE `programs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `program_courses`
@@ -2255,10 +3645,16 @@ ALTER TABLE `program_courses`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `program_tuition_fees`
+--
+ALTER TABLE `program_tuition_fees`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `program_year_levels`
 --
 ALTER TABLE `program_year_levels`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `resource_locks`
@@ -2282,19 +3678,19 @@ ALTER TABLE `schools`
 -- AUTO_INCREMENT for table `sections`
 --
 ALTER TABLE `sections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `section_students`
 --
 ALTER TABLE `section_students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `security_logs`
 --
 ALTER TABLE `security_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=383;
 
 --
 -- AUTO_INCREMENT for table `security_settings`
@@ -2312,7 +3708,7 @@ ALTER TABLE `shs_grade_levels`
 -- AUTO_INCREMENT for table `shs_strands`
 --
 ALTER TABLE `shs_strands`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `shs_tracks`
@@ -2321,10 +3717,16 @@ ALTER TABLE `shs_tracks`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT for table `student_completed_subjects`
+--
+ALTER TABLE `student_completed_subjects`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student_fees`
 --
 ALTER TABLE `student_fees`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `student_grade_details`
@@ -2337,6 +3739,18 @@ ALTER TABLE `student_grade_details`
 --
 ALTER TABLE `student_promotions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `student_subject_enrollments`
+--
+ALTER TABLE `student_subject_enrollments`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `student_term_enrollments`
+--
+ALTER TABLE `student_term_enrollments`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -2354,7 +3768,7 @@ ALTER TABLE `submissions`
 -- AUTO_INCREMENT for table `system_maintenance`
 --
 ALTER TABLE `system_maintenance`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `system_modules`
@@ -2378,7 +3792,7 @@ ALTER TABLE `teacher_subject_assignments`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=222;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=234;
 
 --
 -- Constraints for dumped tables
@@ -2522,7 +3936,6 @@ ALTER TABLE `security_logs`
 -- Constraints for table `students`
 --
 ALTER TABLE `students`
-  ADD CONSTRAINT `fk_student_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_student_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
