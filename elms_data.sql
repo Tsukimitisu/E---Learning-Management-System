@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 28, 2026 at 06:18 PM
+-- Generation Time: Mar 01, 2026 at 10:49 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -68,7 +68,11 @@ CREATE TABLE `active_sessions` (
 --
 
 INSERT INTO `active_sessions` (`id`, `session_id`, `user_id`, `ip_address`, `user_agent`, `last_activity`, `created_at`) VALUES
-(4639, 'a5g225ejco9s7a6tug9f5rhdfj', 6, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-01 01:16:20', '2026-02-28 17:15:31');
+(5444, 'k3r8iiivafqdat7akke83k89uk', 100, '192.168.254.107', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', '2026-03-01 16:02:50', '2026-03-01 07:25:17'),
+(6072, 'i2lvt55cu7k91gnllhgh605qpv', 235, '192.168.254.108', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', '2026-03-01 15:56:36', '2026-03-01 07:47:48'),
+(6656, '616sq9p0tj78c7fl26a76ddqkj', 234, '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', '2026-03-01 16:51:46', '2026-03-01 08:06:56'),
+(7313, 'd19tcbf4f4eg2as0mi0qpjg997', 6, '', '', '2026-03-01 17:03:27', '2026-03-01 09:03:27'),
+(7314, '6tgr4lheviubqecdvil5aqb2gc', 6, '', '', '2026-03-01 17:04:00', '2026-03-01 09:04:00');
 
 -- --------------------------------------------------------
 
@@ -157,6 +161,9 @@ CREATE TABLE `assessment_scores` (
   `score` decimal(5,2) DEFAULT NULL,
   `status` enum('pending','submitted','graded') DEFAULT 'pending',
   `feedback` text DEFAULT NULL,
+  `submitted_file` varchar(255) DEFAULT NULL,
+  `submitted_at` datetime DEFAULT NULL,
+  `student_notes` text DEFAULT NULL,
   `graded_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -998,8 +1005,8 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (780, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:07:14'),
 (781, 6, 'Created student account for James Revilla (2026-0002) - Program ID: 1', '::1', NULL, '2026-02-05 10:10:41'),
 (782, 6, 'User logged out', '::1', NULL, '2026-02-05 10:21:52'),
-(783, 226, 'User logged in - Student', '::1', NULL, '2026-02-05 10:21:57'),
-(784, 226, 'User logged out', '::1', NULL, '2026-02-05 10:23:59'),
+(783, NULL, 'User logged in - Student', '::1', NULL, '2026-02-05 10:21:57'),
+(784, NULL, 'User logged out', '::1', NULL, '2026-02-05 10:23:59'),
 (785, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-05 10:24:07'),
 (786, 6, 'User logged out', '::1', NULL, '2026-02-05 10:26:34'),
 (787, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-05 10:26:41'),
@@ -1072,14 +1079,14 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (854, 205, 'User logged out', '::1', NULL, '2026-02-10 15:53:29'),
 (855, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 15:53:34'),
 (856, 100, 'User logged out', '::1', NULL, '2026-02-10 15:55:06'),
-(857, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 15:55:11'),
-(858, 226, 'User logged out', '::1', NULL, '2026-02-10 15:57:41'),
+(857, NULL, 'User logged in - Student', '::1', NULL, '2026-02-10 15:55:11'),
+(858, NULL, 'User logged out', '::1', NULL, '2026-02-10 15:57:41'),
 (859, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 15:57:49'),
 (860, 100, 'User logged out', '::1', NULL, '2026-02-10 15:58:01'),
 (861, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 15:58:07'),
 (862, 205, 'User logged out', '::1', NULL, '2026-02-10 16:04:45'),
-(863, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 16:04:52'),
-(864, 226, 'User logged out', '::1', NULL, '2026-02-10 16:04:57'),
+(863, NULL, 'User logged in - Student', '::1', NULL, '2026-02-10 16:04:52'),
+(864, NULL, 'User logged out', '::1', NULL, '2026-02-10 16:04:57'),
 (865, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:05:05'),
 (866, 100, 'User logged out', '::1', NULL, '2026-02-10 16:08:32'),
 (867, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-10 16:13:21'),
@@ -1095,14 +1102,14 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (877, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:19:14'),
 (878, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-10 16:22:34'),
 (879, 100, 'User logged out', '::1', NULL, '2026-02-10 16:22:53'),
-(880, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 16:22:57'),
-(881, 226, 'User logged out', '::1', NULL, '2026-02-10 16:23:08'),
+(880, NULL, 'User logged in - Student', '::1', NULL, '2026-02-10 16:22:57'),
+(881, NULL, 'User logged out', '::1', NULL, '2026-02-10 16:23:08'),
 (882, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-10 16:23:22'),
 (883, 4, 'User logged out', '::1', NULL, '2026-02-10 16:23:38'),
-(884, 231, 'User logged in - Student', '::1', NULL, '2026-02-10 16:23:41'),
-(885, 231, 'User logged out', '::1', NULL, '2026-02-10 16:24:52'),
-(886, 226, 'User logged in - Student', '::1', NULL, '2026-02-10 16:24:56'),
-(887, 226, 'User logged out', '::1', NULL, '2026-02-10 16:29:51'),
+(884, NULL, 'User logged in - Student', '::1', NULL, '2026-02-10 16:23:41'),
+(885, NULL, 'User logged out', '::1', NULL, '2026-02-10 16:24:52'),
+(886, NULL, 'User logged in - Student', '::1', NULL, '2026-02-10 16:24:56'),
+(887, NULL, 'User logged out', '::1', NULL, '2026-02-10 16:29:51'),
 (888, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-10 16:30:02'),
 (889, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-11 03:43:14'),
 (890, 4, 'User logged out', '::1', NULL, '2026-02-11 03:43:47'),
@@ -1120,7 +1127,7 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (902, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-11 03:56:33'),
 (903, 100, 'Created assessment: Activity Programming', '::1', NULL, '2026-02-11 03:57:40'),
 (904, 100, 'User logged out', '::1', NULL, '2026-02-11 03:57:54'),
-(905, 226, 'User logged in - Student', '::1', NULL, '2026-02-11 03:58:04'),
+(905, NULL, 'User logged in - Student', '::1', NULL, '2026-02-11 03:58:04'),
 (906, 4, 'Failed login attempt', '::1', NULL, '2026-02-16 04:33:22'),
 (907, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-16 04:33:26'),
 (908, 4, 'User logged out', '::1', NULL, '2026-02-16 04:33:51'),
@@ -1128,28 +1135,28 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (910, 204, 'User logged out', '::1', NULL, '2026-02-16 04:35:27'),
 (911, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-17 06:24:04'),
 (912, 205, 'User logged out', '::1', NULL, '2026-02-17 06:36:52'),
-(913, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:36:57'),
-(914, 226, 'User logged out', '::1', NULL, '2026-02-17 06:38:16'),
+(913, NULL, 'User logged in - Student', '::1', NULL, '2026-02-17 06:36:57'),
+(914, NULL, 'User logged out', '::1', NULL, '2026-02-17 06:38:16'),
 (915, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-17 06:38:25'),
 (916, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-17 06:40:12'),
 (917, 100, 'User logged out', '::1', NULL, '2026-02-17 06:40:27'),
-(918, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:40:30'),
-(919, 226, 'User logged out', '::1', NULL, '2026-02-17 06:41:30'),
+(918, NULL, 'User logged in - Student', '::1', NULL, '2026-02-17 06:40:30'),
+(919, NULL, 'User logged out', '::1', NULL, '2026-02-17 06:41:30'),
 (920, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-17 06:41:37'),
 (921, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 5', '::1', NULL, '2026-02-17 06:42:31'),
 (922, 100, 'User logged out', '::1', NULL, '2026-02-17 06:42:39'),
-(923, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:42:45'),
-(924, 226, 'User logged out', '::1', NULL, '2026-02-17 06:44:04'),
+(923, NULL, 'User logged in - Student', '::1', NULL, '2026-02-17 06:42:45'),
+(924, NULL, 'User logged out', '::1', NULL, '2026-02-17 06:44:04'),
 (925, 100, 'User logged in - Teacher', '::1', NULL, '2026-02-17 06:44:15'),
 (926, 100, 'User logged out', '::1', NULL, '2026-02-17 06:44:52'),
-(927, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 06:44:56'),
-(928, 226, 'User logged out', '::1', NULL, '2026-02-17 07:07:42'),
+(927, NULL, 'User logged in - Student', '::1', NULL, '2026-02-17 06:44:56'),
+(928, NULL, 'User logged out', '::1', NULL, '2026-02-17 07:07:42'),
 (929, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-17 07:22:47'),
 (930, 6, 'User logged out', '::1', NULL, '2026-02-17 07:23:20'),
-(931, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 07:25:43'),
-(932, 226, 'User logged out', '::1', NULL, '2026-02-17 07:26:21'),
-(933, 226, 'User logged in - Student', '::1', NULL, '2026-02-17 07:26:27'),
-(934, 226, 'User logged out', '::1', NULL, '2026-02-17 07:26:35'),
+(931, NULL, 'User logged in - Student', '::1', NULL, '2026-02-17 07:25:43'),
+(932, NULL, 'User logged out', '::1', NULL, '2026-02-17 07:26:21'),
+(933, NULL, 'User logged in - Student', '::1', NULL, '2026-02-17 07:26:27'),
+(934, NULL, 'User logged out', '::1', NULL, '2026-02-17 07:26:35'),
 (935, 6, 'Failed login attempt', '::1', NULL, '2026-02-17 07:26:42'),
 (936, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-17 07:26:47'),
 (937, 6, 'User logged out', '::1', NULL, '2026-02-17 07:37:34'),
@@ -1172,7 +1179,7 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (954, 4, 'User logged out', '::1', NULL, '2026-02-24 17:07:44'),
 (955, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-24 17:07:50'),
 (956, 6, 'User logged out', '::1', NULL, '2026-02-24 17:09:03'),
-(957, 226, 'User logged in - Student', '::1', NULL, '2026-02-24 17:09:09'),
+(957, NULL, 'User logged in - Student', '::1', NULL, '2026-02-24 17:09:09'),
 (958, 100, 'Updated grade for student ID 226 in section ID 1, subject ID 3', '::1', NULL, '2026-02-24 17:10:15'),
 (959, 4, 'User logged in - Super Admin', '::1', NULL, '2026-02-25 19:40:41'),
 (960, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-27 07:35:23'),
@@ -1186,7 +1193,122 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `ip_address`, `details`, `t
 (968, 204, 'User logged in - School Admin', '::1', NULL, '2026-02-27 14:15:01'),
 (969, 204, 'User logged out', '::1', NULL, '2026-02-27 14:16:12'),
 (970, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-02-27 14:16:20'),
-(971, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-28 17:15:31');
+(971, 6, 'User logged in - Registrar', '::1', NULL, '2026-02-28 17:15:31'),
+(972, 6, 'User logged out', '::1', NULL, '2026-02-28 17:46:14'),
+(973, NULL, 'User logged in - Student', '::1', NULL, '2026-02-28 17:46:34'),
+(974, NULL, 'User logged out', '::1', NULL, '2026-02-28 17:46:54'),
+(975, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 02:32:39'),
+(976, 6, 'User logged out', '::1', NULL, '2026-03-01 02:34:31'),
+(977, 204, 'User logged in - School Admin', '::1', NULL, '2026-03-01 02:34:40'),
+(978, 204, 'User logged out', '::1', NULL, '2026-03-01 02:39:10'),
+(979, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 02:39:22'),
+(980, 6, 'User logged out', '::1', NULL, '2026-03-01 02:41:52'),
+(981, 204, 'User logged in - School Admin', '::1', NULL, '2026-03-01 02:41:58'),
+(982, 204, 'User logged out', '::1', NULL, '2026-03-01 02:43:10'),
+(983, 100, 'User logged in - Teacher', '::1', NULL, '2026-03-01 02:43:15'),
+(984, 100, 'User logged out', '::1', NULL, '2026-03-01 02:44:34'),
+(985, 204, 'User logged in - School Admin', '::1', NULL, '2026-03-01 02:44:40'),
+(986, 204, 'User logged out', '::1', NULL, '2026-03-01 03:38:23'),
+(987, 100, 'User logged in - Teacher', '::1', NULL, '2026-03-01 03:38:28'),
+(988, 100, 'User logged out', '::1', NULL, '2026-03-01 03:38:48'),
+(989, 4, 'User logged in - Super Admin', '::1', NULL, '2026-03-01 03:39:22'),
+(990, 4, 'User logged out', '::1', NULL, '2026-03-01 03:40:36'),
+(991, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 03:40:46'),
+(992, 6, 'Program enrollment: student 232, type regular, program 1, level 2, semester 2nd, enrolled_subjects 7', '::1', NULL, '2026-03-01 04:05:11'),
+(993, 6, 'User logged out', '::1', NULL, '2026-03-01 04:06:11'),
+(994, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-03-01 04:06:15'),
+(995, 205, 'User logged out', '::1', NULL, '2026-03-01 04:17:16'),
+(996, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 04:21:15'),
+(997, 6, 'Program enrollment: student 232, type regular, program 1, level 2, semester 1st, enrolled_subjects 9', '::1', NULL, '2026-03-01 04:35:28'),
+(998, 6, 'Program enrollment: student 226, type regular, program 1, level 3, semester 1st, enrolled_subjects 6', '::1', NULL, '2026-03-01 04:35:48'),
+(999, 4, 'User logged in - Super Admin', '::1', NULL, '2026-03-01 05:27:57'),
+(1000, 4, 'User logged out', '::1', NULL, '2026-03-01 05:46:43'),
+(1001, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 05:46:52'),
+(1002, 6, 'User logged out', '::1', NULL, '2026-03-01 05:47:06'),
+(1003, 4, 'User logged in - Super Admin', '::1', NULL, '2026-03-01 05:50:22'),
+(1004, 4, 'User logged out', '::1', NULL, '2026-03-01 05:50:36'),
+(1005, NULL, 'Failed login attempt', '::1', NULL, '2026-03-01 05:50:40'),
+(1006, NULL, 'Failed login attempt', '::1', NULL, '2026-03-01 05:50:42'),
+(1007, NULL, 'Failed login attempt', '::1', NULL, '2026-03-01 05:50:44'),
+(1008, NULL, 'Failed login attempt', '::1', NULL, '2026-03-01 05:52:21'),
+(1009, NULL, 'Failed login attempt', '::1', NULL, '2026-03-01 05:52:28'),
+(1010, NULL, 'User logged in - Student', '::1', NULL, '2026-03-01 05:52:35'),
+(1011, NULL, 'User logged out', '::1', NULL, '2026-03-01 06:02:47'),
+(1012, 205, 'User logged in - Branch Admin', '::1', NULL, '2026-03-01 06:02:53'),
+(1013, 205, 'User logged out', '::1', NULL, '2026-03-01 06:13:33'),
+(1014, NULL, 'User logged in - Student', '::1', NULL, '2026-03-01 06:13:39'),
+(1015, 4, 'User logged in - Super Admin', '::1', NULL, '2026-03-01 07:19:52'),
+(1016, 204, 'User logged in - School Admin', '192.168.254.107', NULL, '2026-03-01 07:21:29'),
+(1017, 205, 'Failed login attempt', '192.168.254.104', NULL, '2026-03-01 07:21:48'),
+(1018, 205, 'User logged in - Branch Admin', '192.168.254.104', NULL, '2026-03-01 07:21:52'),
+(1019, 204, 'User logged out', '192.168.254.107', NULL, '2026-03-01 07:24:17'),
+(1020, 4, 'User logged out', '::1', NULL, '2026-03-01 07:24:29'),
+(1021, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 07:24:34'),
+(1022, 100, 'User logged in - Teacher', '192.168.254.107', NULL, '2026-03-01 07:25:17'),
+(1023, 6, 'Created student account for James Andrei Revilla (2026-0001) - Program ID: 1', '::1', NULL, '2026-03-01 07:35:43'),
+(1024, 6, 'Created student account for Andrei James Subaru (2026-0002) - Program ID: 1', '::1', NULL, '2026-03-01 07:36:42'),
+(1025, 6, 'Program enrollment: student 234, type regular, program 1, level 1, semester 1st, enrolled_subjects 9', '::1', NULL, '2026-03-01 07:37:17'),
+(1026, 6, 'Non-regular enrollment: student 235, type transferee, program 1, level 2, semester 1st, enrolled_subjects 6, completed 3', '::1', NULL, '2026-03-01 07:38:37'),
+(1027, 6, 'User logged out', '::1', NULL, '2026-03-01 07:46:46'),
+(1028, NULL, 'User logged in - Student', '::1', NULL, '2026-03-01 07:46:52'),
+(1029, 235, 'User logged in - Student', '192.168.254.108', NULL, '2026-03-01 07:47:48'),
+(1030, NULL, 'User logged out', '::1', NULL, '2026-03-01 07:56:30'),
+(1031, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 07:56:44'),
+(1032, 6, 'User logged out', '::1', NULL, '2026-03-01 08:03:12'),
+(1033, 204, 'User logged in - School Admin', '::1', NULL, '2026-03-01 08:03:21'),
+(1034, 204, 'User logged out', '::1', NULL, '2026-03-01 08:04:53'),
+(1035, 100, 'Failed login attempt', '::1', NULL, '2026-03-01 08:05:01'),
+(1036, 100, 'User logged in - Teacher', '::1', NULL, '2026-03-01 08:05:07'),
+(1037, 100, 'Uploaded material: material_subj15_1772352368_69a3f3704db52.pdf for subject ID 15', '::1', NULL, '2026-03-01 08:06:08'),
+(1038, 205, 'User logged out', '192.168.254.104', NULL, '2026-03-01 08:06:32'),
+(1039, NULL, 'Failed login attempt', '192.168.254.104', NULL, '2026-03-01 08:06:48'),
+(1040, NULL, 'User logged in - Student', '192.168.254.104', NULL, '2026-03-01 08:06:55'),
+(1041, 100, 'User logged out', '::1', NULL, '2026-03-01 08:08:33'),
+(1042, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 08:08:40'),
+(1043, 6, 'User logged out', '::1', NULL, '2026-03-01 08:08:59'),
+(1044, 100, 'User logged in - Teacher', '::1', NULL, '2026-03-01 08:09:05'),
+(1045, 100, 'User logged out', '::1', NULL, '2026-03-01 08:28:03'),
+(1046, 6, 'Failed login attempt', '::1', NULL, '2026-03-01 08:28:11'),
+(1047, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 08:28:16'),
+(1048, 6, 'Year advancement: student 234, type regular, from level 1 to 2, semester 1st', '::1', NULL, '2026-03-01 08:37:08'),
+(1049, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 7', '::1', NULL, '2026-03-01 08:38:56'),
+(1050, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 0', '::1', NULL, '2026-03-01 08:47:59'),
+(1051, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 0', '::1', NULL, '2026-03-01 09:05:28'),
+(1052, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 0', '::1', NULL, '2026-03-01 09:05:56'),
+(1053, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 0', '::1', NULL, '2026-03-01 09:06:27'),
+(1054, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 0', '::1', NULL, '2026-03-01 09:08:31'),
+(1055, 6, 'Down payment recorded: student 234, amount ₱2,125.00, method cash, ref DP-20260301-0234-e0ce', '::1', NULL, '2026-03-01 09:08:33'),
+(1056, 6, 'Program enrollment: student 234, type regular, program 1, level 2, semester 2nd, enrolled_subjects 0', '::1', NULL, '2026-03-01 09:09:56'),
+(1057, 6, 'Down payment recorded: student 234, amount ₱3,000.00, method cash, ref DP-20260301-0234-9dbc', '::1', NULL, '2026-03-01 09:10:13'),
+(1058, 6, 'Year advancement: student 234, type regular, from level 2 to 3, semester 1st, downpayment ₱2,800.00', '::1', NULL, '2026-03-01 09:10:37'),
+(1059, 6, 'Program enrollment: student 234, type regular, program 1, level 3, semester 2nd, enrolled_subjects 6', '::1', NULL, '2026-03-01 09:17:54'),
+(1060, 6, 'Down payment recorded: student 234, amount ₱3,499.96, method cash, ref DP-20260301-0234-a9de', '::1', NULL, '2026-03-01 09:18:00'),
+(1061, 6, 'User logged out', '::1', NULL, '2026-03-01 09:18:52'),
+(1062, 4, 'User logged in - Super Admin', '::1', NULL, '2026-03-01 09:18:59'),
+(1063, 4, 'User logged out', '::1', NULL, '2026-03-01 09:19:09'),
+(1064, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 09:19:18'),
+(1065, 6, 'Created student account for James Andrei Revilla (2026-0003) - Program ID: 1', '::1', NULL, '2026-03-01 09:19:46'),
+(1066, 6, 'Program enrollment: student 236, type regular, program 1, level 1, semester 1st, enrolled_subjects 9', '::1', NULL, '2026-03-01 09:20:03'),
+(1067, 6, 'Down payment recorded: student 236, amount ₱3,499.98, method cash, ref DP-20260301-0236-cce7', '::1', NULL, '2026-03-01 09:20:13'),
+(1068, 6, 'Year advancement: student 236, type regular, from level 1 to 2, semester 1st, downpayment ₱3,500.00', '::1', NULL, '2026-03-01 09:21:05'),
+(1069, 6, 'User logged out', '::1', NULL, '2026-03-01 09:28:48'),
+(1070, 4, 'User logged in - Super Admin', '::1', NULL, '2026-03-01 09:28:54'),
+(1071, 4, 'User logged out', '::1', NULL, '2026-03-01 09:29:08'),
+(1072, 6, 'Failed login attempt', '::1', NULL, '2026-03-01 09:29:14'),
+(1073, 6, 'Failed login attempt', '::1', NULL, '2026-03-01 09:29:21'),
+(1074, 6, 'User logged in - Registrar', '::1', NULL, '2026-03-01 09:29:24'),
+(1075, 6, 'Created student account for James Andrei Revilla (2026-0003) - Program ID: 1', '::1', NULL, '2026-03-01 09:36:32'),
+(1076, 6, 'Program enrollment: student 237, type regular, program 1, level 1, semester 1st, enrolled_subjects 9', '::1', NULL, '2026-03-01 09:37:19'),
+(1077, 6, 'Down payment recorded: student 237, amount ₱2,500.00, method cash, ref DP-20260301-0237-e234', '::1', NULL, '2026-03-01 09:38:13'),
+(1078, 6, 'Year advancement: student 237, type regular, from level 1 to 2, semester 1st, downpayment ₱2,500.00', '::1', NULL, '2026-03-01 09:39:05'),
+(1079, 6, 'User logged out', '::1', NULL, '2026-03-01 09:40:15'),
+(1080, 100, 'Failed login attempt', '::1', NULL, '2026-03-01 09:40:26'),
+(1081, 100, 'Failed login attempt', '::1', NULL, '2026-03-01 09:40:43'),
+(1082, 100, 'Failed login attempt', '::1', NULL, '2026-03-01 09:40:45'),
+(1083, 100, 'User logged in - Teacher', '::1', NULL, '2026-03-01 09:41:45'),
+(1084, 100, 'User logged out', '::1', NULL, '2026-03-01 09:42:10'),
+(1085, 237, 'User logged in - Student', '::1', NULL, '2026-03-01 09:42:25'),
+(1086, 237, 'User logged out', '::1', NULL, '2026-03-01 09:43:52');
 
 -- --------------------------------------------------------
 
@@ -1314,7 +1436,55 @@ CREATE TABLE `curriculum_subjects` (
 --
 
 INSERT INTO `curriculum_subjects` (`id`, `subject_code`, `subject_title`, `units`, `lecture_hours`, `lab_hours`, `subject_type`, `program_id`, `year_level_id`, `shs_strand_id`, `shs_grade_level_id`, `semester`, `prerequisites`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
-(10, 'STEM-102', 'BIOLOGY', 3.0, 3, 3, 'shs_core', NULL, NULL, 1, 1, 1, 'Stem 1001', 1, 204, '2026-02-05 08:35:28', '2026-02-05 08:43:24');
+(10, 'STEM-102', 'BIOLOGY', 3.0, 3, 3, 'shs_core', NULL, NULL, 1, 1, 1, 'Stem 1001', 1, 204, '2026-02-05 08:35:28', '2026-02-05 08:43:24'),
+(12, 'CORE 1', 'ART APPRECIATION', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:35:50', '2026-03-01 02:35:50'),
+(13, 'RIZAL', 'RIZAL&#039;S LIFE WORKS &amp; WRITTING', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:36:21', '2026-03-01 02:36:21'),
+(14, 'ITE 1', 'INTRODUCTION TO COMPUTING', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:36:47', '2026-03-01 02:36:47'),
+(15, 'ITE 2', 'FUNDAMENTALS OF PROGRAMMING', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:37:14', '2026-03-01 02:37:14'),
+(16, 'CORE 2', 'PURPOSIVE COMMINICATION', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:37:37', '2026-03-01 02:37:37'),
+(17, 'CORE 3', 'MATHEMATICS IN THE MODERN WORLD', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:38:12', '2026-03-01 02:38:12'),
+(18, 'PE 1', 'PHYSICAL EDUCATION', 2.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:52:43', '2026-03-01 03:04:41'),
+(19, 'NSTP 1', 'NATIONAL SERVICE TRAINING PROGRAM 1', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:56:16', '2026-03-01 02:56:16'),
+(20, 'CVED 101', 'VALUES EDUCATION', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 1, '', 1, 204, '2026-03-01 02:59:37', '2026-03-01 02:59:37'),
+(21, 'CORE 4', 'UNDERSTANDING THE SELF', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:00:14', '2026-03-01 03:00:14'),
+(22, 'CORE 5', 'SCIENCE TECHNOLOGY &amp; SOCIETY', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:02:20', '2026-03-01 03:02:20'),
+(23, 'ITE 3', 'FUNDAMENTALS OF PROGRAMMING 2', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:05:25', '2026-03-01 03:05:50'),
+(24, 'ITE MAJOR 1', 'INTRO TO HUMAN INTERACTION', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:06:27', '2026-03-01 03:06:27'),
+(25, 'ITE 4', 'DATA STRUCTURES &amp; ALGORITHMS', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:07:19', '2026-03-01 03:07:19'),
+(26, 'ITE MAJOR 2', 'DISCRETE MATHEMATICS', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:08:06', '2026-03-01 03:08:06'),
+(27, 'PE 2', 'PHYSICAL EDUCATION 2', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:08:33', '2026-03-01 03:08:33'),
+(28, 'NSTP 2', 'NATIONAL SERVICE TRAINING PROGRAM 2', 2.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:08:56', '2026-03-01 03:09:12'),
+(29, 'CVED 102', 'VALUES EDUCATION 2', 3.0, 0, 0, 'college', 1, 1, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:10:45', '2026-03-01 03:10:45'),
+(30, 'ELECTIVE 1', 'OBJECT ORIENTED PROGRAMMING', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:11:36', '2026-03-01 03:11:36'),
+(31, 'FIL 1', 'FILIPINO 1(KONTEKSWALISADONG KOMUNIKASYON SA FILIPINO)', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:13:04', '2026-03-01 03:13:04'),
+(32, 'APC 1', 'PLATFORM TECHNOLOGY', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:13:42', '2026-03-01 03:13:42'),
+(33, 'CORE 6', 'THE CONTEMPORARY WORLD', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:15:07', '2026-03-01 03:15:07'),
+(34, 'APC 2', 'MULTIMEDIA SYSTEMS', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:15:43', '2026-03-01 03:15:43'),
+(35, 'APC 3', 'WEB SYSTEM TECHNOLOGIES', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:17:21', '2026-03-01 03:17:21'),
+(36, 'ITE MAJOR 3', 'FUNDAMENTALS OF DATABASE SYSTEM', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:17:50', '2026-03-01 03:17:50'),
+(37, 'CVED 103', 'MORALITY &amp; SOCIAL RESPONSIBILITY', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:18:17', '2026-03-01 03:27:32'),
+(38, 'PE 3', 'PHYSICAL EDUCATION 3', 2.0, 0, 0, 'college', 1, 2, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:18:35', '2026-03-01 03:19:41'),
+(39, 'CORE 7', 'ETHICS', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:18:58', '2026-03-01 03:18:58'),
+(40, 'FIL 2', 'FILIPINO 2', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:19:26', '2026-03-01 03:19:26'),
+(41, 'CORE 8', 'READING IN THE PHILIPPINE HISTORY', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:20:20', '2026-03-01 03:20:20'),
+(42, 'ITE 5', 'INFORMATION MANAGEMENT', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:20:55', '2026-03-01 03:20:55'),
+(43, 'ITE MAJOR 4', 'DATA COMMUNICATION AND NETWORKING 1', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:21:42', '2026-03-01 03:21:42'),
+(44, 'ITE MAJOR 5', 'QUANTITATIVE METHODS', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:24:31', '2026-03-01 03:24:31'),
+(45, 'CVED 104', 'PEACE, EDUCATION, MARRIEGE, &amp; FAMILY PLANNING', 3.0, 0, 0, 'college', 1, 2, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:26:49', '2026-03-01 03:26:49'),
+(46, 'PE 4', 'PHYSICAL EDUCATION 4', 2.0, 0, 0, 'college', 1, NULL, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:28:04', '2026-03-01 03:28:04'),
+(47, 'PE4', 'PHYSICAL EDUCATION 4', 3.0, 0, 0, 'college', 1, NULL, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:29:42', '2026-03-01 03:29:42'),
+(48, 'ELECTIVE', 'HUMAN COMPUTER INTERACTION 2', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:30:26', '2026-03-01 03:30:26'),
+(49, 'ITE MAJOR 6', 'DATA COMMUNICATION AND NETWORKING 2', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:30:53', '2026-03-01 03:30:53'),
+(50, 'ITE MAJOR 7', 'SYSTEM INTEGRATION AND ARCHITECHTURE 1', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:32:32', '2026-03-01 03:32:32'),
+(51, 'ITE MAJOR 8', 'INTEGRATIVE PROGRAMMING TECHNOLOGIES 1', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:33:07', '2026-03-01 03:33:07'),
+(52, 'APC 4', 'MOBILE TECHNOLOGY', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:33:34', '2026-03-01 03:33:34'),
+(53, 'APC 5', 'SOFTWARE ENGINEERING', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 1, '', 1, 204, '2026-03-01 03:33:55', '2026-03-01 03:33:55'),
+(54, 'ITE MAJOR 9', 'INFORMATION ASSURANCE &amp; SECURITY 1', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:34:39', '2026-03-01 03:34:39'),
+(55, 'ITE MAJOR 10', 'SOCIAL &amp; PROFESSIONAL ISSUES', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:35:43', '2026-03-01 03:35:43'),
+(56, 'ITE MAJOR 11', 'CAPSTONE PROJECT &amp; RESEARCH', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:36:36', '2026-03-01 03:36:36'),
+(57, 'ITE 6', 'APPLICATION DEVELOPMENT &amp; EMERGING TECHNOLOGIES', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:37:22', '2026-03-01 03:37:22'),
+(58, 'ELECTIVE 3', 'SYSTEM INTEGRATION AND ARCHITECHTURE 2', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:37:59', '2026-03-01 03:37:59'),
+(59, 'APC 6', 'CLOUD COMPUTING', 3.0, 0, 0, 'college', 1, 3, NULL, NULL, 2, '', 1, 204, '2026-03-01 03:38:17', '2026-03-01 03:38:17');
 
 -- --------------------------------------------------------
 
@@ -1367,7 +1537,11 @@ INSERT INTO `email_logs` (`id`, `recipient_email`, `subject`, `template_type`, `
 (27, 'yujinjae05@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-02-11 03:52:32'),
 (28, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'failed', 'Email domain does not exist', NULL, '2026-02-16 04:36:19'),
 (29, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-17 07:07:52'),
-(30, 'revillajamesandrei4@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-18 00:12:38');
+(30, 'revillajamesandrei4@gmail.com', 'ELMS - Datamex - Password Reset Request', 'password_reset', 'sent', NULL, NULL, '2026-02-18 00:12:38'),
+(31, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-03-01 07:35:47'),
+(32, 'revillajamesandrei4@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-03-01 07:36:47'),
+(33, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-03-01 09:19:50'),
+(34, 'Jamesrev235@gmail.com', 'ELMS - Datamex - Your Account Has Been Created', 'account_creation', 'sent', NULL, 6, '2026-03-01 09:36:37');
 
 -- --------------------------------------------------------
 
@@ -1408,14 +1582,6 @@ CREATE TABLE `grades` (
   `notes` text DEFAULT NULL,
   `version` int(10) UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `grades`
---
-
-INSERT INTO `grades` (`id`, `student_id`, `section_id`, `subject_id`, `academic_year_id`, `semester`, `class_id`, `prelim`, `midterm`, `prefinal`, `final`, `final_grade`, `remarks`, `notes`, `version`) VALUES
-(8, 226, 1, 3, 1, NULL, NULL, 90.00, 99.00, 0.00, 0.00, 94.50, 'PASSED', 'Ang Galing', 4),
-(9, 226, 1, 5, 1, NULL, NULL, 85.00, 0.00, 0.00, 0.00, 85.00, 'PASSED', '', 1);
 
 -- --------------------------------------------------------
 
@@ -1509,7 +1675,8 @@ INSERT INTO `learning_materials` (`id`, `section_id`, `subject_id`, `class_id`, 
 (2, NULL, NULL, 1, 'materials/material_1_1768583063_696a6f9773a42.pptx', '2026-01-16 17:04:23', NULL),
 (3, NULL, NULL, 3, 'materials/material_3_1768584379_696a74bb48747.pptx', '2026-01-16 17:26:19', NULL),
 (10, NULL, 4, NULL, 'materials/material_subj4_1768761931_696d2a4b39360.pptx', '2026-01-18 18:45:31', 100),
-(11, NULL, 4, NULL, 'materials/material_subj4_1768965999_6970476fc42e5.pdf', '2026-01-21 03:26:39', 100);
+(11, NULL, 4, NULL, 'materials/material_subj4_1768965999_6970476fc42e5.pdf', '2026-01-21 03:26:39', 100),
+(12, NULL, 15, NULL, 'materials/material_subj15_1772352368_69a3f3704db52.pdf', '2026-03-01 08:06:08', 100);
 
 -- --------------------------------------------------------
 
@@ -1646,7 +1813,6 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (222, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 09:13:26'),
 (223, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:06:52'),
 (224, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:07:14'),
-(225, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:21:57'),
 (226, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:24:07'),
 (227, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:26:41'),
 (228, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-05 10:27:53'),
@@ -1687,10 +1853,8 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (263, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:49:17'),
 (264, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:49:20'),
 (265, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:53:34'),
-(266, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:55:11'),
 (267, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:57:49'),
 (268, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 15:58:07'),
-(269, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:04:52'),
 (270, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:05:05'),
 (271, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:13:21'),
 (272, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:13:40'),
@@ -1698,10 +1862,7 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (274, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:18:10'),
 (275, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:18:34'),
 (276, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:19:14'),
-(277, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:22:57'),
 (278, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:23:22'),
-(279, 'revillajamesandrei4@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:23:41'),
-(280, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:24:56'),
 (281, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-10 16:30:02'),
 (282, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:43:14'),
 (283, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:43:54'),
@@ -1709,23 +1870,16 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (285, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:45:37'),
 (286, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:48:50'),
 (287, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:53:41'),
-(288, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 1, '2026-02-11 03:58:04'),
 (289, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-16 04:33:22'),
 (290, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-16 04:33:26'),
 (291, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-16 04:34:01'),
 (292, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:24:04'),
-(293, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:36:57'),
 (294, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:38:25'),
-(295, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:40:30'),
 (296, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:41:37'),
-(297, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:42:45'),
 (298, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:44:15'),
-(299, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 06:44:56'),
 (300, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:22:47'),
 (301, 'student@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-17 07:25:23'),
 (302, 'student@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-17 07:25:30'),
-(303, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:25:43'),
-(304, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:26:27'),
 (305, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:26:42'),
 (306, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:26:47'),
 (307, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-17 07:37:39'),
@@ -1739,7 +1893,6 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (315, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 17:06:35'),
 (316, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 1, '2026-02-24 17:07:40'),
 (317, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 17:07:50'),
-(318, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-24 17:09:09'),
 (319, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-25 19:40:41'),
 (320, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 07:35:23'),
 (321, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 08:28:10'),
@@ -1747,7 +1900,99 @@ INSERT INTO `login_attempts` (`id`, `email`, `ip_address`, `user_agent`, `succes
 (323, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 14:13:57'),
 (324, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 14:15:01'),
 (325, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-27 14:16:20'),
-(326, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-28 17:15:31');
+(326, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-02-28 17:15:31'),
+(327, 'student@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-02-28 17:46:25'),
+(329, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 02:32:38'),
+(330, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 02:34:40'),
+(331, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 02:39:22'),
+(332, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 02:41:58'),
+(333, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 02:43:15'),
+(334, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 02:44:39'),
+(335, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 03:38:28'),
+(336, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 03:39:22'),
+(337, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 03:40:46'),
+(338, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 04:06:15'),
+(339, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 04:21:15'),
+(340, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 05:27:57'),
+(341, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 05:46:52'),
+(342, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 05:50:22'),
+(349, 'branchadmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 06:02:53'),
+(351, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 07:19:52'),
+(352, 'schooladmin@elms.com', '192.168.254.107', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-03-01 07:21:29'),
+(353, 'branchadmin@elms.com', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-03-01 07:21:48'),
+(354, 'branchadmin@elms.com', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-03-01 07:21:52'),
+(355, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 07:24:34'),
+(356, 'teacher@elms.com', '192.168.254.107', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 1, '2026-03-01 07:25:17'),
+(358, 'revillajamesandrei4@gmail.com', '192.168.254.108', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 1, '2026-03-01 07:47:48'),
+(359, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 07:56:44'),
+(360, 'schooladmin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:03:21'),
+(361, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:05:01'),
+(362, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:05:07'),
+(365, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:08:40'),
+(366, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:09:05'),
+(367, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:28:11'),
+(368, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 08:28:16'),
+(369, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:18:59'),
+(370, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:19:18'),
+(371, 'admin@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:28:54'),
+(372, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:29:14'),
+(373, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:29:21'),
+(374, 'registrar@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:29:24'),
+(375, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:40:26'),
+(376, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:40:43'),
+(377, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:40:45'),
+(378, 'teacher@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:41:45'),
+(379, 'student@elms.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 0, '2026-03-01 09:42:16'),
+(380, 'Jamesrev235@gmail.com', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 1, '2026-03-01 09:42:25');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL COMMENT 'Recipient user ID',
+  `title` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'info' COMMENT 'info, success, warning, danger, announcement, enrollment, payment, grade, material',
+  `link` varchar(500) DEFAULT NULL COMMENT 'Optional URL to navigate to',
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `read_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `link`, `is_read`, `created_by`, `created_at`, `read_at`) VALUES
+(1, 234, 'Enrollment Confirmed', 'You have been enrolled in 9 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 07:37:17', NULL),
+(2, 234, 'New Learning Material', 'A new learning material has been uploaded for your subject.', 'material', NULL, 0, 100, '2026-03-01 08:06:08', NULL),
+(3, 234, 'Payment Recorded', 'A payment of ₱5,000.00 has been recorded. Ref: PAY-20260301-2156', 'payment', NULL, 0, 6, '2026-03-01 08:36:56', NULL),
+(4, 234, 'Enrollment Confirmed', 'You have been enrolled in 7 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 08:38:56', NULL),
+(5, 234, 'Enrollment Confirmed', 'You have been enrolled in 0 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 08:47:59', NULL),
+(6, 234, 'Payment Recorded', 'A payment of ₱8,500.00 has been recorded. Ref: PAY-20260301-1353', 'payment', NULL, 0, 6, '2026-03-01 08:49:02', NULL),
+(7, 234, 'Enrollment Confirmed', 'You have been enrolled in 0 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:05:28', NULL),
+(8, 234, 'Enrollment Confirmed', 'You have been enrolled in 0 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:05:56', NULL),
+(9, 234, 'Enrollment Confirmed', 'You have been enrolled in 0 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:06:27', NULL),
+(10, 234, 'Enrollment Confirmed', 'You have been enrolled in 0 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:08:31', NULL),
+(11, 234, 'Down Payment Recorded', 'Your down payment of ₱2,125.00 has been recorded successfully.', 'payment', NULL, 0, 6, '2026-03-01 09:08:33', NULL),
+(12, 234, 'Enrollment Confirmed', 'You have been enrolled in 0 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:09:56', NULL),
+(13, 234, 'Down Payment Recorded', 'Your down payment of ₱3,000.00 has been recorded successfully.', 'payment', NULL, 0, 6, '2026-03-01 09:10:13', NULL),
+(14, 234, 'Year Level Advanced', 'You have been advanced to 3rd Year. Down payment of ₱2,800.00 recorded.', 'enrollment', NULL, 0, 6, '2026-03-01 09:10:37', NULL),
+(15, 234, 'Enrollment Confirmed', 'You have been enrolled in 6 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:17:54', NULL),
+(16, 234, 'Down Payment Recorded', 'Your down payment of ₱3,499.96 has been recorded successfully.', 'payment', NULL, 0, 6, '2026-03-01 09:18:00', NULL),
+(17, 236, 'Enrollment Confirmed', 'You have been enrolled in 9 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:20:03', NULL),
+(18, 236, 'Down Payment Recorded', 'Your down payment of ₱3,499.98 has been recorded successfully.', 'payment', NULL, 0, 6, '2026-03-01 09:20:13', NULL),
+(19, 236, 'Payment Recorded', 'A payment of ₱5,000.02 has been recorded. Ref: PAY-20260301-0965', 'payment', NULL, 0, 6, '2026-03-01 09:20:53', NULL),
+(20, 236, 'Year Level Advanced', 'You have been advanced to 2nd Year. Down payment of ₱3,500.00 recorded.', 'enrollment', NULL, 0, 6, '2026-03-01 09:21:05', NULL),
+(21, 237, 'Enrollment Confirmed', 'You have been enrolled in 9 subject(s) for this term.', 'enrollment', NULL, 0, 6, '2026-03-01 09:37:19', NULL),
+(22, 237, 'Down Payment Recorded', 'Your down payment of ₱2,500.00 has been recorded successfully.', 'payment', NULL, 0, 6, '2026-03-01 09:38:13', NULL),
+(23, 237, 'Payment Recorded', 'A payment of ₱5,000.00 has been recorded. Ref: PAY-20260301-1529', 'payment', NULL, 0, 6, '2026-03-01 09:38:47', NULL),
+(24, 237, 'Year Level Advanced', 'You have been advanced to 2nd Year. Down payment of ₱2,500.00 recorded.', 'enrollment', NULL, 0, 6, '2026-03-01 09:39:05', NULL);
 
 -- --------------------------------------------------------
 
@@ -1786,10 +2031,7 @@ CREATE TABLE `password_resets` (
 --
 
 INSERT INTO `password_resets` (`id`, `user_id`, `token`, `expires_at`, `used`, `created_at`) VALUES
-(4, 224, 'c4fc97b88e4f9f77876502004f1362626e15ce998b7ca7b88ea2fab3f423512d', '2026-02-05 20:17:27', 0, '2026-02-05 11:17:27'),
-(5, 226, 'aa3fc2fb5f54cf4ab92cbe3c2c519a51b2025c1c44bb29647b032ff3abe751ed', '2026-02-16 13:36:19', 1, '2026-02-16 04:36:19'),
-(6, 226, 'ba961478a7634befc08c9d2a20074c94327e7f7ff717756ac484bbbe1dc24db6', '2026-02-17 16:07:48', 0, '2026-02-17 07:07:48'),
-(7, 231, '3f6c399d9950e2d182b8bb89755b0085405ff6ee086b63084b2b25f8fde1b95f', '2026-02-18 09:12:32', 0, '2026-02-18 00:12:32');
+(4, 224, 'c4fc97b88e4f9f77876502004f1362626e15ce998b7ca7b88ea2fab3f423512d', '2026-02-05 20:17:27', 0, '2026-02-05 11:17:27');
 
 -- --------------------------------------------------------
 
@@ -1825,10 +2067,10 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `reference_no`, `or_number`, `student_id`, `amount`, `payment_type`, `other_type_description`, `description`, `academic_year_id`, `semester`, `term`, `branch_id`, `recorded_by`, `payment_method`, `status`, `verified_by`, `verified_at`, `rejection_reason`, `proof_file`, `created_at`) VALUES
-(4, 'PAY-20260205-9103', NULL, 226, 3500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-02-05 10:10:41'),
-(5, 'PAY-20260205-3825', NULL, 231, 4500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-02-05 10:51:25'),
-(6, 'PAY-20260211-4898', NULL, 232, 3500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-02-11 03:52:25'),
-(7, 'PAY-20260227-7517', '2024-0127', 232, 5000.00, 'Tuition', '', '', 1, '1st', 'full', 1, 6, 'cash', 'verified', 6, '2026-02-27 16:07:26', NULL, NULL, '2026-02-27 08:07:26');
+(10, 'PAY-20260301-1001', NULL, 235, 3500.00, 'Tuition', NULL, 'Down payment upon enrollment', 1, '1st', NULL, 1, 6, 'cash', 'verified', NULL, NULL, NULL, NULL, '2026-03-01 07:36:42'),
+(20, 'DP-20260301-0237-e234', NULL, 237, 2500.00, NULL, NULL, 'Down payment upon enrollment', 1, '1st', NULL, NULL, NULL, 'cash', 'verified', 6, '2026-03-01 17:38:13', NULL, NULL, '2026-03-01 09:38:13'),
+(21, 'PAY-20260301-1529', '324234', 237, 5000.00, 'Tuition', '', '', 1, '1st', 'full', 1, 6, 'cash', 'verified', 6, '2026-03-01 17:38:47', NULL, NULL, '2026-03-01 09:38:47'),
+(22, 'DP-ADV-20260301-0237-fa9f', NULL, 237, 2500.00, NULL, NULL, 'Down payment upon year advancement to 2nd Year', 1, '1st', NULL, NULL, NULL, 'cash', 'verified', 6, '2026-03-01 17:39:05', NULL, NULL, '2026-03-01 09:39:05');
 
 -- --------------------------------------------------------
 
@@ -1880,6 +2122,7 @@ CREATE TABLE `program_courses` (
 CREATE TABLE `program_tuition_fees` (
   `id` int(10) UNSIGNED NOT NULL,
   `program_id` int(10) UNSIGNED NOT NULL,
+  `program_type` enum('college','shs') NOT NULL DEFAULT 'college',
   `year_level_id` int(10) UNSIGNED DEFAULT NULL,
   `semester` enum('1st','2nd','summer') DEFAULT '1st',
   `tuition_fee` decimal(10,2) NOT NULL DEFAULT 0.00,
@@ -1897,12 +2140,16 @@ CREATE TABLE `program_tuition_fees` (
 -- Dumping data for table `program_tuition_fees`
 --
 
-INSERT INTO `program_tuition_fees` (`id`, `program_id`, `year_level_id`, `semester`, `tuition_fee`, `misc_fee`, `lab_fee`, `other_fees`, `academic_year_id`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, '1st', 8700.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 09:52:56', '2026-02-05 09:52:56'),
-(2, 5, 13, '1st', 9000.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 10:28:18', '2026-02-05 10:28:18'),
-(3, 6, 17, '1st', 9500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 10:30:49', '2026-02-05 10:30:49'),
-(4, 2, 5, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-11 03:50:37', '2026-02-11 03:50:37'),
-(5, 1, 2, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-27 07:35:57', '2026-02-27 07:35:57');
+INSERT INTO `program_tuition_fees` (`id`, `program_id`, `program_type`, `year_level_id`, `semester`, `tuition_fee`, `misc_fee`, `lab_fee`, `other_fees`, `academic_year_id`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 1, 'college', 1, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 09:52:56', '2026-03-01 07:33:01'),
+(2, 5, 'college', 13, '1st', 9000.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-05 10:28:18', '2026-02-05 10:28:18'),
+(3, 6, 'college', 17, '1st', 9500.00, 0.00, 0.00, 0.00, 1, 0, '2026-02-05 10:30:49', '2026-03-01 07:25:39'),
+(4, 2, 'college', 5, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 0, '2026-02-11 03:50:37', '2026-03-01 07:25:45'),
+(5, 1, 'college', 2, '1st', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-02-27 07:35:57', '2026-02-27 07:35:57'),
+(6, 1, 'college', 1, '2nd', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-03-01 07:32:35', '2026-03-01 07:32:35'),
+(7, 1, 'college', 2, '2nd', 8500.00, 0.00, 0.00, 0.00, 1, 1, '2026-03-01 07:33:22', '2026-03-01 07:33:22'),
+(8, 1, 'college', 3, '1st', 11200.00, 0.00, 0.00, 0.00, 1, 1, '2026-03-01 07:33:51', '2026-03-01 07:33:51'),
+(9, 1, 'college', 3, '2nd', 11200.00, 0.00, 0.00, 0.00, 1, 1, '2026-03-01 07:34:14', '2026-03-01 07:34:14');
 
 -- --------------------------------------------------------
 
@@ -2028,7 +2275,9 @@ INSERT INTO `sections` (`id`, `section_name`, `program_id`, `year_level_id`, `sh
 (4, 'BSIT 1 B', 1, 1, NULL, NULL, '1st', 1, 2, 40, '', NULL, 1, '2026-01-18 20:39:24', '2026-01-18 20:39:24'),
 (5, 'BSIT 1 C', 1, 1, NULL, NULL, '1st', 1, 1, 40, '', NULL, 1, '2026-01-19 02:40:11', '2026-01-19 02:40:11'),
 (6, 'BSCS 1A', 2, 5, NULL, NULL, '1st', 1, 1, 40, '', 216, 1, '2026-01-31 13:19:24', '2026-01-31 13:19:24'),
-(7, 'Ilang ilang', NULL, NULL, 2, 3, '1st', 1, 1, 40, '', NULL, 1, '2026-02-03 03:28:12', '2026-02-03 03:28:12');
+(7, 'Ilang ilang', NULL, NULL, 2, 3, '1st', 1, 1, 40, '', NULL, 1, '2026-02-03 03:28:12', '2026-02-03 03:28:12'),
+(8, 'BSIT 3 A', 1, 3, NULL, NULL, '1st', 1, 1, 40, '', 100, 1, '2026-03-01 06:03:41', '2026-03-01 06:03:41'),
+(9, 'BSIT 2A', 1, 2, NULL, NULL, '1st', 1, 1, 40, '', NULL, 1, '2026-03-01 07:42:08', '2026-03-01 07:42:08');
 
 -- --------------------------------------------------------
 
@@ -2049,7 +2298,9 @@ CREATE TABLE `section_students` (
 --
 
 INSERT INTO `section_students` (`id`, `section_id`, `student_id`, `enrolled_at`, `status`) VALUES
-(33, 1, 226, '2026-02-10 16:18:46', 'active');
+(33, 1, 226, '2026-02-10 16:18:46', ''),
+(34, 2, 234, '2026-03-01 07:44:46', 'active'),
+(35, 9, 235, '2026-03-01 07:45:56', 'active');
 
 -- --------------------------------------------------------
 
@@ -2354,7 +2605,7 @@ INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_
 (278, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 09:13:26'),
 (279, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:06:52'),
 (280, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:07:14'),
-(281, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:21:57'),
+(281, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:21:57'),
 (282, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:24:07'),
 (283, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:26:41'),
 (284, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-05 10:27:53'),
@@ -2395,10 +2646,10 @@ INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_
 (319, 205, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-10 15:49:17'),
 (320, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:49:20'),
 (321, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:53:34'),
-(322, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:55:11'),
+(322, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:55:11'),
 (323, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:57:49'),
 (324, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 15:58:07'),
-(325, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:04:52'),
+(325, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:04:52'),
 (326, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:05:05'),
 (327, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:13:21'),
 (328, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:13:40'),
@@ -2406,10 +2657,10 @@ INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_
 (330, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:18:10'),
 (331, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:18:34'),
 (332, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:19:14'),
-(333, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:22:57'),
+(333, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:22:57'),
 (334, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:23:22'),
-(335, 231, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:23:41'),
-(336, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:24:56'),
+(335, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:23:41'),
+(336, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:24:56'),
 (337, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-10 16:30:02'),
 (338, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:43:14'),
 (339, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:43:54'),
@@ -2417,23 +2668,23 @@ INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_
 (341, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:45:37'),
 (342, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:48:50'),
 (343, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:53:41'),
-(344, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:58:04'),
+(344, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-11 03:58:04'),
 (345, 4, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-16 04:33:22'),
 (346, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-16 04:33:26'),
 (347, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-16 04:34:01'),
 (348, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:24:04'),
-(349, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:36:57'),
+(349, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:36:57'),
 (350, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:38:25'),
-(351, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:40:30'),
+(351, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:40:30'),
 (352, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:41:37'),
-(353, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:42:45'),
+(353, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:42:45'),
 (354, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:44:15'),
-(355, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:44:56'),
+(355, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 06:44:56'),
 (356, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:22:47'),
 (357, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-17 07:25:23'),
 (358, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-17 07:25:30'),
-(359, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:25:43'),
-(360, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:26:27'),
+(359, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:25:43'),
+(360, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:26:27'),
 (361, 6, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-17 07:26:42'),
 (362, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:26:47'),
 (363, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-17 07:37:39'),
@@ -2447,7 +2698,7 @@ INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_
 (371, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:06:35'),
 (372, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 'User login successful', '', '2026-02-24 17:07:40'),
 (373, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:07:50'),
-(374, 226, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:09:09'),
+(374, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-24 17:09:09'),
 (375, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-25 19:40:41'),
 (376, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 07:35:23'),
 (377, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 08:28:10'),
@@ -2455,7 +2706,61 @@ INSERT INTO `security_logs` (`id`, `user_id`, `event_type`, `ip_address`, `user_
 (379, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 14:13:57'),
 (380, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 14:15:01'),
 (381, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-27 14:16:20'),
-(382, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-28 17:15:31');
+(382, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-28 17:15:31'),
+(383, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-02-28 17:46:25'),
+(384, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-02-28 17:46:34'),
+(385, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 02:32:38'),
+(386, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 02:34:40'),
+(387, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 02:39:22'),
+(388, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 02:41:58'),
+(389, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 02:43:15'),
+(390, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 02:44:39'),
+(391, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 03:38:28'),
+(392, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 03:39:22'),
+(393, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 03:40:46'),
+(394, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 04:06:15'),
+(395, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 04:21:15'),
+(396, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 05:27:57'),
+(397, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 05:46:52'),
+(398, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 05:50:22'),
+(399, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 05:50:40'),
+(400, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 05:50:42'),
+(401, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 05:50:44'),
+(402, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 05:52:21'),
+(403, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 05:52:28'),
+(404, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 05:52:35'),
+(405, 205, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 06:02:53'),
+(406, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 06:13:39'),
+(407, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 07:19:52'),
+(408, 204, 'login_success', '192.168.254.107', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-03-01 07:21:29'),
+(409, 205, 'login_failed', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-03-01 07:21:48'),
+(410, 205, 'login_success', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-03-01 07:21:52'),
+(411, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 07:24:34'),
+(412, 100, 'login_success', '192.168.254.107', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-03-01 07:25:17'),
+(413, NULL, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 07:46:52'),
+(414, 235, 'login_success', '192.168.254.108', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', 'User login successful', '', '2026-03-01 07:47:48'),
+(415, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 07:56:44'),
+(416, 204, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 08:03:21'),
+(417, 100, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 08:05:01'),
+(418, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 08:05:07'),
+(419, NULL, 'login_failed', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 'User login failed', 'medium', '2026-03-01 08:06:48'),
+(420, NULL, 'login_success', '192.168.254.104', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36', 'User login successful', '', '2026-03-01 08:06:55'),
+(421, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 08:08:40'),
+(422, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 08:09:05'),
+(423, 6, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 08:28:11'),
+(424, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 08:28:16'),
+(425, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 09:18:59'),
+(426, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 09:19:18'),
+(427, 4, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 09:28:54'),
+(428, 6, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 09:29:14'),
+(429, 6, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 09:29:21'),
+(430, 6, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 09:29:24'),
+(431, 100, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 09:40:26'),
+(432, 100, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 09:40:43'),
+(433, 100, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 09:40:45'),
+(434, 100, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 09:41:45'),
+(435, NULL, 'login_failed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login failed', 'medium', '2026-03-01 09:42:16'),
+(436, 237, 'login_success', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'User login successful', '', '2026-03-01 09:42:25');
 
 -- --------------------------------------------------------
 
@@ -2477,8 +2782,8 @@ CREATE TABLE `security_settings` (
 --
 
 INSERT INTO `security_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_by`, `updated_at`) VALUES
-(1, 'max_login_attempts', '5', 'Maximum failed login attempts before lockout', 4, '2026-02-03 03:23:09'),
-(2, 'lockout_duration', '2', 'Account lockout duration in minutes', 4, '2026-01-31 11:03:16'),
+(1, 'max_login_attempts', '3', 'Maximum failed login attempts before lockout', 4, '2026-03-01 05:50:32'),
+(2, 'lockout_duration', '1', 'Account lockout duration in minutes', 4, '2026-03-01 05:50:32'),
 (3, 'password_min_length', '8', 'Minimum password length', 4, '2026-01-31 08:39:28'),
 (4, 'password_require_uppercase', '1', 'Require uppercase letter in password', 4, '2026-01-31 08:39:28'),
 (5, 'password_require_lowercase', '1', 'Require lowercase letter in password', 4, '2026-01-31 08:39:28'),
@@ -2496,7 +2801,8 @@ INSERT INTO `security_settings` (`id`, `setting_key`, `setting_value`, `descript
 (17, 'smtp_from_email', '', 'From email address', 4, '2026-01-19 16:16:41'),
 (18, 'smtp_from_name', 'DATAMEX COLLEGE OF SAINT ADELINE', 'From name for emails', 4, '2026-01-19 16:24:35'),
 (19, 'enable_email_verification', '1', 'Require email verification for new accounts', NULL, '2026-01-19 15:29:52'),
-(20, 'password_reset_expiry', '60', 'Password reset link expiry in minutes', 4, '2026-01-31 08:39:28');
+(20, 'password_reset_expiry', '60', 'Password reset link expiry in minutes', 4, '2026-01-31 08:39:28'),
+(21, 'lockout_cycles', '3', 'Allowed lockout cycles before permanent lock', 4, '2026-03-01 05:50:32');
 
 -- --------------------------------------------------------
 
@@ -2614,9 +2920,8 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`user_id`, `student_no`, `course_id`, `student_type`, `previous_school`) VALUES
-(226, '2026-0002', 1, 'regular', NULL),
-(231, '2026-0003', 5, 'regular', NULL),
-(232, '2026-0004', 2, 'regular', NULL);
+(235, '2026-0002', 1, 'transferee', 'Duon High School'),
+(237, '2026-0003', 1, 'regular', '');
 
 -- --------------------------------------------------------
 
@@ -2636,6 +2941,15 @@ CREATE TABLE `student_completed_subjects` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `student_completed_subjects`
+--
+
+INSERT INTO `student_completed_subjects` (`id`, `student_id`, `subject_id`, `completion_source`, `previous_subject_name`, `previous_grade`, `remarks`, `recorded_by`, `created_at`) VALUES
+(1, 235, 32, 'Duon High School', '', '1.5', 'Completed in previous school', 6, '2026-03-01 07:38:37'),
+(2, 235, 34, 'Duon High School', '', '1.25', 'Completed in previous school', 6, '2026-03-01 07:38:37'),
+(3, 235, 35, 'Duon High School', '', '2.0', 'Completed in previous school', 6, '2026-03-01 07:38:37');
+
 -- --------------------------------------------------------
 
 --
@@ -2649,6 +2963,7 @@ CREATE TABLE `student_fees` (
   `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `academic_year_id` int(10) UNSIGNED DEFAULT NULL,
   `semester` enum('1st','2nd','summer') DEFAULT '1st',
+  `year_level_id` int(10) UNSIGNED DEFAULT NULL,
   `description` text DEFAULT NULL,
   `due_date` date DEFAULT NULL,
   `created_by` int(10) UNSIGNED DEFAULT NULL,
@@ -2659,12 +2974,20 @@ CREATE TABLE `student_fees` (
 -- Dumping data for table `student_fees`
 --
 
-INSERT INTO `student_fees` (`id`, `student_id`, `fee_type`, `amount`, `academic_year_id`, `semester`, `description`, `due_date`, `created_by`, `created_at`) VALUES
-(1, 203, 'Tuition Fee', 11600.00, 1, '1st', '', NULL, 211, '2026-01-18 20:31:19'),
-(2, 221, 'Tuition Fee', 11100.00, 1, '1st', '', NULL, 6, '2026-01-21 03:21:50'),
-(3, 226, 'Tuition', 8700.00, 1, '1st', 'Tuition Fee', NULL, 6, '2026-02-05 10:10:41'),
-(4, 231, 'Tuition', 9000.00, 1, '1st', 'Tuition Fee', NULL, 6, '2026-02-05 10:51:25'),
-(5, 232, 'Tuition', 8500.00, 1, '1st', 'Tuition Fee', NULL, 6, '2026-02-11 03:52:25');
+INSERT INTO `student_fees` (`id`, `student_id`, `fee_type`, `amount`, `academic_year_id`, `semester`, `year_level_id`, `description`, `due_date`, `created_by`, `created_at`) VALUES
+(1, 203, 'Tuition Fee', 11600.00, 1, '1st', NULL, '', NULL, 211, '2026-01-18 20:31:19'),
+(2, 221, 'Tuition Fee', 11100.00, 1, '1st', NULL, '', NULL, 6, '2026-01-21 03:21:50'),
+(3, 226, 'Tuition', 8700.00, 1, '1st', NULL, 'Tuition Fee', NULL, 6, '2026-02-05 10:10:41'),
+(4, 231, 'Tuition', 9000.00, 1, '1st', NULL, 'Tuition Fee', NULL, 6, '2026-02-05 10:51:25'),
+(5, 232, 'Tuition', 8500.00, 1, '1st', NULL, 'Tuition Fee', NULL, 6, '2026-02-11 03:52:25'),
+(7, 234, 'Tuition', 8500.00, 1, '1st', NULL, 'Tuition Fee', NULL, 6, '2026-03-01 07:35:43'),
+(8, 235, 'Tuition', 8500.00, 1, '1st', NULL, 'Tuition Fee', NULL, 6, '2026-03-01 07:36:42'),
+(9, 234, 'Tuition Fee', 8500.00, 1, '2nd', NULL, 'Auto-assessed tuition for 2nd semester enrollment', NULL, 6, '2026-03-01 08:38:56'),
+(10, 236, 'Tuition Fee', 8500.00, 1, '1st', NULL, 'Auto-assessed tuition for 1st semester enrollment', NULL, 6, '2026-03-01 09:20:03'),
+(11, 237, 'Tuition Fee', 8500.00, 1, '1st', 1, 'Auto-assessed tuition for 1st semester enrollment', NULL, 6, '2026-03-01 09:37:19'),
+(12, 237, 'Discount', -1000.00, 1, '1st', 1, 'Discount: Early Enrollment (₱1,000.00)', NULL, 6, '2026-03-01 09:37:19'),
+(13, 237, 'Tuition Fee', 8500.00, 1, '1st', 2, 'Auto-assessed tuition for 1st semester enrollment', NULL, 6, '2026-03-01 09:39:05'),
+(14, 237, 'Discount', -1000.00, 1, '1st', 2, 'Discount: Early Enrollment (₱1,000.00)', NULL, 6, '2026-03-01 09:39:05');
 
 -- --------------------------------------------------------
 
@@ -2730,7 +3053,7 @@ CREATE TABLE `student_subject_enrollments` (
   `subject_id` int(10) UNSIGNED NOT NULL,
   `section_id` int(11) DEFAULT NULL,
   `academic_year_id` int(10) UNSIGNED NOT NULL,
-  `status` enum('enrolled','completed','dropped') NOT NULL DEFAULT 'enrolled',
+  `status` enum('enrolled','completed','dropped','credited') NOT NULL DEFAULT 'enrolled',
   `enrollment_type` enum('regular','irregular','transferee') NOT NULL DEFAULT 'regular',
   `recorded_by` int(10) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -2743,7 +3066,111 @@ CREATE TABLE `student_subject_enrollments` (
 
 INSERT INTO `student_subject_enrollments` (`id`, `student_id`, `subject_id`, `section_id`, `academic_year_id`, `status`, `enrollment_type`, `recorded_by`, `created_at`, `updated_at`) VALUES
 (1, 226, 3, 1, 1, 'enrolled', 'regular', NULL, '2026-02-27 07:34:54', '2026-02-27 07:34:54'),
-(2, 226, 5, 1, 1, 'enrolled', 'regular', NULL, '2026-02-27 07:34:54', '2026-02-27 07:34:54');
+(2, 226, 5, 1, 1, 'enrolled', 'regular', NULL, '2026-02-27 07:34:54', '2026-02-27 07:34:54'),
+(8, 232, 39, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(9, 232, 41, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(10, 232, 45, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(11, 232, 40, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(12, 232, 42, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(13, 232, 43, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(14, 232, 44, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(15, 232, 32, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(16, 232, 34, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(17, 232, 35, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(18, 232, 33, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(19, 232, 37, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(20, 232, 30, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(21, 232, 31, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(22, 232, 36, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(23, 232, 38, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(24, 226, 52, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(25, 226, 53, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(26, 226, 48, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(27, 226, 49, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(28, 226, 50, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(29, 226, 51, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(30, 234, 12, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(31, 234, 16, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(32, 234, 17, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(33, 234, 20, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(34, 234, 14, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(35, 234, 15, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(36, 234, 19, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(37, 234, 18, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(38, 234, 13, 2, 1, 'enrolled', 'regular', 205, '2026-03-01 07:37:17', '2026-03-01 07:44:46'),
+(39, 235, 32, 9, 1, 'credited', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(40, 235, 34, 9, 1, 'credited', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(41, 235, 35, 9, 1, 'credited', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(42, 235, 33, 9, 1, 'enrolled', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(43, 235, 37, 9, 1, 'enrolled', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(44, 235, 30, 9, 1, 'enrolled', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(45, 235, 31, 9, 1, 'enrolled', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(46, 235, 36, 9, 1, 'enrolled', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(47, 235, 38, 9, 1, 'enrolled', 'transferee', 205, '2026-03-01 07:38:37', '2026-03-01 07:45:56'),
+(66, 234, 32, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(67, 234, 34, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(68, 234, 35, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(69, 234, 33, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(70, 234, 37, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(71, 234, 30, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(72, 234, 31, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(73, 234, 36, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(74, 234, 38, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:37:08', '2026-03-01 08:37:08'),
+(75, 234, 39, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(76, 234, 41, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(77, 234, 45, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(78, 234, 40, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(79, 234, 42, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(80, 234, 43, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(81, 234, 44, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 08:38:56', '2026-03-01 08:38:56'),
+(106, 234, 52, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:10:37', '2026-03-01 09:10:37'),
+(107, 234, 53, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:10:37', '2026-03-01 09:10:37'),
+(108, 234, 48, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:10:37', '2026-03-01 09:10:37'),
+(109, 234, 49, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:10:37', '2026-03-01 09:10:37'),
+(110, 234, 50, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:10:37', '2026-03-01 09:10:37'),
+(111, 234, 51, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:10:37', '2026-03-01 09:10:37'),
+(112, 234, 59, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:17:54', '2026-03-01 09:17:54'),
+(113, 234, 58, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:17:54', '2026-03-01 09:17:54'),
+(114, 234, 57, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:17:54', '2026-03-01 09:17:54'),
+(115, 234, 55, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:17:54', '2026-03-01 09:17:54'),
+(116, 234, 56, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:17:54', '2026-03-01 09:17:54'),
+(117, 234, 54, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:17:54', '2026-03-01 09:17:54'),
+(118, 236, 12, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(119, 236, 16, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(120, 236, 17, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(121, 236, 20, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(122, 236, 14, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(123, 236, 15, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(124, 236, 19, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(125, 236, 18, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(126, 236, 13, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:20:03', '2026-03-01 09:20:03'),
+(127, 236, 32, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(128, 236, 34, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(129, 236, 35, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(130, 236, 33, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(131, 236, 37, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(132, 236, 30, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(133, 236, 31, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(134, 236, 36, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(135, 236, 38, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:21:05', '2026-03-01 09:21:05'),
+(136, 237, 12, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(137, 237, 16, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(138, 237, 17, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(139, 237, 20, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(140, 237, 14, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(141, 237, 15, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(142, 237, 19, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(143, 237, 18, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(144, 237, 13, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:37:19', '2026-03-01 09:37:19'),
+(145, 237, 32, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(146, 237, 34, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(147, 237, 35, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(148, 237, 33, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(149, 237, 37, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(150, 237, 30, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(151, 237, 31, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(152, 237, 36, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05'),
+(153, 237, 38, NULL, 1, 'enrolled', 'regular', 6, '2026-03-01 09:39:05', '2026-03-01 09:39:05');
 
 -- --------------------------------------------------------
 
@@ -2766,6 +3193,20 @@ CREATE TABLE `student_term_enrollments` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `student_term_enrollments`
+--
+
+INSERT INTO `student_term_enrollments` (`id`, `student_id`, `program_type`, `program_id`, `year_level_id`, `academic_year_id`, `semester`, `student_type`, `previous_school`, `status`, `recorded_by`, `created_at`, `updated_at`) VALUES
+(5, 232, 'college', 1, 2, 1, '2nd', 'regular', '', 'enrolled', 6, '2026-03-01 04:05:11', '2026-03-01 04:05:11'),
+(6, 232, 'college', 1, 2, 1, '1st', 'regular', '', 'enrolled', 6, '2026-03-01 04:35:28', '2026-03-01 04:35:28'),
+(7, 226, 'college', 1, 3, 1, '1st', 'regular', '', 'enrolled', 6, '2026-03-01 04:35:48', '2026-03-01 04:35:48'),
+(8, 234, 'college', 1, 3, 1, '1st', 'regular', '', 'enrolled', 6, '2026-03-01 07:37:17', '2026-03-01 09:10:37'),
+(9, 235, 'college', 1, 2, 1, '1st', 'transferee', 'Duon High School', 'enrolled', 6, '2026-03-01 07:38:37', '2026-03-01 07:38:37'),
+(11, 234, 'college', 1, 3, 1, '2nd', 'regular', '', 'enrolled', 6, '2026-03-01 08:38:56', '2026-03-01 09:17:54'),
+(24, 236, 'college', 1, 2, 1, '1st', 'regular', '', 'enrolled', 6, '2026-03-01 09:20:03', '2026-03-01 09:21:05'),
+(26, 237, 'college', 1, 2, 1, '1st', 'regular', '', 'enrolled', 6, '2026-03-01 09:37:19', '2026-03-01 09:39:05');
 
 -- --------------------------------------------------------
 
@@ -2908,7 +3349,63 @@ INSERT INTO `teacher_subject_assignments` (`id`, `teacher_id`, `curriculum_subje
 (2, 100, 3, 1, 1, 1, '2026-01-18 17:56:06'),
 (3, 216, 4, 2, 1, 1, '2026-01-18 20:50:08'),
 (4, 216, 3, 2, 1, 1, '2026-01-18 20:50:13'),
-(5, 100, 5, 1, 1, 1, '2026-01-19 14:50:35');
+(5, 100, 5, 1, 1, 1, '2026-01-19 14:50:35'),
+(6, 100, 12, 1, 1, 0, '2026-03-01 04:06:32'),
+(7, 100, 16, 1, 1, 0, '2026-03-01 04:06:37'),
+(8, 100, 14, 1, 1, 1, '2026-03-01 07:43:20'),
+(9, 100, 15, 1, 1, 1, '2026-03-01 07:43:24'),
+(10, 100, 34, 1, 1, 1, '2026-03-01 07:46:23'),
+(11, 100, 35, 1, 1, 1, '2026-03-01 07:46:27'),
+(12, 100, 30, 1, 1, 1, '2026-03-01 07:46:32'),
+(13, 100, 36, 1, 1, 1, '2026-03-01 07:46:36');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tuition_discounts`
+--
+
+CREATE TABLE `tuition_discounts` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `name` varchar(150) NOT NULL COMMENT 'e.g., Early Bird Discount, Scholarship Discount',
+  `discount_type` enum('percentage','fixed') NOT NULL DEFAULT 'percentage' COMMENT 'percentage = % off tuition, fixed = flat amount off',
+  `value` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Percentage (0-100) or fixed amount',
+  `start_date` date NOT NULL COMMENT 'Discount validity start date',
+  `end_date` date NOT NULL COMMENT 'Discount validity end date',
+  `academic_year_id` int(10) UNSIGNED DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tuition_discounts`
+--
+
+INSERT INTO `tuition_discounts` (`id`, `name`, `discount_type`, `value`, `start_date`, `end_date`, `academic_year_id`, `description`, `is_active`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'Early Enrollment', 'fixed', 1000.00, '2026-03-01', '2026-03-02', 1, '', 1, 6, '2026-03-01 09:23:31', '2026-03-01 09:23:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tuition_penalties`
+--
+
+CREATE TABLE `tuition_penalties` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `name` varchar(150) NOT NULL COMMENT 'e.g., Late Enrollment Penalty, Re-enrollment Fee',
+  `penalty_type` enum('percentage','fixed') NOT NULL DEFAULT 'fixed' COMMENT 'percentage = % added to tuition, fixed = flat amount added',
+  `value` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Percentage (0-100) or fixed amount',
+  `start_date` date NOT NULL COMMENT 'Penalty applies from this date onward',
+  `academic_year_id` int(10) UNSIGNED DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2932,18 +3429,17 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `password`, `status`, `last_login`, `created_at`, `lock_count`, `last_locked_at`) VALUES
-(4, 'admin@elms.com', '$2y$10$HT./ovUEHrcCRGbLzjSHquhagQeVxD9iK59//YEDUfntP5pn3o3m2', 'active', '2026-02-27 22:13:57', '2026-01-16 12:57:04', 0, NULL),
-(6, 'registrar@elms.com', '$2y$10$emmb9dv7qdUCsPWfW0Ey4u3YLcA6h99ym0DrPa1dAo8n0bV0PUeSe', 'active', '2026-03-01 01:15:31', '2026-01-16 13:06:58', 0, NULL),
-(100, 'teacher@elms.com', '$2y$10$gS8DWoSFQX9iUAZ4r2jCvucHbM0Swd7iGB.5uG1pxlBkiKSXZf22O', 'active', '2026-02-25 01:07:40', '2026-01-16 13:08:50', 0, NULL),
-(204, 'schooladmin@elms.com', '$2y$10$QA38bQbDvhQwo/.BHioND.p1Y06Oy0rcHTXOC7i4FnhmwqLyVZGcu', 'active', '2026-02-27 22:15:01', '2026-01-16 13:32:27', 0, NULL),
-(205, 'branchadmin@elms.com', '$2y$10$Bic2FhHZbHvu3AvS8601HO0UXxxyyvi01LGZh3iIW35AmKC8kFB0i', 'active', '2026-02-27 22:16:20', '2026-01-16 16:32:28', 0, NULL),
+(4, 'admin@elms.com', '$2y$10$HT./ovUEHrcCRGbLzjSHquhagQeVxD9iK59//YEDUfntP5pn3o3m2', 'active', '2026-03-01 17:28:54', '2026-01-16 12:57:04', 0, NULL),
+(6, 'registrar@elms.com', '$2y$10$emmb9dv7qdUCsPWfW0Ey4u3YLcA6h99ym0DrPa1dAo8n0bV0PUeSe', 'active', '2026-03-01 17:29:24', '2026-01-16 13:06:58', 0, NULL),
+(100, 'teacher@elms.com', '$2y$10$gS8DWoSFQX9iUAZ4r2jCvucHbM0Swd7iGB.5uG1pxlBkiKSXZf22O', 'active', '2026-03-01 17:41:45', '2026-01-16 13:08:50', 0, NULL),
+(204, 'schooladmin@elms.com', '$2y$10$QA38bQbDvhQwo/.BHioND.p1Y06Oy0rcHTXOC7i4FnhmwqLyVZGcu', 'active', '2026-03-01 16:03:21', '2026-01-16 13:32:27', 0, NULL),
+(205, 'branchadmin@elms.com', '$2y$10$Bic2FhHZbHvu3AvS8601HO0UXxxyyvi01LGZh3iIW35AmKC8kFB0i', 'active', '2026-03-01 15:21:52', '2026-01-16 16:32:28', 0, NULL),
 (210, 'sample@elms.com', '$2y$10$7Xri9SoPDxk2v/ybP78NduUbh8rspsEBnffz.OksDEdm4llPiRpWu', 'active', '2026-02-05 19:32:35', '2026-01-18 19:14:15', 0, NULL),
 (211, 'rev@registrar.com', '$2y$10$GM/9k7ytk1UmmRMd2/FkgOgA9CdZN5RupGr5iCzCCv5FKhp0zy2Rq', 'active', '2026-01-19 18:06:01', '2026-01-18 20:10:51', 0, NULL),
 (216, 'senpai@teacher.com', '$2y$10$U8SYILHG/24ZXUUTUpyC3.HbI3W8tbsOicY7/zfM.Z29MkUfwWQk.', 'active', '2026-02-05 19:31:03', '2026-01-18 20:47:29', 0, NULL),
 (224, 'jamessenpai9@gmail.com', '$2y$10$i8fTVxxUibMVx8M5I6oDEecc7AMZMedGS4Hrac2wQeVAJop/Z4Sxi', 'active', '2026-02-05 19:21:27', '2026-01-24 07:58:17', 0, NULL),
-(226, 'Jamesrev235@gmail.com', '$2y$10$dgNmtItewKFQvvrOCZ8ryuCBht7KWDUkOvuI5dVMqU6/bw1aBbIGq', 'active', '2026-02-25 01:09:09', '2026-02-05 10:10:41', 0, NULL),
-(231, 'revillajamesandrei4@gmail.com', '$2y$10$J879eXG0p8ftGYWxNdRcMOEdoYPHEj18XX1ks6SS3Iw/MoS9Ql3pm', 'active', '2026-02-11 00:23:41', '2026-02-05 10:51:25', 0, NULL),
-(232, 'yujinjae05@gmail.com', '$2y$10$K9I9q5/hgEAfnoavXQwSz.T9B.RhWt3i.IaK7kj3X0.iUsHqP1z4q', 'active', NULL, '2026-02-11 03:52:25', 0, NULL);
+(235, 'revillajamesandrei4@gmail.com', '$2y$10$DA8FNEF3JSD4fRer1Im4Xue8jZaRy9eyJcvxrE1O26Pelu1rAk.6W', 'active', '2026-03-01 15:47:48', '2026-03-01 07:36:42', 0, NULL),
+(237, 'Jamesrev235@gmail.com', '$2y$10$HnZNv0MPZo9dbIGXfHWp9.KynoCKj4lZ8ciPw.mIbiHikK4Q0F2.S', 'active', '2026-03-01 17:42:25', '2026-03-01 09:36:32', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -2974,9 +3470,8 @@ INSERT INTO `user_profiles` (`user_id`, `first_name`, `last_name`, `contact_no`,
 (211, 'James', 'Revs', '0906281723', NULL, 2),
 (216, 'Senpai', 'James', '', '', 2),
 (224, 'James', 'Andrei Revilla', '09181234567', 'Dyan Lng Sa TAbi', 4),
-(226, 'James', 'Revilla', '09181234567', 'dyan lng', 1),
-(231, 'James Andrei', 'Revilla', '0906281723', 'Dyan lng', 1),
-(232, 'Eugine', 'Almira', '093426387462', 'Dyan lng sa tabi', 1);
+(235, 'Andrei James', 'Subaru', '0909936123', 'Malabon City', 1),
+(237, 'James Andrei', 'Revilla', '09181234567', 'asddfa', 1);
 
 -- --------------------------------------------------------
 
@@ -3003,9 +3498,8 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (211, 4),
 (216, 5),
 (224, 3),
-(226, 6),
-(231, 6),
-(232, 6);
+(235, 6),
+(237, 6);
 
 --
 -- Indexes for dumped tables
@@ -3196,6 +3690,15 @@ ALTER TABLE `login_attempts`
   ADD KEY `email` (`email`),
   ADD KEY `ip_address` (`ip_address`),
   ADD KEY `attempted_at` (`attempted_at`);
+
+--
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notif_user_read` (`user_id`,`is_read`),
+  ADD KEY `idx_notif_user_created` (`user_id`,`created_at`),
+  ADD KEY `idx_notif_type` (`type`);
 
 --
 -- Indexes for table `oauth_tokens`
@@ -3457,6 +3960,24 @@ ALTER TABLE `teacher_subject_assignments`
   ADD KEY `idx_ay` (`academic_year_id`);
 
 --
+-- Indexes for table `tuition_discounts`
+--
+ALTER TABLE `tuition_discounts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_discount_dates` (`start_date`,`end_date`),
+  ADD KEY `idx_discount_active` (`is_active`),
+  ADD KEY `idx_discount_ay` (`academic_year_id`);
+
+--
+-- Indexes for table `tuition_penalties`
+--
+ALTER TABLE `tuition_penalties`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_penalty_start` (`start_date`),
+  ADD KEY `idx_penalty_active` (`is_active`),
+  ADD KEY `idx_penalty_ay` (`academic_year_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -3492,7 +4013,7 @@ ALTER TABLE `academic_years`
 -- AUTO_INCREMENT for table `active_sessions`
 --
 ALTER TABLE `active_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4648;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8026;
 
 --
 -- AUTO_INCREMENT for table `announcements`
@@ -3534,7 +4055,7 @@ ALTER TABLE `attendance`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=972;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1087;
 
 --
 -- AUTO_INCREMENT for table `branches`
@@ -3564,13 +4085,13 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `curriculum_subjects`
 --
 ALTER TABLE `curriculum_subjects`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `email_logs`
 --
 ALTER TABLE `email_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
@@ -3606,13 +4127,19 @@ ALTER TABLE `grading_terms`
 -- AUTO_INCREMENT for table `learning_materials`
 --
 ALTER TABLE `learning_materials`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=327;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=381;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `oauth_tokens`
@@ -3630,7 +4157,7 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `programs`
@@ -3648,7 +4175,7 @@ ALTER TABLE `program_courses`
 -- AUTO_INCREMENT for table `program_tuition_fees`
 --
 ALTER TABLE `program_tuition_fees`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `program_year_levels`
@@ -3678,25 +4205,25 @@ ALTER TABLE `schools`
 -- AUTO_INCREMENT for table `sections`
 --
 ALTER TABLE `sections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `section_students`
 --
 ALTER TABLE `section_students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `security_logs`
 --
 ALTER TABLE `security_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=383;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=437;
 
 --
 -- AUTO_INCREMENT for table `security_settings`
 --
 ALTER TABLE `security_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `shs_grade_levels`
@@ -3720,13 +4247,13 @@ ALTER TABLE `shs_tracks`
 -- AUTO_INCREMENT for table `student_completed_subjects`
 --
 ALTER TABLE `student_completed_subjects`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `student_fees`
 --
 ALTER TABLE `student_fees`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `student_grade_details`
@@ -3744,13 +4271,13 @@ ALTER TABLE `student_promotions`
 -- AUTO_INCREMENT for table `student_subject_enrollments`
 --
 ALTER TABLE `student_subject_enrollments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=154;
 
 --
 -- AUTO_INCREMENT for table `student_term_enrollments`
 --
 ALTER TABLE `student_term_enrollments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -3786,13 +4313,25 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `teacher_subject_assignments`
 --
 ALTER TABLE `teacher_subject_assignments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `tuition_discounts`
+--
+ALTER TABLE `tuition_discounts`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `tuition_penalties`
+--
+ALTER TABLE `tuition_penalties`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=234;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=238;
 
 --
 -- Constraints for dumped tables
