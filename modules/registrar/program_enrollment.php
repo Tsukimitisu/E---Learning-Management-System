@@ -362,7 +362,7 @@ include '../../includes/header.php';
 
 <!-- Enrollment Fee Assessment Result Modal -->
 <div class="modal fade" id="feeResultModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
             <div class="modal-header p-4 text-white" style="background: linear-gradient(135deg, #28a745, #20c997); border: none;">
                 <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Enrollment Successful</h5>
@@ -373,8 +373,8 @@ include '../../includes/header.php';
             <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between">
                 <a href="students.php" class="btn btn-outline-secondary rounded-pill px-3"><i class="bi bi-people me-1"></i> View Students</a>
                 <div class="d-flex gap-2">
-                    <a href="payment_history.php" class="btn btn-outline-primary rounded-pill px-3" id="feeResultPaymentLink"><i class="bi bi-credit-card me-1"></i> Record Payment</a>
-                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" onclick="closeFeeModalAndReload()"><i class="bi bi-check-lg me-1"></i> Done</button>
+                    <a href="payment_history.php" class="btn btn-outline-primary rounded-pill px-3" id="feeResultPaymentLink"><i class="bi bi-credit-card me-1"></i> Payment History</a>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" id="feeResultDoneBtn" onclick="closeFeeModalAndReload()"><i class="bi bi-check-lg me-1"></i> Done</button>
                 </div>
             </div>
         </div>
@@ -817,6 +817,14 @@ function showFeeResultModal(response) {
     const enrolledCount = meta.enrolled_count || 0;
     const completedCount = meta.completed_count || 0;
     const totalSubjects = meta.total_subjects || 0;
+    const isFirstEnrollment = !meta.is_re_enrollment;
+
+    // Discount / Penalty data
+    const discountsApplied = meta.discounts_applied || [];
+    const penaltiesApplied = meta.penalties_applied || [];
+    const totalDiscount = parseFloat(meta.total_discount || 0);
+    const totalPenalty = parseFloat(meta.total_penalty || 0);
+    const adjustedFee = Math.max(0, fee - totalDiscount + totalPenalty);
 
     const semesterLabel = semester === '2nd' ? '2nd Semester' : (semester === 'summer' ? 'Summer' : '1st Semester');
     const programText = document.getElementById('selectedProgramText')?.textContent || '';
@@ -857,9 +865,41 @@ function showFeeResultModal(response) {
         <div class="border rounded-4 overflow-hidden mb-3">
             <div class="p-3 bg-white">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="small text-muted fw-bold text-uppercase">Assessed Tuition Fee</span>
+                    <span class="small text-muted fw-bold text-uppercase">Base Tuition Fee</span>
                     <span class="fw-bold fs-5" style="color: var(--maroon);">₱${fee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
                 </div>`;
+
+    // Show discount line items
+    if (discountsApplied.length > 0) {
+        discountsApplied.forEach(d => {
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-success"><i class="bi bi-tag-fill me-1"></i>${escapeHtml(d.description)}</span>
+                    <span class="fw-bold text-success">-₱${parseFloat(d.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>`;
+        });
+    }
+
+    // Show penalty line items
+    if (penaltiesApplied.length > 0) {
+        penaltiesApplied.forEach(p => {
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(p.description)}</span>
+                    <span class="fw-bold text-danger">+₱${parseFloat(p.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>`;
+        });
+    }
+
+    // Show adjusted total if there are discounts or penalties
+    if (discountsApplied.length > 0 || penaltiesApplied.length > 0) {
+        html += `
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-uppercase" style="color: var(--blue);">Adjusted Total Fee</span>
+                    <span class="fw-bold fs-5" style="color: var(--blue);">₱${adjustedFee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>`;
+    }
     
     if (fee > 0) {
         html += `
@@ -883,36 +923,135 @@ function showFeeResultModal(response) {
             </div>
         </div>`;
 
-    if (fee > 0) {
-        const downpayment = Math.ceil(fee * 0.25);
-        const remaining = fee - downpayment;
+    // Down payment section - mandatory when fee > 0 and balance > 0
+    const doneBtn = document.getElementById('feeResultDoneBtn');
+    const effectiveFee = (discountsApplied.length > 0 || penaltiesApplied.length > 0) ? adjustedFee : fee;
+    if (fee > 0 && semesterBalance > 0) {
+        const downpayment = Math.ceil(effectiveFee * 0.25);
+        const remaining = effectiveFee - downpayment;
         const perTerm = Math.ceil(remaining / 4);
         html += `
-        <div class="bg-light rounded-4 p-3">
-            <p class="small text-muted fw-bold text-uppercase mb-2"><i class="bi bi-calculator me-1"></i> Payment Options</p>
-            <div class="row g-2">
-                <div class="col-6">
-                    <div class="border rounded-3 p-2 bg-white text-center h-100">
-                        <small class="text-muted d-block">Full Payment</small>
-                        <span class="fw-bold text-success">₱${fee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+        <div class="border border-danger rounded-4 overflow-hidden mb-3" id="downpaymentSection">
+            <div class="p-3 bg-danger bg-opacity-10">
+                <p class="small fw-bold text-danger text-uppercase mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Mandatory Down Payment Required</p>
+                <p class="small text-muted mb-3">A minimum down payment is required to complete the enrollment process.</p>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="border rounded-3 p-2 bg-white text-center h-100">
+                            <small class="text-muted d-block">Full Payment</small>
+                            <span class="fw-bold text-success">₱${effectiveFee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded-3 p-2 bg-white text-center h-100">
+                            <small class="text-muted d-block">Min Down Payment (25%)</small>
+                            <span class="fw-bold text-primary">₱${downpayment.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="border rounded-3 p-2 bg-white text-center h-100">
-                        <small class="text-muted d-block">Down Payment (25%)</small>
-                        <span class="fw-bold text-primary">₱${downpayment.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold mb-1">Amount (₱)</label>
+                        <input type="number" class="form-control" id="downpaymentAmount" min="${downpayment}" max="${effectiveFee}" step="0.01" value="${downpayment}" placeholder="Min: ₱${downpayment}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold mb-1">Payment Method</label>
+                        <select class="form-select" id="downpaymentMethod">
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="gcash">GCash</option>
+                            <option value="online">Online Payment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-danger w-100 fw-bold" id="processDownpaymentBtn" onclick="processDownPayment()">
+                            <i class="bi bi-cash-stack me-1"></i> Record Payment
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div class="mt-2 small text-muted text-center">
-                Installment: 4 terms × ₱${perTerm.toLocaleString('en-PH', {minimumFractionDigits: 2})} after down payment
+                <div id="downpaymentFeedback" class="mt-2"></div>
+                <div class="mt-2 small text-muted text-center">
+                    Installment option: 4 terms × ₱${perTerm.toLocaleString('en-PH', {minimumFractionDigits: 2})} after down payment
+                </div>
             </div>
         </div>`;
+        // Disable Done button until down payment is made
+        if (doneBtn) {
+            doneBtn.disabled = true;
+            doneBtn.title = 'Record down payment first';
+            doneBtn.innerHTML = '<i class="bi bi-lock me-1"></i> Pay First';
+        }
+    } else {
+        if (doneBtn) {
+            doneBtn.disabled = false;
+            doneBtn.title = '';
+            doneBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Done';
+        }
     }
 
     document.getElementById('feeResultBody').innerHTML = html;
     const feeModal = new bootstrap.Modal(document.getElementById('feeResultModal'));
     feeModal.show();
+}
+
+function processDownPayment() {
+    const amountInput = document.getElementById('downpaymentAmount');
+    const methodSelect = document.getElementById('downpaymentMethod');
+    const feedback = document.getElementById('downpaymentFeedback');
+    const btn = document.getElementById('processDownpaymentBtn');
+    
+    const amount = parseFloat(amountInput.value);
+    const minAmount = parseFloat(amountInput.min);
+    
+    if (!amount || amount < minAmount) {
+        feedback.innerHTML = `<div class="alert alert-warning small py-1 mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Minimum down payment is ₱${minAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>`;
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+    feedback.innerHTML = '';
+    
+    const fd = new FormData();
+    fd.append('action', 'record_downpayment');
+    fd.append('student_id', selectedStudentId);
+    fd.append('amount', amount);
+    fd.append('payment_method', methodSelect.value);
+    
+    fetch('process/program_enrollment_api.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                feedback.innerHTML = `<div class="alert alert-success small py-1 mb-0"><i class="bi bi-check-circle me-1"></i> ${d.message}</div>`;
+                // Disable payment form
+                amountInput.disabled = true;
+                methodSelect.disabled = true;
+                btn.style.display = 'none';
+                // Update the balance display
+                const section = document.getElementById('downpaymentSection');
+                if (section) section.classList.remove('border-danger');
+                if (section) section.classList.add('border-success');
+                // Enable Done button
+                const doneBtn = document.getElementById('feeResultDoneBtn');
+                if (doneBtn) {
+                    doneBtn.disabled = false;
+                    doneBtn.title = '';
+                    doneBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Done';
+                    doneBtn.classList.remove('btn-secondary');
+                    doneBtn.classList.add('btn-success');
+                }
+            } else {
+                feedback.innerHTML = `<div class="alert alert-danger small py-1 mb-0"><i class="bi bi-x-circle me-1"></i> ${d.message}</div>`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cash-stack me-1"></i> Record Payment';
+            }
+        })
+        .catch(err => {
+            console.error('Down payment error:', err);
+            feedback.innerHTML = '<div class="alert alert-danger small py-1 mb-0"><i class="bi bi-x-circle me-1"></i> Network error. Please try again.</div>';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cash-stack me-1"></i> Record Payment';
+        });
 }
 
 function closeFeeModalAndReload() {

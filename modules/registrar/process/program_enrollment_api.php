@@ -52,6 +52,9 @@ switch ($action) {
     case 'get_student_balance':
         getStudentBalance();
         break;
+    case 'record_downpayment':
+        recordDownPayment();
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
@@ -517,6 +520,66 @@ function getStudentBalance() {
     ]);
 }
 
+function recordDownPayment() {
+    global $conn, $branch_id, $current_ay_id;
+
+    $student_id = (int)($_POST['student_id'] ?? 0);
+    $amount = (float)($_POST['amount'] ?? 0);
+    $payment_method = clean_input($_POST['payment_method'] ?? 'cash');
+
+    if (!$student_id || !verifyStudentInRegistrarBranch($student_id, $branch_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid student']);
+        return;
+    }
+
+    if ($amount <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid payment amount']);
+        return;
+    }
+
+    // Get the latest term enrollment to determine semester
+    $latest = getLatestTermEnrollment($student_id);
+    $semester = $latest ? normalizeSemester($latest['semester']) : '1st';
+
+    // Calculate minimum down payment (25% of current semester fee)
+    $semester_fee = getSemesterTuitionFee($student_id, $current_ay_id, $semester);
+    $min_downpayment = ceil($semester_fee * 0.25);
+
+    if ($amount < $min_downpayment && $min_downpayment > 0) {
+        echo json_encode(['success' => false, 'message' => 'Minimum down payment is ₱' . number_format($min_downpayment, 2)]);
+        return;
+    }
+
+    $valid_methods = ['cash', 'bank_transfer', 'gcash', 'online'];
+    if (!in_array($payment_method, $valid_methods)) {
+        $payment_method = 'cash';
+    }
+
+    $recorded_by = (int)$_SESSION['user_id'];
+    $description = 'Down payment upon enrollment';
+    $reference_no = 'DP-' . date('Ymd') . '-' . str_pad($student_id, 4, '0', STR_PAD_LEFT) . '-' . substr(uniqid(), -4);
+
+    $stmt = $conn->prepare("
+        INSERT INTO payments (student_id, amount, payment_method, reference_number, academic_year_id, semester, description, status, verified_by, verified_at, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'verified', ?, NOW(), NOW())
+    ");
+    $stmt->bind_param("idssissi", $student_id, $amount, $payment_method, $reference_no, $current_ay_id, $semester, $description, $recorded_by);
+    
+    if ($stmt->execute()) {
+        logAuditSimple($conn, "Down payment recorded: student {$student_id}, amount ₱" . number_format($amount, 2) . ", method {$payment_method}, ref {$reference_no}");
+        
+        $new_balance = getSemesterOutstandingBalance($student_id, $current_ay_id, $semester);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Down payment of ₱' . number_format($amount, 2) . ' recorded successfully. Ref: ' . $reference_no,
+            'new_balance' => $new_balance,
+            'reference_number' => $reference_no
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to record payment: ' . $conn->error]);
+    }
+}
+
 function applyProgramEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $student_type, $previous_school, $completed_subject_ids, $completed_subject_details, $recorded_by, $current_ay_id) {
     global $conn;
 
@@ -772,6 +835,9 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
     $total_outstanding = getAllOutstandingBalance($student_id);
     $semester_balance = getSemesterOutstandingBalance($student_id, $current_ay_id, $semester);
 
+    // Get discount/penalty adjustments applied to this term
+    $adjustments = getTermFeeAdjustments($student_id, $current_ay_id, $semester);
+
     return [
         'semester' => $semester,
         'student_type' => $student_type,
@@ -782,6 +848,10 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         'tuition_fee_assessed' => $assessed_fee,
         'semester_balance' => $semester_balance,
         'total_balance' => $total_outstanding,
+        'discounts_applied' => $adjustments['discounts'],
+        'penalties_applied' => $adjustments['penalties'],
+        'total_discount' => $adjustments['total_discount'],
+        'total_penalty' => $adjustments['total_penalty'],
     ];
 }
 
@@ -889,6 +959,18 @@ function normalizeSemester($semester) {
     return $semester;
 }
 
+function getSemesterTuitionFee($student_id, $academic_year_id, $semester) {
+    global $conn;
+    $semester = normalizeSemester($semester);
+    $student_id = (int)$student_id;
+    $academic_year_id = (int)$academic_year_id;
+
+    $stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM student_fees WHERE student_id = ? AND academic_year_id = ? AND semester = ?");
+    $stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $stmt->execute();
+    return (float)($stmt->get_result()->fetch_assoc()['total'] ?? 0);
+}
+
 function getSemesterOutstandingBalance($student_id, $academic_year_id, $semester) {
     global $conn;
 
@@ -951,6 +1033,55 @@ function getAllOutstandingBalance($student_id) {
     $total_paid = (float)($paid_stmt->get_result()->fetch_assoc()['total'] ?? 0);
 
     return max(0, round($total_fees - $total_paid, 2));
+}
+
+function getTermFeeAdjustments($student_id, $academic_year_id, $semester) {
+    global $conn;
+    $student_id = (int)$student_id;
+    $academic_year_id = (int)$academic_year_id;
+    $semester = normalizeSemester($semester);
+
+    $discounts = [];
+    $penalties = [];
+    $total_discount = 0;
+    $total_penalty = 0;
+
+    // Get discount entries
+    $disc_stmt = $conn->prepare("
+        SELECT fee_type, amount, description FROM student_fees
+        WHERE student_id = ? AND academic_year_id = ? AND semester = ? AND fee_type = 'Discount'
+        ORDER BY id ASC
+    ");
+    $disc_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $disc_stmt->execute();
+    $disc_result = $disc_stmt->get_result();
+    while ($row = $disc_result->fetch_assoc()) {
+        $amt = abs((float)$row['amount']);
+        $discounts[] = ['description' => $row['description'], 'amount' => $amt];
+        $total_discount += $amt;
+    }
+
+    // Get penalty entries
+    $pen_stmt = $conn->prepare("
+        SELECT fee_type, amount, description FROM student_fees
+        WHERE student_id = ? AND academic_year_id = ? AND semester = ? AND fee_type = 'Penalty'
+        ORDER BY id ASC
+    ");
+    $pen_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $pen_stmt->execute();
+    $pen_result = $pen_stmt->get_result();
+    while ($row = $pen_result->fetch_assoc()) {
+        $amt = (float)$row['amount'];
+        $penalties[] = ['description' => $row['description'], 'amount' => $amt];
+        $total_penalty += $amt;
+    }
+
+    return [
+        'discounts' => $discounts,
+        'penalties' => $penalties,
+        'total_discount' => round($total_discount, 2),
+        'total_penalty' => round($total_penalty, 2),
+    ];
 }
 
 function getLatestTermEnrollment($student_id) {
@@ -1053,6 +1184,7 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
         return 0;
     }
 
+    // Insert base tuition fee
     $description = "Auto-assessed tuition for {$semester} semester enrollment";
     $insert_fee = $conn->prepare("
         INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
@@ -1060,6 +1192,67 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     ");
     $insert_fee->bind_param("idissi", $student_id, $tuition_fee, $academic_year_id, $semester, $description, $recorded_by);
     $insert_fee->execute();
+
+    // Apply active discounts (today between start_date and end_date)
+    $today = date('Y-m-d');
+    $discount_stmt = $conn->prepare("
+        SELECT id, name, discount_type, value FROM tuition_discounts
+        WHERE is_active = 1 AND start_date <= ? AND end_date >= ?
+          AND (academic_year_id = ? OR academic_year_id IS NULL)
+        ORDER BY id ASC
+    ");
+    $discount_stmt->bind_param("ssi", $today, $today, $academic_year_id);
+    $discount_stmt->execute();
+    $discounts = $discount_stmt->get_result();
+
+    while ($disc = $discounts->fetch_assoc()) {
+        $discount_amount = 0;
+        if ($disc['discount_type'] === 'percentage') {
+            $discount_amount = round($tuition_fee * ($disc['value'] / 100), 2);
+        } else {
+            $discount_amount = round((float)$disc['value'], 2);
+        }
+        if ($discount_amount > 0) {
+            // Insert as negative amount (reduces total fees)
+            $neg_amount = -$discount_amount;
+            $disc_desc = "Discount: " . $disc['name'] . " (" . ($disc['discount_type'] === 'percentage' ? $disc['value'] . '%' : '₱' . number_format($disc['value'], 2)) . ")";
+            $disc_insert = $conn->prepare("
+                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
+                VALUES (?, 'Discount', ?, ?, ?, ?, ?, NOW())
+            ");
+            $disc_insert->bind_param("idissi", $student_id, $neg_amount, $academic_year_id, $semester, $disc_desc, $recorded_by);
+            $disc_insert->execute();
+        }
+    }
+
+    // Apply active penalties (today >= start_date)
+    $penalty_stmt = $conn->prepare("
+        SELECT id, name, penalty_type, value FROM tuition_penalties
+        WHERE is_active = 1 AND start_date <= ?
+          AND (academic_year_id = ? OR academic_year_id IS NULL)
+        ORDER BY id ASC
+    ");
+    $penalty_stmt->bind_param("si", $today, $academic_year_id);
+    $penalty_stmt->execute();
+    $penalties = $penalty_stmt->get_result();
+
+    while ($pen = $penalties->fetch_assoc()) {
+        $penalty_amount = 0;
+        if ($pen['penalty_type'] === 'percentage') {
+            $penalty_amount = round($tuition_fee * ($pen['value'] / 100), 2);
+        } else {
+            $penalty_amount = round((float)$pen['value'], 2);
+        }
+        if ($penalty_amount > 0) {
+            $pen_desc = "Penalty: " . $pen['name'] . " (" . ($pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2)) . ")";
+            $pen_insert = $conn->prepare("
+                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
+                VALUES (?, 'Penalty', ?, ?, ?, ?, ?, NOW())
+            ");
+            $pen_insert->bind_param("idissi", $student_id, $penalty_amount, $academic_year_id, $semester, $pen_desc, $recorded_by);
+            $pen_insert->execute();
+        }
+    }
 
     return $tuition_fee;
 }

@@ -55,63 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $current_ay = reset($current_ay);
         }
     }
-    
-    if ($action === 'promote_students') {
-        $from_ay_id = (int)$_POST['from_academic_year'];
-        $to_ay_id = (int)$_POST['to_academic_year'];
-        $program_id = !empty($_POST['program_id']) ? (int)$_POST['program_id'] : null;
-        $from_year_level = (int)$_POST['from_year_level'];
-        
-        $sql = "SELECT DISTINCT ss.student_id, sec.program_id, sec.year_level_id, sec.shs_strand_id, sec.shs_grade_level_id
-                FROM section_students ss
-                INNER JOIN sections sec ON ss.section_id = sec.id
-                WHERE sec.academic_year_id = ? AND sec.branch_id = ? AND ss.status = 'active'";
-        $params = [$from_ay_id, $branch_id];
-        $types = "ii";
-        if ($program_id) {
-            $sql .= " AND sec.program_id = ? AND sec.year_level_id = ?";
-            $params[] = $program_id; $params[] = $from_year_level; $types .= "ii";
-        }
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $students = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        
-        $promoted_count = 0;
-        foreach ($students as $student) {
-            if ($student['program_id']) {
-                $next_yl = $conn->prepare("SELECT id FROM program_year_levels WHERE program_id = ? AND year_level = (SELECT year_level + 1 FROM program_year_levels WHERE id = ?)");
-                $next_yl->bind_param("ii", $student['program_id'], $student['year_level_id']);
-                $next_yl->execute();
-                $next = $next_yl->get_result()->fetch_assoc();
-                $to_year_level_id = $next['id'] ?? null;
-                $promotion_type = $to_year_level_id ? 'promoted' : 'graduated';
-            } else {
-                $current_grade = $conn->query("SELECT grade_level FROM shs_grade_levels WHERE id = " . $student['shs_grade_level_id'])->fetch_assoc();
-                if ($current_grade && $current_grade['grade_level'] == 11) {
-                    $next = $conn->query("SELECT id FROM shs_grade_levels WHERE grade_level = 12")->fetch_assoc();
-                    $to_year_level_id = null; $to_shs_grade = $next['id'] ?? null; $promotion_type = 'promoted';
-                } else { $promotion_type = 'graduated'; $to_shs_grade = null; }
-            }
-            $log = $conn->prepare("INSERT INTO student_promotions (student_id, from_academic_year_id, to_academic_year_id, from_year_level_id, to_year_level_id, from_shs_grade_level_id, to_shs_grade_level_id, program_id, shs_strand_id, branch_id, promotion_type, promoted_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $to_yl = $to_year_level_id ?? null; $to_shs = $to_shs_grade ?? null; $promoted_by = $_SESSION['user_id'];
-            $log->bind_param("iiiiiiiiiisi", $student['student_id'], $from_ay_id, $to_ay_id, $student['year_level_id'], $to_yl, $student['shs_grade_level_id'], $to_shs, $student['program_id'], $student['shs_strand_id'], $branch_id, $promotion_type, $promoted_by);
-            $log->execute();
-            
-            // Mark previous term enrollments as completed
-            $update_term = $conn->prepare("UPDATE student_term_enrollments SET status = 'completed', updated_at = NOW() WHERE student_id = ? AND academic_year_id = ? AND status = 'enrolled'");
-            $update_term->bind_param("ii", $student['student_id'], $from_ay_id);
-            $update_term->execute();
-            
-            // Mark previous subject enrollments as completed
-            $update_subj = $conn->prepare("UPDATE student_subject_enrollments SET status = 'completed', updated_at = NOW() WHERE student_id = ? AND academic_year_id = ? AND status = 'enrolled'");
-            $update_subj->bind_param("ii", $student['student_id'], $from_ay_id);
-            $update_subj->execute();
-            
-            $promoted_count++;
-        }
-        $message = "$promoted_count students processed for promotion!";
-    }
 }
 
 $programs = $conn->query("SELECT DISTINCT p.* FROM programs p INNER JOIN sections s ON s.program_id = p.id WHERE s.branch_id = $branch_id")->fetch_all(MYSQLI_ASSOC);
@@ -135,7 +78,7 @@ include '../../includes/header.php';
             <h4 class="fw-bold mb-0" style="color: var(--blue);">
                 <i class="bi bi-calendar3-range me-2 text-maroon"></i>Academic Year Management
             </h4>
-            <p class="text-muted small mb-0">Control school cycles, timeline status, and student promotions.</p>
+            <p class="text-muted small mb-0">Control school cycles and timeline status.</p>
         </div>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 bg-transparent p-0">
@@ -253,94 +196,6 @@ include '../../includes/header.php';
         </div>
     </div>
 
-    <!-- 5. PROMOTION SECTION (Balanced Full Width) -->
-    <div class="content-card mb-5">
-        <div class="card-header-modern bg-white text-maroon" style="border-top: 3px solid var(--maroon);">
-            <i class="bi bi-arrow-up-circle me-2"></i>Student Progression & Promotion
-        </div>
-        <div class="card-body p-4">
-            <!-- Progression Tracker (Desktop Only) -->
-            <div class="d-none d-lg-flex align-items-center justify-content-between px-5 mb-5 mt-2">
-                <?php $levels = ["1st Year", "2nd Year", "3rd Year", "4th Year"]; 
-                foreach($levels as $index => $label): ?>
-                    <div class="promotion-step <?php echo ($index == 0) ? 'active' : ''; ?>">
-                        <div class="step-circle"><?php echo $index + 1; ?></div>
-                        <span class="step-label"><?php echo $label; ?></span>
-                    </div>
-                    <?php if($index < 3): ?>
-                        <div class="text-muted opacity-25"><i class="bi bi-chevron-right fs-4"></i></div>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-                <div class="text-muted opacity-25"><i class="bi bi-chevron-right fs-4"></i></div>
-                <div class="promotion-step graduate">
-                    <div class="step-circle"><i class="bi bi-mortarboard-fill"></i></div>
-                    <span class="step-label text-success fw-bold">Graduate</span>
-                </div>
-            </div>
-
-            <!-- Promotion Form -->
-            <form method="POST" id="promotionForm" class="bg-light p-4 rounded-4 border">
-                <input type="hidden" name="action" value="promote_students">
-                <div class="row g-3">
-                    <div class="col-lg-3 col-md-6">
-                        <label class="form-label-custom">Source Year</label>
-                        <select name="from_academic_year" class="form-select" required>
-                            <?php foreach ($academic_years as $ay): ?>
-                            <option value="<?php echo $ay['id']; ?>" <?php echo $ay['is_active'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($ay['year_name']); ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <label class="form-label-custom">Target Year</label>
-                        <select name="to_academic_year" class="form-select" required>
-                            <?php foreach ($academic_years as $ay): ?>
-                            <option value="<?php echo $ay['id']; ?>"><?php echo htmlspecialchars($ay['year_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <label class="form-label-custom">Academic Program</label>
-                        <select name="program_id" class="form-select">
-                            <option value="">All Programs</option>
-                            <?php foreach ($programs as $p): ?>
-                            <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['program_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <label class="form-label-custom">Promote From</label>
-                        <select name="from_year_level" class="form-select">
-                            <option value="">Select Level</option>
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3">3rd Year</option>
-                            <option value="4">4th Year</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mt-4 p-3 border-start border-4 border-warning bg-white rounded shadow-sm">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-shield-lock-fill text-warning fs-4 me-3"></i>
-                        <p class="mb-0 small text-muted">
-                            <strong>Security Note:</strong> Only students with "Cleared" status in the selected Source Year will be moved. This action is permanently logged.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="text-end mt-4">
-                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold me-2 mb-2 mb-sm-0" onclick="alert('Student preview functionality is being generated...')">
-                        <i class="bi bi-eye me-1"></i> PREVIEW
-                    </button>
-                    <button type="submit" class="btn btn-maroon px-5" onclick="return confirm('Promote students to the next year level? This process moves database records to the target period.')">
-                        <i class="bi bi-rocket-takeoff me-2"></i> PROCESS PROMOTION
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
 
 <?php include '../../includes/footer.php'; ?>

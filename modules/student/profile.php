@@ -89,6 +89,26 @@ $section_info = $conn->query("
     LIMIT 1
 ")->fetch_assoc();
 
+// Also check student_term_enrollments for the latest enrollment info (updated by registrar)
+$term_enrollment_info = null;
+$tbl_check = $conn->query("SHOW TABLES LIKE 'student_term_enrollments'");
+if ($tbl_check && $tbl_check->num_rows > 0) {
+    $term_enrollment_info = $conn->query("
+        SELECT ste.*,
+               CASE WHEN ste.program_type = 'college' THEN pyl.year_name ELSE sgl.grade_name END as year_level,
+               CASE WHEN ste.program_type = 'college' THEN p.program_name ELSE ss.strand_name END as program_name,
+               CASE WHEN ste.program_type = 'college' THEN p.program_code ELSE ss.strand_code END as program_code
+        FROM student_term_enrollments ste
+        LEFT JOIN program_year_levels pyl ON ste.year_level_id = pyl.id
+        LEFT JOIN shs_grade_levels sgl ON ste.year_level_id = sgl.id
+        LEFT JOIN programs p ON ste.program_id = p.id AND ste.program_type = 'college'
+        LEFT JOIN shs_strands ss ON ste.program_id = ss.id AND ste.program_type = 'shs'
+        WHERE ste.student_id = $student_id AND ste.academic_year_id = " . ($current_ay['id'] ?? 0) . "
+        ORDER BY FIELD(ste.semester, 'summer', '2nd', '1st') DESC
+        LIMIT 1
+    ")->fetch_assoc();
+}
+
 include '../../includes/header.php';
 ?>
 
@@ -143,8 +163,8 @@ include '../../includes/header.php';
                     <div class="d-grid gap-2 text-start mt-4">
                         <div class="p-3 rounded-3 bg-light border">
                             <label class="text-muted small text-uppercase fw-bold d-block mb-1" style="font-size: 0.6rem;">Current Standing</label>
-                            <div class="fw-bold text-blue"><?php echo htmlspecialchars($section_info['section_name'] ?? 'No Section'); ?></div>
-                            <small class="text-muted"><?php echo htmlspecialchars($section_info['program_name'] ?? ''); ?></small>
+                            <div class="fw-bold text-blue"><?php echo htmlspecialchars($term_enrollment_info['year_level'] ?? $section_info['year_level'] ?? $section_info['section_name'] ?? 'No Section'); ?></div>
+                            <small class="text-muted"><?php echo htmlspecialchars($term_enrollment_info['program_name'] ?? $section_info['program_name'] ?? ''); ?></small>
                         </div>
                         <div class="p-3 rounded-3 bg-light border">
                             <label class="text-muted small text-uppercase fw-bold d-block mb-1" style="font-size: 0.6rem;">Institution</label>
@@ -239,23 +259,19 @@ include '../../includes/header.php';
                         <div class="col-6 col-md-3">
                             <div class="academic-info-box">
                                 <label class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Enrolled Program</label>
-                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($user_info['program_code'] ?? 'N/A'); ?></div>
+                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($term_enrollment_info['program_code'] ?? $user_info['program_code'] ?? 'N/A'); ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="academic-info-box">
                                 <label class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Year Level</label>
-                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($section_info['year_level'] ?? 'N/A'); ?></div>
+                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($term_enrollment_info['year_level'] ?? $section_info['year_level'] ?? 'N/A'); ?></div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="academic-info-box">
-                                <label class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Account Status</label>
-                                <div>
-                                    <span class="badge rounded-pill bg-<?php echo ($user_info['status'] ?? 'active') == 'active' ? 'success' : 'secondary'; ?> px-3">
-                                        <?php echo strtoupper($user_info['status'] ?? 'active'); ?>
-                                    </span>
-                                </div>
+                                <label class="small text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">Semester</label>
+                                <div class="fw-bold text-dark"><?php echo ucfirst($term_enrollment_info['semester'] ?? $section_info['semester'] ?? 'N/A'); ?></div>
                             </div>
                         </div>
                     </div>

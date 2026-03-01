@@ -45,6 +45,26 @@ $section_info = $conn->query("
     LIMIT 1
 ")->fetch_assoc();
 
+// Also get term enrollment info (updated by registrar on enrollment/advancement)
+$dash_term_enrollment = null;
+$tbl_check = $conn->query("SHOW TABLES LIKE 'student_term_enrollments'");
+if ($tbl_check && $tbl_check->num_rows > 0) {
+    $dash_term_enrollment = $conn->query("
+        SELECT ste.*,
+               CASE WHEN ste.program_type = 'college' THEN pyl.year_name ELSE sgl.grade_name END as year_level,
+               CASE WHEN ste.program_type = 'college' THEN p.program_name ELSE ss.strand_name END as program_name,
+               CASE WHEN ste.program_type = 'college' THEN p.program_code ELSE ss.strand_code END as program_code
+        FROM student_term_enrollments ste
+        LEFT JOIN program_year_levels pyl ON ste.year_level_id = pyl.id
+        LEFT JOIN shs_grade_levels sgl ON ste.year_level_id = sgl.id
+        LEFT JOIN programs p ON ste.program_id = p.id AND ste.program_type = 'college'
+        LEFT JOIN shs_strands ss ON ste.program_id = ss.id AND ste.program_type = 'shs'
+        WHERE ste.student_id = $student_id AND ste.academic_year_id = $current_ay_id
+        ORDER BY FIELD(ste.semester, 'summer', '2nd', '1st') DESC
+        LIMIT 1
+    ")->fetch_assoc();
+}
+
 $section_id = $section_info['id'] ?? 0;
 $subjects = [];
 if ($section_id > 0) {
@@ -128,12 +148,21 @@ include '../../includes/header.php';
                 <h2 class="fw-bold mb-1 text-white">Hello, <?php echo htmlspecialchars(explode(' ', $_SESSION['name'])[0]); ?>!</h2>
                 <?php if ($section_info): ?>
                     <p class="mb-0 opacity-75 fw-semibold">
-                        <?php echo htmlspecialchars($section_info['program_code'] . ' - ' . $section_info['section_name']); ?>
+                        <?php echo htmlspecialchars(($dash_term_enrollment['program_code'] ?? $section_info['program_code']) . ' - ' . $section_info['section_name']); ?>
+                        <?php if ($dash_term_enrollment): ?>
+                            <span class="ms-2 opacity-50"><?php echo htmlspecialchars($dash_term_enrollment['year_level'] ?? ''); ?> &middot; <?php echo ucfirst($dash_term_enrollment['semester'] ?? ''); ?> Sem</span>
+                        <?php endif; ?>
                     </p>
                     <div class="mt-2 d-flex gap-3 small opacity-50">
                         <span><i class="bi bi-geo-alt me-1"></i><?php echo htmlspecialchars($section_info['branch_name'] ?? 'Main'); ?></span>
                         <span><i class="bi bi-calendar3 me-1"></i><?php echo htmlspecialchars($current_ay['year_name'] ?? 'Current AY'); ?></span>
                     </div>
+                <?php elseif ($dash_term_enrollment): ?>
+                    <p class="mb-0 opacity-75 fw-semibold">
+                        <?php echo htmlspecialchars($dash_term_enrollment['program_code'] . ' - ' . $dash_term_enrollment['year_level']); ?>
+                        <span class="ms-2 opacity-50"><?php echo ucfirst($dash_term_enrollment['semester']); ?> Sem</span>
+                    </p>
+                    <div class="mt-2 small opacity-50"><i class="bi bi-info-circle me-1"></i>Section assignment pending</div>
                 <?php else: ?>
                     <p class="mb-0 opacity-75"><i class="bi bi-exclamation-circle me-2"></i>Status: Enrollment Pending Section Assignment</p>
                 <?php endif; ?>

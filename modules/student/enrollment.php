@@ -16,7 +16,7 @@ $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_ac
 $current_ay_id = $current_ay['id'] ?? 0;
 
 $student = $conn->query("
-    SELECT s.student_no, up.*, u.email,
+    SELECT s.student_no, s.student_type, s.previous_school, up.*, u.email,
            p.program_name, p.program_code,
            ss.strand_name, ss.strand_code
     FROM students s
@@ -26,6 +26,28 @@ $student = $conn->query("
     LEFT JOIN shs_strands ss ON s.course_id = ss.id
     WHERE s.user_id = $student_id
 ")->fetch_assoc();
+
+// Get the latest term enrollment from the registrar's enrollment system
+$term_enrollment = null;
+$tbl_check = $conn->query("SHOW TABLES LIKE 'student_term_enrollments'");
+if ($tbl_check && $tbl_check->num_rows > 0) {
+    $term_enrollment = $conn->query("
+        SELECT ste.*,
+               CASE WHEN ste.program_type = 'college' THEN pyl.year_name ELSE sgl.grade_name END as year_level,
+               CASE WHEN ste.program_type = 'college' THEN p.program_name ELSE ss.strand_name END as program_name,
+               CASE WHEN ste.program_type = 'college' THEN p.program_code ELSE ss.strand_code END as program_code,
+               ay.year_name as ay_name
+        FROM student_term_enrollments ste
+        LEFT JOIN program_year_levels pyl ON ste.year_level_id = pyl.id
+        LEFT JOIN shs_grade_levels sgl ON ste.year_level_id = sgl.id
+        LEFT JOIN programs p ON ste.program_id = p.id AND ste.program_type = 'college'
+        LEFT JOIN shs_strands ss ON ste.program_id = ss.id AND ste.program_type = 'shs'
+        LEFT JOIN academic_years ay ON ste.academic_year_id = ay.id
+        WHERE ste.student_id = $student_id AND ste.academic_year_id = $current_ay_id
+        ORDER BY FIELD(ste.semester, 'summer', '2nd', '1st') DESC
+        LIMIT 1
+    ")->fetch_assoc();
+}
 
 $enrollment = $conn->query("
     SELECT sst.*, sec.section_name, sec.semester,
@@ -150,15 +172,15 @@ include '../../includes/header.php';
                         </div>
                         <div class="col-md-6">
                             <label class="info-label">Year Level / Grade</label>
-                            <div class="info-value"><?php echo htmlspecialchars($enrollment['year_level']); ?></div>
+                            <div class="info-value"><?php echo htmlspecialchars($term_enrollment['year_level'] ?? $enrollment['year_level']); ?></div>
                         </div>
                         <div class="col-md-6">
                             <label class="info-label">Current Semester</label>
-                            <div class="info-value"><?php echo ucfirst($enrollment['semester'] ?? 'N/A'); ?> Term</div>
+                            <div class="info-value"><?php echo ucfirst($term_enrollment['semester'] ?? $enrollment['semester'] ?? 'N/A'); ?> Term</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="info-label">School Branch</label>
-                            <div class="info-value"><?php echo htmlspecialchars($enrollment['branch_name'] ?? 'Main Campus'); ?></div>
+                            <label class="info-label">Student Type</label>
+                            <div><span class="badge bg-<?php echo ($term_enrollment['student_type'] ?? $student['student_type'] ?? 'regular') === 'transferee' ? 'warning text-dark' : (($term_enrollment['student_type'] ?? $student['student_type'] ?? 'regular') === 'irregular' ? 'info' : 'secondary'); ?> px-3 py-2 rounded-pill"><?php echo strtoupper($term_enrollment['student_type'] ?? $student['student_type'] ?? 'Regular'); ?></span></div>
                         </div>
                         <div class="col-md-6">
                             <label class="info-label">Registration Status</label>
@@ -168,6 +190,53 @@ include '../../includes/header.php';
                             <label class="info-label">Validation Date</label>
                             <div class="info-value text-muted small"><i class="bi bi-calendar-check me-2"></i><?php echo date('F d, Y', strtotime($enrollment['enrolled_at'])); ?></div>
                         </div>
+                    </div>
+
+                <?php elseif ($term_enrollment): ?>
+                    <div class="status-ribbon bg-primary shadow-sm">PROGRAM ENROLLED</div>
+                    
+                    <div class="d-flex align-items-center mb-5">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-mortarboard fs-1"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0 text-primary">Program Enrollment Active</h4>
+                            <p class="text-muted small mb-0">Enrolled for <?php echo htmlspecialchars($term_enrollment['ay_name'] ?? $current_ay['year_name']); ?></p>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-2">
+                        <div class="col-md-6">
+                            <label class="info-label">Program</label>
+                            <div class="info-value fw-bold" style="color: var(--maroon);"><?php echo htmlspecialchars(($term_enrollment['program_code'] ?? '') . ' - ' . ($term_enrollment['program_name'] ?? '')); ?></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="info-label">Year Level / Grade</label>
+                            <div class="info-value"><?php echo htmlspecialchars($term_enrollment['year_level'] ?? 'N/A'); ?></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="info-label">Current Semester</label>
+                            <div class="info-value"><?php echo ucfirst($term_enrollment['semester']); ?> Term</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="info-label">Student Type</label>
+                            <div><span class="badge bg-<?php echo $term_enrollment['student_type'] === 'transferee' ? 'warning text-dark' : ($term_enrollment['student_type'] === 'irregular' ? 'info' : 'secondary'); ?> px-3 py-2 rounded-pill"><?php echo strtoupper($term_enrollment['student_type']); ?></span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="info-label">Assigned Section</label>
+                            <div class="info-value text-muted">
+                                <i class="bi bi-hourglass-split me-1 text-warning"></i> Pending assignment by Registrar
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="info-label">Enrollment Status</label>
+                            <div><span class="badge bg-<?php echo $term_enrollment['status'] === 'enrolled' ? 'success' : ($term_enrollment['status'] === 'completed' ? 'secondary' : 'danger'); ?> px-4 py-2 rounded-pill"><?php echo strtoupper($term_enrollment['status']); ?></span></div>
+                        </div>
+                    </div>
+
+                    <div class="alert bg-light border-0 mt-3 small">
+                        <i class="bi bi-info-circle me-2 text-blue"></i>
+                        Your program enrollment is confirmed. The Registrar will assign you to a section shortly.
                     </div>
                 <?php else: ?>
                     <div class="text-center py-5">
