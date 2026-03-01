@@ -37,6 +37,9 @@ function addTuitionFee() {
     $year_level_id = !empty($_POST['year_level_id']) ? (int)$_POST['year_level_id'] : null;
     $semester = $conn->real_escape_string($_POST['semester']);
     $tuition_fee = floatval($_POST['tuition_fee']);
+    $misc_fee = floatval($_POST['misc_fee'] ?? 0);
+    $lab_fee = floatval($_POST['lab_fee'] ?? 0);
+    $other_fees = floatval($_POST['other_fees'] ?? 0);
     
     // Get current academic year
     $ay_result = $conn->query("SELECT id FROM academic_years WHERE is_active = 1 LIMIT 1");
@@ -66,24 +69,11 @@ function addTuitionFee() {
         return;
     }
     
-    // Insert with simplified fields
-    if ($year_level_id && $academic_year_id) {
-        $sql = "INSERT INTO program_tuition_fees (program_id, program_type, year_level_id, semester, tuition_fee, academic_year_id, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("isisdi", $program_id, $program_type, $year_level_id, $semester, $tuition_fee, $academic_year_id);
-    } else if ($year_level_id) {
-        $sql = "INSERT INTO program_tuition_fees (program_id, program_type, year_level_id, semester, tuition_fee, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("isisd", $program_id, $program_type, $year_level_id, $semester, $tuition_fee);
-    } else if ($academic_year_id) {
-        $sql = "INSERT INTO program_tuition_fees (program_id, program_type, semester, tuition_fee, academic_year_id, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("issdi", $program_id, $program_type, $semester, $tuition_fee, $academic_year_id);
-    } else {
-        $sql = "INSERT INTO program_tuition_fees (program_id, program_type, semester, tuition_fee, is_active, created_at) VALUES (?, ?, ?, ?, 1, NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("issd", $program_id, $program_type, $semester, $tuition_fee);
-    }
+    // Insert with all fee fields
+    $sql = "INSERT INTO program_tuition_fees (program_id, program_type, year_level_id, semester, tuition_fee, misc_fee, lab_fee, other_fees, academic_year_id, is_active, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("isisddddi", $program_id, $program_type, $year_level_id, $semester, $tuition_fee, $misc_fee, $lab_fee, $other_fees, $academic_year_id);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Tuition fee added successfully']);
@@ -118,6 +108,9 @@ function updateTuitionFee() {
     $year_level_id = !empty($_POST['year_level_id']) ? (int)$_POST['year_level_id'] : null;
     $semester = $conn->real_escape_string($_POST['semester']);
     $tuition_fee = floatval($_POST['tuition_fee']);
+    $misc_fee = floatval($_POST['misc_fee'] ?? 0);
+    $lab_fee = floatval($_POST['lab_fee'] ?? 0);
+    $other_fees = floatval($_POST['other_fees'] ?? 0);
     
     // Check for duplicate (excluding current record)
     $check_sql = "SELECT id FROM program_tuition_fees WHERE program_id = ? AND program_type = ? AND semester = ? AND id != ?";
@@ -142,16 +135,10 @@ function updateTuitionFee() {
         return;
     }
     
-    // Update with simplified fields
-    if ($year_level_id) {
-        $sql = "UPDATE program_tuition_fees SET program_id = ?, program_type = ?, year_level_id = ?, semester = ?, tuition_fee = ? WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("isisdi", $program_id, $program_type, $year_level_id, $semester, $tuition_fee, $id);
-    } else {
-        $sql = "UPDATE program_tuition_fees SET program_id = ?, program_type = ?, year_level_id = NULL, semester = ?, tuition_fee = ? WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("issdi", $program_id, $program_type, $semester, $tuition_fee, $id);
-    }
+    // Update with all fee fields
+    $sql = "UPDATE program_tuition_fees SET program_id = ?, program_type = ?, year_level_id = ?, semester = ?, tuition_fee = ?, misc_fee = ?, lab_fee = ?, other_fees = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("isisddddi", $program_id, $program_type, $year_level_id, $semester, $tuition_fee, $misc_fee, $lab_fee, $other_fees, $id);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Tuition fee updated successfully']);

@@ -51,10 +51,11 @@ $current_ay_id = $current_ay['id'] ?? 0;
 // Fetch existing tuition fees
 $tuition_fees_query = "
     SELECT ptf.*,
-           COALESCE(ptf.program_type, 'college') as program_type,
+           COALESCE(ptf.program_type, 'college') as ptype,
            COALESCE(p.program_code, ss.strand_code) as program_code,
            COALESCE(p.program_name, ss.strand_name) as program_name,
-           COALESCE(pyl.year_name, sgl.grade_name) as year_name
+           COALESCE(pyl.year_name, sgl.grade_name) as year_name,
+           COALESCE(pyl.year_level, sgl.grade_level, 0) as year_sort
     FROM program_tuition_fees ptf
     LEFT JOIN programs p ON ptf.program_id = p.id AND COALESCE(ptf.program_type, 'college') = 'college'
     LEFT JOIN shs_strands ss ON ptf.program_id = ss.id AND ptf.program_type = 'shs'
@@ -64,6 +65,57 @@ $tuition_fees_query = "
     ORDER BY ptf.program_type, COALESCE(p.program_code, ss.strand_code), COALESCE(pyl.year_level, sgl.grade_level), ptf.semester
 ";
 $tuition_fees_result = $conn->query($tuition_fees_query);
+
+// Organize fees by program → year_level → semester
+$fees_by_program = [];
+if ($tuition_fees_result && $tuition_fees_result->num_rows > 0) {
+    while ($fee = $tuition_fees_result->fetch_assoc()) {
+        $key = $fee['ptype'] . '_' . $fee['program_id'];
+        if (!isset($fees_by_program[$key])) {
+            $fees_by_program[$key] = [
+                'program_id' => $fee['program_id'],
+                'program_type' => $fee['ptype'],
+                'program_code' => $fee['program_code'],
+                'program_name' => $fee['program_name'],
+                'fees' => [],
+                'total_configured' => 0,
+            ];
+        }
+        $year_key = $fee['year_level_id'] ?: 'all';
+        $year_name = $fee['year_name'] ?: 'All Year Levels';
+        if (!isset($fees_by_program[$key]['fees'][$year_key])) {
+            $fees_by_program[$key]['fees'][$year_key] = [
+                'year_name' => $year_name,
+                'year_sort' => $fee['year_sort'],
+                'semesters' => [],
+            ];
+        }
+        $fees_by_program[$key]['fees'][$year_key]['semesters'][$fee['semester']] = $fee;
+        $fees_by_program[$key]['total_configured']++;
+    }
+    // Sort year levels within each program
+    foreach ($fees_by_program as &$prog) {
+        uasort($prog['fees'], fn($a, $b) => $a['year_sort'] <=> $b['year_sort']);
+    }
+    unset($prog);
+}
+
+// Programs/strands that have NO fees configured yet
+$unconfigured_programs = [];
+$programs_result->data_seek(0);
+while ($p = $programs_result->fetch_assoc()) {
+    $key = 'college_' . $p['id'];
+    if (!isset($fees_by_program[$key])) {
+        $unconfigured_programs[] = ['id' => $p['id'], 'type' => 'college', 'code' => $p['program_code'], 'name' => $p['program_name']];
+    }
+}
+$shs_strands_result->data_seek(0);
+while ($s = $shs_strands_result->fetch_assoc()) {
+    $key = 'shs_' . $s['id'];
+    if (!isset($fees_by_program[$key])) {
+        $unconfigured_programs[] = ['id' => $s['id'], 'type' => 'shs', 'code' => $s['strand_code'], 'name' => $s['strand_name']];
+    }
+}
 
 include '../../includes/header.php';
 ?>
@@ -104,6 +156,140 @@ include '../../includes/header.php';
         font-size: 1.5rem;
         font-weight: 700;
         color: var(--maroon);
+    }
+
+    .program-card {
+        background: white;
+        border-radius: 18px;
+        border: 1px solid #e8e8e8;
+        overflow: hidden;
+        margin-bottom: 25px;
+        transition: 0.3s;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .program-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+    .program-card-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .program-card-header .program-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .program-card-header .program-badge .icon-circle {
+        width: 46px; height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        flex-shrink: 0;
+    }
+    .program-card-header .program-meta h5 { margin: 0; font-weight: 700; font-size: 1rem; color: #1a1a2e; }
+    .program-card-header .program-meta small { color: #888; font-size: 0.78rem; }
+
+    .year-accordion .year-header {
+        padding: 12px 25px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+        transition: 0.2s;
+    }
+    .year-accordion .year-header:hover { background: #eef1f5; }
+    .year-accordion .year-header .year-label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--blue);
+    }
+    .year-accordion .year-header .chevron {
+        transition: transform 0.3s;
+        font-size: 0.9rem;
+        color: #aaa;
+    }
+    .year-accordion .year-header.collapsed .chevron { transform: rotate(-90deg); }
+
+    .semester-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 15px;
+        padding: 20px 25px;
+    }
+    .semester-card {
+        background: #fafbfc;
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        padding: 18px;
+        position: relative;
+    }
+    .semester-card .sem-label {
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #555;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .semester-card .fee-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 0.83rem;
+    }
+    .semester-card .fee-row .fee-label { color: #666; }
+    .semester-card .fee-row .fee-value { font-weight: 600; color: #333; }
+    .semester-card .fee-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 2px solid var(--maroon);
+        padding-top: 10px;
+        margin-top: 8px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: var(--maroon);
+    }
+
+    .empty-year {
+        padding: 25px;
+        text-align: center;
+        color: #aaa;
+        font-size: 0.85rem;
+    }
+
+    .unconfigured-card {
+        background: white;
+        border: 2px dashed #ddd;
+        border-radius: 18px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+    .unconfigured-card:hover { border-color: var(--maroon); background: #fdf5f5; }
+
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
     }
 </style>
 
@@ -169,57 +355,152 @@ include '../../includes/header.php';
         <span class="ms-3 text-muted small">| Tuition fees configured below will apply to this academic year</span>
     </div>
 
-    <!-- Tuition Fees Table -->
-    <div class="main-card-modern animate__animated animate__fadeInUp">
-        <div class="p-3 bg-light border-bottom">
-            <h6 class="mb-0 fw-bold text-uppercase small text-muted"><i class="bi bi-list-ul me-2"></i>Configured Tuition Fees</h6>
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="main-card-modern p-3 text-center">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Programs Configured</div>
+                <div class="fs-3 fw-bold" style="color: var(--blue);"><?php echo count($fees_by_program); ?></div>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover table-modern align-middle mb-0" id="tuitionTable">
-                <thead>
-                    <tr>
-                        <th class="ps-4">Program</th>
-                        <th>Type</th>
-                        <th>Year Level</th>
-                        <th>Semester</th>
-                        <th class="text-end">Tuition Fee</th>
-                        <th class="text-center pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($tuition_fees_result && $tuition_fees_result->num_rows > 0): ?>
-                        <?php while ($fee = $tuition_fees_result->fetch_assoc()): ?>
-                        <tr data-id="<?php echo $fee['id']; ?>">
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($fee['program_code']); ?></div>
-                                <small class="text-muted"><?php echo htmlspecialchars($fee['program_name']); ?></small>
-                            </td>
-                            <td><span class="badge bg-<?php echo ($fee['program_type'] ?? 'college') === 'shs' ? 'success' : 'primary'; ?> bg-opacity-75"><?php echo strtoupper($fee['program_type'] ?? 'college'); ?></span></td>
-                            <td><?php echo htmlspecialchars($fee['year_name'] ?? 'All'); ?></td>
-                            <td><span class="badge bg-primary bg-opacity-10 text-primary"><?php echo $fee['semester']; ?> Sem</span></td>
-                            <td class="text-end fw-bold text-maroon">₱<?php echo number_format($fee['tuition_fee'], 2); ?></td>
-                            <td class="text-center pe-4">
-                                <button class="btn btn-sm btn-warning" onclick="editTuition(<?php echo $fee['id']; ?>)" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteTuition(<?php echo $fee['id']; ?>)" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
-                                No tuition fees configured yet. Click "Add Tuition Fee" to get started.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+        <div class="col-md-3">
+            <div class="main-card-modern p-3 text-center">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Total Fee Entries</div>
+                <div class="fs-3 fw-bold" style="color: var(--maroon);"><?php echo array_sum(array_column($fees_by_program, 'total_configured')); ?></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="main-card-modern p-3 text-center">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Unconfigured</div>
+                <div class="fs-3 fw-bold text-warning"><?php echo count($unconfigured_programs); ?></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="main-card-modern p-3 text-center">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Program Types</div>
+                <div class="fs-5 fw-bold">
+                    <?php
+                    $college_cnt = 0; $shs_cnt = 0;
+                    foreach ($fees_by_program as $fp) { if ($fp['program_type'] === 'college') $college_cnt++; else $shs_cnt++; }
+                    ?>
+                    <span class="badge bg-primary bg-opacity-75 me-1"><?php echo $college_cnt; ?> College</span>
+                    <span class="badge bg-success bg-opacity-75"><?php echo $shs_cnt; ?> SHS</span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Program Cards -->
+    <?php if (!empty($fees_by_program)): ?>
+        <?php foreach ($fees_by_program as $prog_key => $prog): ?>
+        <div class="program-card animate__animated animate__fadeInUp">
+            <!-- Card Header -->
+            <div class="program-card-header">
+                <div class="program-badge">
+                    <div class="icon-circle" style="background: <?php echo $prog['program_type'] === 'shs' ? '#198754' : 'var(--blue)'; ?>;">
+                        <i class="bi bi-<?php echo $prog['program_type'] === 'shs' ? 'book' : 'mortarboard-fill'; ?>"></i>
+                    </div>
+                    <div class="program-meta">
+                        <h5><?php echo htmlspecialchars($prog['program_code']); ?></h5>
+                        <small><?php echo htmlspecialchars($prog['program_name']); ?></small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="stat-pill bg-<?php echo $prog['program_type'] === 'shs' ? 'success' : 'primary'; ?> bg-opacity-10 text-<?php echo $prog['program_type'] === 'shs' ? 'success' : 'primary'; ?>">
+                        <?php echo strtoupper($prog['program_type']); ?>
+                    </span>
+                    <span class="stat-pill bg-secondary bg-opacity-10 text-secondary">
+                        <i class="bi bi-grid-3x3-gap-fill"></i> <?php echo $prog['total_configured']; ?> fee(s)
+                    </span>
+                    <button class="btn btn-sm btn-outline-primary" onclick="openAddForProgram('<?php echo $prog['program_type']; ?>', <?php echo $prog['program_id']; ?>)" title="Add fee for this program">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Year Level Accordion -->
+            <div class="year-accordion">
+                <?php foreach ($prog['fees'] as $year_key => $year_data): ?>
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear(this)" data-year="<?php echo $prog_key . '_' . $year_key; ?>">
+                        <span class="year-label">
+                            <i class="bi bi-mortarboard me-2"></i><?php echo htmlspecialchars($year_data['year_name']); ?>
+                            <span class="ms-2 text-muted small">(<?php echo count($year_data['semesters']); ?> semester<?php echo count($year_data['semesters']) > 1 ? 's' : ''; ?>)</span>
+                        </span>
+                        <i class="bi bi-chevron-down chevron"></i>
+                    </div>
+                    <div class="year-body">
+                        <div class="semester-grid">
+                            <?php
+                            $sem_order = ['1st', '2nd', 'summer'];
+                            foreach ($sem_order as $sem):
+                                if (!isset($year_data['semesters'][$sem])) continue;
+                                $sf = $year_data['semesters'][$sem];
+                            ?>
+                            <div class="semester-card">
+                                <div class="sem-label">
+                                    <span><i class="bi bi-calendar3 me-1"></i><?php echo $sem === 'summer' ? 'Summer Term' : $sem . ' Semester'; ?></span>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-warning border-0 p-1" onclick="editTuition(<?php echo $sf['id']; ?>)" title="Edit"><i class="bi bi-pencil-fill" style="font-size:0.7rem;"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteTuition(<?php echo $sf['id']; ?>)" title="Delete"><i class="bi bi-trash-fill" style="font-size:0.7rem;"></i></button>
+                                    </div>
+                                </div>
+                                <div class="fee-row">
+                                    <span class="fee-label">Tuition Fee</span>
+                                    <span class="fee-value">₱<?php echo number_format($sf['tuition_fee'], 2); ?></span>
+                                </div>
+                                <div class="fee-row">
+                                    <span class="fee-label">Miscellaneous Fee</span>
+                                    <span class="fee-value">₱<?php echo number_format($sf['misc_fee'] ?? 0, 2); ?></span>
+                                </div>
+                                <div class="fee-row">
+                                    <span class="fee-label">Laboratory Fee</span>
+                                    <span class="fee-value">₱<?php echo number_format($sf['lab_fee'] ?? 0, 2); ?></span>
+                                </div>
+                                <div class="fee-row">
+                                    <span class="fee-label">Other Fees</span>
+                                    <span class="fee-value">₱<?php echo number_format($sf['other_fees'] ?? 0, 2); ?></span>
+                                </div>
+                                <div class="fee-total">
+                                    <span>Total</span>
+                                    <span>₱<?php echo number_format($sf['total_fee'] ?? ($sf['tuition_fee'] + ($sf['misc_fee'] ?? 0) + ($sf['lab_fee'] ?? 0) + ($sf['other_fees'] ?? 0)), 2); ?></span>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <!-- Unconfigured Programs -->
+    <?php if (!empty($unconfigured_programs)): ?>
+    <h6 class="fw-bold text-muted text-uppercase small mt-4 mb-3"><i class="bi bi-exclamation-circle me-1"></i>Programs Without Tuition Fees</h6>
+    <div class="row g-3">
+        <?php foreach ($unconfigured_programs as $up): ?>
+        <div class="col-md-4">
+            <div class="unconfigured-card">
+                <i class="bi bi-<?php echo $up['type'] === 'shs' ? 'book' : 'mortarboard'; ?> fs-2 d-block mb-2 text-muted opacity-50"></i>
+                <div class="fw-bold"><?php echo htmlspecialchars($up['code']); ?></div>
+                <small class="text-muted d-block mb-3"><?php echo htmlspecialchars($up['name']); ?></small>
+                <button class="btn btn-sm btn-maroon-pill" onclick="openAddForProgram('<?php echo $up['type']; ?>', <?php echo $up['id']; ?>)">
+                    <i class="bi bi-plus-circle me-1"></i>Configure Fees
+                </button>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if (empty($fees_by_program) && empty($unconfigured_programs)): ?>
+    <div class="main-card-modern p-5 text-center">
+        <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+        <p class="text-muted">No programs found. Add programs first before configuring tuition fees.</p>
+    </div>
+    <?php endif; ?>
 
     </div><!-- /tuitionPane -->
 
@@ -417,9 +698,30 @@ include '../../includes/header.php';
                         </select>
                     </div>
                     <hr>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tuition Fee (₱) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control form-control-lg" name="tuition_fee" step="0.01" required placeholder="Enter tuition fee amount">
+                    <h6 class="fw-bold small text-uppercase text-muted mb-3"><i class="bi bi-cash-stack me-1"></i>Fee Breakdown</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Tuition Fee (₱) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="tuition_fee" step="0.01" min="0" required placeholder="0.00" oninput="calcAddTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Miscellaneous Fee (₱)</label>
+                            <input type="number" class="form-control" name="misc_fee" step="0.01" min="0" value="0" placeholder="0.00" oninput="calcAddTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Laboratory Fee (₱)</label>
+                            <input type="number" class="form-control" name="lab_fee" step="0.01" min="0" value="0" placeholder="0.00" oninput="calcAddTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Other Fees (₱)</label>
+                            <input type="number" class="form-control" name="other_fees" step="0.01" min="0" value="0" placeholder="0.00" oninput="calcAddTotal()">
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 rounded-3" style="background: #f0e6e6;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="color: var(--maroon);"><i class="bi bi-calculator me-1"></i>Total Fee</span>
+                            <span class="fs-4 fw-bold" style="color: var(--maroon);" id="addTotalDisplay">₱0.00</span>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4">
@@ -475,9 +777,30 @@ include '../../includes/header.php';
                         </select>
                     </div>
                     <hr>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tuition Fee (₱) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control form-control-lg" name="tuition_fee" id="edit_tuition_fee" step="0.01" required placeholder="Enter tuition fee amount">
+                    <h6 class="fw-bold small text-uppercase text-muted mb-3"><i class="bi bi-cash-stack me-1"></i>Fee Breakdown</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Tuition Fee (₱) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="tuition_fee" id="edit_tuition_fee" step="0.01" min="0" required placeholder="0.00" oninput="calcEditTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Miscellaneous Fee (₱)</label>
+                            <input type="number" class="form-control" name="misc_fee" id="edit_misc_fee" step="0.01" min="0" value="0" placeholder="0.00" oninput="calcEditTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Laboratory Fee (₱)</label>
+                            <input type="number" class="form-control" name="lab_fee" id="edit_lab_fee" step="0.01" min="0" value="0" placeholder="0.00" oninput="calcEditTotal()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Other Fees (₱)</label>
+                            <input type="number" class="form-control" name="other_fees" id="edit_other_fees" step="0.01" min="0" value="0" placeholder="0.00" oninput="calcEditTotal()">
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 rounded-3" style="background: #f0e6e6;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="color: var(--maroon);"><i class="bi bi-calculator me-1"></i>Total Fee</span>
+                            <span class="fs-4 fw-bold" style="color: var(--maroon);" id="editTotalDisplay">₱0.00</span>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4">
@@ -739,6 +1062,47 @@ function loadYearLevels(programId, selectId) {
     }
 }
 
+// Year-level accordion toggle
+function toggleYear(el) {
+    el.classList.toggle('collapsed');
+    const body = el.nextElementSibling;
+    if (body.style.display === 'none') {
+        body.style.display = '';
+    } else {
+        body.style.display = 'none';
+    }
+}
+
+// Open Add modal pre-filled for a specific program
+function openAddForProgram(type, programId) {
+    document.getElementById('add_program_type').value = type;
+    switchProgramType('add');
+    setTimeout(() => {
+        document.getElementById('add_program_id').value = programId;
+        loadYearLevelsForType('add');
+    }, 50);
+    new bootstrap.Modal(document.getElementById('addTuitionModal')).show();
+}
+
+// Calculate total for Add form
+function calcAddTotal() {
+    const form = document.getElementById('addTuitionForm');
+    const t = parseFloat(form.querySelector('[name="tuition_fee"]').value) || 0;
+    const m = parseFloat(form.querySelector('[name="misc_fee"]').value) || 0;
+    const l = parseFloat(form.querySelector('[name="lab_fee"]').value) || 0;
+    const o = parseFloat(form.querySelector('[name="other_fees"]').value) || 0;
+    document.getElementById('addTotalDisplay').textContent = '₱' + (t + m + l + o).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+// Calculate total for Edit form
+function calcEditTotal() {
+    const t = parseFloat(document.getElementById('edit_tuition_fee').value) || 0;
+    const m = parseFloat(document.getElementById('edit_misc_fee').value) || 0;
+    const l = parseFloat(document.getElementById('edit_lab_fee').value) || 0;
+    const o = parseFloat(document.getElementById('edit_other_fees').value) || 0;
+    document.getElementById('editTotalDisplay').textContent = '₱' + (t + m + l + o).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
 // Add Tuition Form
 document.getElementById('addTuitionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -793,6 +1157,10 @@ async function editTuition(id) {
             
             document.getElementById('edit_semester').value = fee.semester;
             document.getElementById('edit_tuition_fee').value = fee.tuition_fee;
+            document.getElementById('edit_misc_fee').value = fee.misc_fee || 0;
+            document.getElementById('edit_lab_fee').value = fee.lab_fee || 0;
+            document.getElementById('edit_other_fees').value = fee.other_fees || 0;
+            calcEditTotal();
             
             new bootstrap.Modal(document.getElementById('editTuitionModal')).show();
         } else {

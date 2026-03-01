@@ -66,17 +66,6 @@ try {
         $grades[] = $row;
     }
 
-    $attendance_summary = $conn->query("
-        SELECT COUNT(*) as total_days,
-               SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count
-        FROM attendance
-        WHERE student_id = $student_id
-    ")->fetch_assoc();
-
-    $total_days = (int)($attendance_summary['total_days'] ?? 0);
-    $present = (int)($attendance_summary['present_count'] ?? 0);
-    $percentage = $total_days > 0 ? round(($present / $total_days) * 100, 2) : 0;
-
     $payment_summary = $conn->query("
         SELECT SUM(CASE WHEN status = 'verified' THEN amount ELSE 0 END) as total_paid,
                COUNT(CASE WHEN status = 'verified' THEN 1 END) as verified_payments
@@ -100,12 +89,6 @@ try {
         ],
         'enrollment_history' => $enrollment_history,
         'grades' => $grades,
-        'attendance_summary' => [
-            'total_days' => $total_days,
-            'present' => $present,
-            'absent' => $total_days - $present,
-            'percentage' => $percentage
-        ],
         'payment_summary' => [
             'total_paid' => $total_paid,
             'verified_payments' => $payment_summary['verified_payments'] ?? 0,

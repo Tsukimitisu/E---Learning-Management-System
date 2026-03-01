@@ -24,21 +24,6 @@ $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) $start_date = date('Y-m-01');
 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date)) $end_date = date('Y-m-t');
 
-// Attendance Report Data — use prepared statements
-$att_stmt = $conn->prepare("
-    SELECT cl.id as class_id, cl.section_name, s.subject_code, s.subject_title, COUNT(DISTINCT e.student_id) as total_enrolled, COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) as total_present, ROUND((COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) * 100.0) / NULLIF(COUNT(DISTINCT e.student_id), 0), 2) as attendance_rate
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    LEFT JOIN enrollments e ON cl.id = e.class_id AND e.status = 'approved'
-    LEFT JOIN attendance a ON cl.id = a.class_id AND a.attendance_date BETWEEN ? AND ?
-    WHERE cl.branch_id = ?
-    GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title
-    ORDER BY s.subject_code, cl.section_name
-");
-$att_stmt->bind_param("ssi", $start_date, $end_date, $branch_id);
-$att_stmt->execute();
-$attendance_report = $att_stmt->get_result();
-
 // Academic Performance Report
 $perf_stmt = $conn->prepare("
     SELECT cl.id as class_id, cl.section_name, s.subject_code, s.subject_title, COUNT(DISTINCT e.student_id) as total_students, AVG(g.final_grade) as avg_final_grade, COUNT(CASE WHEN g.remarks = 'PASSED' THEN 1 END) as passed_count, ROUND((COUNT(CASE WHEN g.remarks = 'PASSED' THEN 1 END) * 100.0) / NULLIF(COUNT(g.student_id), 0), 2) as pass_rate
@@ -120,54 +105,6 @@ include '../../includes/header.php';
             <button class="btn btn-outline-primary w-100 h-100 rounded-4 fw-bold" onclick="exportReport('enrollment')">
                 <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>EXPORT STATS
             </button>
-        </div>
-    </div>
-
-    <!-- 3. ATTENDANCE REPORT TABLE -->
-    <div class="content-card animate__animated animate__fadeInUp">
-        <div class="card-header-modern bg-white d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-calendar-check me-2 text-maroon"></i>Attendance Report Summary</span>
-            <button class="btn btn-sm btn-light border px-3 fw-bold" style="font-size: 0.65rem;" onclick="exportReport('attendance')">EXPORT CSV</button>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover table-modern mb-0">
-                <thead>
-                    <tr>
-                        <th>Section</th>
-                        <th>Subject Title</th>
-                        <th class="text-center">Enrolled</th>
-                        <th class="text-center">Present</th>
-                        <th class="text-center">Attendance Rate</th>
-                        <th class="text-end">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($row = $attendance_report->fetch_assoc()): 
-                        $rate = $row['attendance_rate'] ?? 0;
-                        $color = ($rate >= 80) ? 'success' : (($rate >= 60) ? 'warning' : 'danger');
-                    ?>
-                    <tr>
-                        <td class="fw-bold text-dark"><?php echo htmlspecialchars($row['section_name'] ?? 'N/A'); ?></td>
-                        <td>
-                            <div class="fw-bold"><?php echo htmlspecialchars($row['subject_code']); ?></div>
-                            <small class="text-muted"><?php echo htmlspecialchars($row['subject_title']); ?></small>
-                        </td>
-                        <td class="text-center"><?php echo number_format($row['total_enrolled']); ?></td>
-                        <td class="text-center"><?php echo number_format($row['total_present']); ?></td>
-                        <td class="text-center">
-                            <span class="badge bg-<?php echo $color; ?> bg-opacity-10 text-<?php echo $color; ?> px-3 py-2 fw-bold">
-                                <?php echo number_format($rate, 1); ?>%
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <span class="report-status text-<?php echo $color; ?>">
-                                <?php echo ($rate >= 80) ? 'Excellent' : (($rate >= 60) ? 'Good' : 'Critical'); ?>
-                            </span>
-                        </td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
         </div>
     </div>
 

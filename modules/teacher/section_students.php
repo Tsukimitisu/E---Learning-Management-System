@@ -143,9 +143,6 @@ include '../../includes/header.php';
             <button class="btn btn-success btn-action-pill shadow-sm" onclick="exportStudents()">
                 <i class="bi bi-download me-1"></i> Export
             </button>
-            <a href="attendance.php?section_id=<?php echo $section_id; ?>&subject_id=<?php echo $subject_id; ?>" class="btn btn-primary btn-action-pill shadow-sm">
-                <i class="bi bi-calendar-check me-1"></i> Attendance
-            </a>
             <a href="grading.php?section_id=<?php echo $section_id; ?>&subject_id=<?php echo $subject_id; ?>" class="btn btn-warning btn-action-pill shadow-sm">
                 <i class="bi bi-journal-check me-1"></i> Grades
             </a>

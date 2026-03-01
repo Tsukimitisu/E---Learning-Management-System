@@ -177,7 +177,6 @@ include '../../includes/header.php';
                                 <th class="text-center">Midterm</th>
                                 <th class="text-center">Final</th>
                                 <th class="text-center">GWA</th>
-                                <th class="text-center">Attendance</th>
                                 <th class="text-center pe-4">Finance</th>
                             </tr>
                         </thead>
@@ -246,17 +245,17 @@ document.getElementById('classSelect').addEventListener('change', async function
     }
 
     if (!classId) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted small">Select a class section above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted small">Select a class section above.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
 
     try {
         const response = await fetch(`process/get_class_records.php?class_id=${classId}`);
         const data = await response.json();
         if (data.status !== 'success') {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Fetch failed.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Fetch failed.</td></tr>';
             return;
         }
         tbody.innerHTML = data.records.map(r => `
@@ -266,12 +265,11 @@ document.getElementById('classSelect').addEventListener('change', async function
                 <td class="text-center">${r.midterm ?? '-'}</td>
                 <td class="text-center">${r.final ?? '-'}</td>
                 <td class="text-center fw-bold text-blue">${r.final_grade ?? '-'}</td>
-                <td class="text-center"><span class="badge bg-light text-dark border">${r.attendance_percentage ?? 0}%</span></td>
                 <td class="text-center pe-4"><span class="badge rounded-pill bg-info">${r.payment_status}</span></td>
             </tr>
         `).join('');
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Server Error.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Server Error.</td></tr>';
     }
 });
 </script>

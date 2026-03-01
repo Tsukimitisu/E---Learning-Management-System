@@ -45,10 +45,7 @@
                 <input class="form-check-input" type="checkbox" name="include_grades" value="1" checked>
                 <label class="form-check-label">Include Grades</label>
             </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="include_attendance" value="1">
-                <label class="form-check-label">Include Attendance</label>
-            </div>
+
         </div>
     </div>
     <div class="mt-3">

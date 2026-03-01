@@ -1,0 +1,140 @@
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[01-Mar-2026 15:23:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[01-Mar-2026 15:37:29 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:576
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(56): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 576
+[01-Mar-2026 15:38:50 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:576
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(56): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 576
+[01-Mar-2026 16:39:01 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:586
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(56): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 586
+[01-Mar-2026 16:48:09 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:48:11 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:48:11 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:48:11 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:48:14 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:48:21 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:48:28 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:759
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(59): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 759
+[01-Mar-2026 16:52:47 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_bind.php on line 3
+[01-Mar-2026 16:53:54 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_bind.php on line 3
+[01-Mar-2026 16:57:00 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_bind.php on line 3
+[01-Mar-2026 16:57:37 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_tuition.php on line 3
+[01-Mar-2026 16:58:21 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_tuition.php on line 3
+[01-Mar-2026 16:58:21 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 5
+[01-Mar-2026 16:58:21 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:5
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\test_tuition.php(27): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 5
+[01-Mar-2026 16:58:40 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_tuition.php on line 5
+[01-Mar-2026 16:58:40 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 5
+[01-Mar-2026 16:58:40 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:5
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\test_tuition.php(8): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 5
+[01-Mar-2026 16:59:32 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_tuition.php on line 5
+[01-Mar-2026 17:02:20 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:544
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(50): enrollNextYear()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 544
+[01-Mar-2026 17:02:25 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:544
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(50): enrollNextYear()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 544
+[01-Mar-2026 17:04:00 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_api.php on line 12
+[01-Mar-2026 17:05:31 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:775
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(75): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 775
+[01-Mar-2026 17:05:59 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:775
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(75): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 775
+[01-Mar-2026 17:06:28 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:775
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(75): recordDownPayment()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 775
+[01-Mar-2026 17:06:48 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:560
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(66): enrollNextYear()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 560
+[01-Mar-2026 17:06:56 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_schema.php on line 3
+[01-Mar-2026 17:07:06 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php:560
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php(66): enrollNextYear()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\program_enrollment_api.php on line 560
+[01-Mar-2026 17:08:45 Asia/Manila] PHP Notice:  ob_end_clean(): Failed to delete buffer. No buffer to delete in C:\xampp\htdocs\elms_system\test_prepare.php on line 3
+[01-Mar-2026 17:24:30 Asia/Manila] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\elms_system\config\db.php:99) in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 7
+[01-Mar-2026 17:24:30 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in C:\xampp\htdocs\elms_system\test_advance_balance.php:20
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 20
+[01-Mar-2026 17:25:13 Asia/Manila] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\elms_system\config\db.php:99) in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 7
+[01-Mar-2026 17:25:13 Asia/Manila] PHP Warning:  Attempt to read property "num_rows" on bool in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 25
+[01-Mar-2026 17:25:13 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in C:\xampp\htdocs\elms_system\test_advance_balance.php:43
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 43
+[01-Mar-2026 17:25:57 Asia/Manila] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\elms_system\config\db.php:99) in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 3
+[01-Mar-2026 17:25:57 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in C:\xampp\htdocs\elms_system\test_advance_balance.php:30
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 30
+[01-Mar-2026 17:29:18 Asia/Manila] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\elms_system\config\db.php:99) in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 3

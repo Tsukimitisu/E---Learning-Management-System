@@ -46,41 +46,78 @@ $subjects_query->bind_param("ii", $teacher_id, $current_ay_id);
 $subjects_query->execute();
 $subjects_result = $subjects_query->get_result();
 
-$total_sections = 0;
-$total_students = 0;
+// Collect unique section filter keys to avoid counting the same section multiple times
+$section_filters = [];
 $semester_map = [1 => '1st', 2 => '2nd', 3 => 'summer'];
 
 while ($subject = $subjects_result->fetch_assoc()) {
     $semester_str = $semester_map[$subject['semester']] ?? '1st';
     
-    // Count sections and students for this subject
     if (!empty($subject['program_id'])) {
+        $key = "college_{$subject['program_id']}_{$subject['year_level_id']}_{$semester_str}_{$subject['branch_id']}";
+        if (!isset($section_filters[$key])) {
+            $section_filters[$key] = [
+                'type' => 'college',
+                'program_id' => $subject['program_id'],
+                'year_level_id' => $subject['year_level_id'],
+                'semester' => $semester_str,
+                'branch_id' => $subject['branch_id']
+            ];
+        }
+    } else {
+        $key = "shs_{$subject['shs_strand_id']}_{$subject['shs_grade_level_id']}_{$semester_str}_{$subject['branch_id']}";
+        if (!isset($section_filters[$key])) {
+            $section_filters[$key] = [
+                'type' => 'shs',
+                'shs_strand_id' => $subject['shs_strand_id'],
+                'shs_grade_level_id' => $subject['shs_grade_level_id'],
+                'semester' => $semester_str,
+                'branch_id' => $subject['branch_id']
+            ];
+        }
+    }
+}
+
+// Now count distinct sections and students from unique filter groups
+$all_section_ids = [];
+foreach ($section_filters as $filter) {
+    if ($filter['type'] === 'college') {
         $count_query = $conn->prepare("
-            SELECT COUNT(DISTINCT s.id) as section_count,
-                   COUNT(DISTINCT ss.student_id) as student_count
+            SELECT s.id
             FROM sections s
-            LEFT JOIN section_students ss ON s.id = ss.section_id AND ss.status = 'active'
             WHERE s.program_id = ? AND s.year_level_id = ? AND s.semester = ?
             AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1
         ");
-        $count_query->bind_param("iisii", $subject['program_id'], $subject['year_level_id'], 
-            $semester_str, $subject['branch_id'], $current_ay_id);
+        $count_query->bind_param("iisii", $filter['program_id'], $filter['year_level_id'], 
+            $filter['semester'], $filter['branch_id'], $current_ay_id);
     } else {
         $count_query = $conn->prepare("
-            SELECT COUNT(DISTINCT s.id) as section_count,
-                   COUNT(DISTINCT ss.student_id) as student_count
+            SELECT s.id
             FROM sections s
-            LEFT JOIN section_students ss ON s.id = ss.section_id AND ss.status = 'active'
             WHERE s.shs_strand_id = ? AND s.shs_grade_level_id = ? AND s.semester = ?
             AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1
         ");
-        $count_query->bind_param("iisii", $subject['shs_strand_id'], $subject['shs_grade_level_id'], 
-            $semester_str, $subject['branch_id'], $current_ay_id);
+        $count_query->bind_param("iisii", $filter['shs_strand_id'], $filter['shs_grade_level_id'], 
+            $filter['semester'], $filter['branch_id'], $current_ay_id);
     }
     $count_query->execute();
-    $counts = $count_query->get_result()->fetch_assoc();
-    $total_sections += $counts['section_count'] ?? 0;
-    $total_students += $counts['student_count'] ?? 0;
+    $sec_result = $count_query->get_result();
+    while ($sec = $sec_result->fetch_assoc()) {
+        $all_section_ids[$sec['id']] = true;
+    }
+}
+
+$total_sections = count($all_section_ids);
+$total_students = 0;
+
+if (!empty($all_section_ids)) {
+    $section_id_list = implode(',', array_map('intval', array_keys($all_section_ids)));
+    $student_result = $conn->query("
+        SELECT COUNT(DISTINCT student_id) as cnt 
+        FROM section_students 
+        WHERE section_id IN ($section_id_list) AND status = 'active'
+    ");
+    $total_students = $student_result->fetch_assoc()['cnt'] ?? 0;
 }
 
 $stats['total_sections'] = $total_sections;

@@ -29,7 +29,7 @@ if ($branch_row = $branch_result->fetch_assoc()) {
 }
 $branch_stmt->close();
 
-$stats = ['total_students' => 0, 'total_classes' => 0, 'active_teachers' => 0, 'today_attendance' => 0];
+$stats = ['total_students' => 0, 'total_classes' => 0, 'active_teachers' => 0];
 
 $result = $conn->query("SELECT COUNT(DISTINCT s.user_id) as count FROM students s INNER JOIN courses c ON s.course_id = c.id WHERE c.branch_id = $branch_id");
 if ($row = $result->fetch_assoc()) { $stats['total_students'] = $row['count']; }
@@ -39,10 +39,6 @@ if ($row = $result->fetch_assoc()) { $stats['total_classes'] = $row['count']; }
 
 $result = $conn->query("SELECT COUNT(DISTINCT teacher_id) as count FROM classes WHERE branch_id = $branch_id AND teacher_id IS NOT NULL");
 if ($row = $result->fetch_assoc()) { $stats['active_teachers'] = $row['count']; }
-
-$today = date('Y-m-d');
-$result = $conn->query("SELECT COUNT(DISTINCT student_id) as count FROM attendance a INNER JOIN classes cl ON a.class_id = cl.id WHERE cl.branch_id = $branch_id AND a.attendance_date = '$today' AND a.status = 'present'");
-if ($row = $result->fetch_assoc()) { $stats['today_attendance'] = $row['count']; }
 
 include '../../includes/header.php'; 
 ?>
@@ -86,12 +82,6 @@ include '../../includes/header.php';
             <div class="stat-card-modern border-bottom border-info border-4">
                 <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-person-badge"></i></div>
                 <div><h4 class="mb-0 fw-bold"><?php echo number_format($stats['active_teachers']); ?></h4><small class="text-muted fw-bold text-uppercase" style="font-size:0.6rem;">Active Teachers</small></div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 animate__animated animate__zoomIn" style="animation-delay: 0.4s;">
-            <div class="stat-card-modern border-bottom border-warning border-4">
-                <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-calendar-check"></i></div>
-                <div><h4 class="mb-0 fw-bold"><?php echo number_format($stats['today_attendance']); ?></h4><small class="text-muted fw-bold text-uppercase" style="font-size:0.6rem;">Today's Attendance</small></div>
             </div>
         </div>
     </div>
@@ -165,7 +155,6 @@ include '../../includes/header.php';
                             <div class="col-md-6">
                                 <h6>Academic Monitoring</h6>
                                 <ul>
-                                    <li>Track branch-wide attendance</li>
                                     <li>Monitor teacher compliance</li>
                                     <li>Generate performance summaries</li>
                                 </ul>

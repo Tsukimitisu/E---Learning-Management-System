@@ -12,6 +12,22 @@ header('Content-Type: application/json');
 // Suppress display_errors for JSON API responses
 ini_set('display_errors', 0);
 
+// Catch fatal errors and return JSON
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        echo json_encode([
+            'success' => false,
+            'message' => 'Server error: ' . $error['message'],
+            'debug_file' => $error['file'],
+            'debug_line' => $error['line']
+        ]);
+    }
+});
+
 $user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
 if (!isset($_SESSION['user_id']) || $user_role != ROLE_REGISTRAR) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
@@ -48,6 +64,9 @@ switch ($action) {
         break;
     case 'enroll_next_year':
         enrollNextYear();
+        break;
+    case 'preview_advance':
+        previewAdvance();
         break;
     case 'get_student_balance':
         getStudentBalance();
@@ -416,6 +435,8 @@ function enrollNextYear() {
     $previous_school = clean_input($_POST['previous_school'] ?? '');
     $completed_subject_ids = parseIdList($_POST['completed_subject_ids'] ?? '[]');
     $completed_subject_details = parseCompletedSubjectDetails($_POST['completed_subject_details'] ?? '{}');
+    $downpayment_amount = (float)($_POST['downpayment_amount'] ?? 0);
+    $payment_method = clean_input($_POST['payment_method'] ?? 'cash');
 
     if (!$student_id) {
         echo json_encode(['success' => false, 'message' => 'Student ID is required']);
@@ -430,10 +451,31 @@ function enrollNextYear() {
         return;
     }
 
+    // Validate mandatory downpayment
+    if ($downpayment_amount <= 0) {
+        echo json_encode(['success' => false, 'message' => 'A down payment is required to advance the student.']);
+        return;
+    }
+
+    $valid_methods = ['cash', 'bank_transfer', 'online', 'check'];
+    if (!in_array($payment_method, $valid_methods)) {
+        $payment_method = 'cash';
+    }
+
     // Get current enrollment
     $current = getLatestTermEnrollment($student_id);
     if (!$current) {
         echo json_encode(['success' => false, 'message' => 'Student has no current enrollment to advance from.']);
+        return;
+    }
+
+    // Block advancement if student has ANY outstanding balance
+    $total_outstanding = getAllOutstandingBalance($student_id);
+    if ($total_outstanding > 0.009) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Cannot advance year level. The student has an outstanding balance of ₱' . number_format($total_outstanding, 2) . '. All fees must be fully paid before advancement.'
+        ]);
         return;
     }
 
@@ -479,6 +521,22 @@ function enrollNextYear() {
 
     $new_year_level_id = (int)$next_yl['id'];
 
+    // Look up tuition fee and apply discounts/penalties to validate minimum downpayment (25%)
+    $tuition_lookup = lookupTuitionFee($program_type, $program_id, $new_year_level_id, $semester, $current_ay_id);
+    if ($tuition_lookup > 0) {
+        $adj = previewActiveAdjustments($tuition_lookup, $current_ay_id);
+        $adjusted_tuition = max(0, $tuition_lookup - $adj['total_discount'] + $adj['total_penalty']);
+        $effective_fee = $adjusted_tuition > 0 ? $adjusted_tuition : $tuition_lookup;
+        $min_downpayment = ceil($effective_fee * 0.25);
+        if ($downpayment_amount < $min_downpayment) {
+            echo json_encode(['success' => false, 'message' => 'Minimum down payment is ₱' . number_format($min_downpayment, 2) . ' (25% of adjusted tuition fee).']);
+            return;
+        }
+        if ($downpayment_amount > $effective_fee) {
+            $downpayment_amount = $effective_fee;
+        }
+    }
+
     $conn->begin_transaction();
     try {
         // Mark previous term enrollment as completed
@@ -493,21 +551,251 @@ function enrollNextYear() {
             (int)$_SESSION['user_id'], $current_ay_id
         );
 
-        logAuditSimple($conn, "Year advancement: student {$student_id}, type {$student_type}, from level {$current['year_level_id']} to {$new_year_level_id}, semester {$semester}");
+        // Record mandatory downpayment within the same transaction
+        $recorded_by = (int)$_SESSION['user_id'];
+        $reference_no = 'DP-ADV-' . date('Ymd') . '-' . str_pad($student_id, 4, '0', STR_PAD_LEFT) . '-' . substr(uniqid(), -4);
+        $dp_description = 'Down payment upon year advancement to ' . $next_yl['year_name'];
+
+        // Flush any pending results from prior queries
+        while ($conn->more_results() && $conn->next_result()) {
+            $r = $conn->store_result();
+            if ($r) $r->free();
+        }
+
+        $dp_stmt = $conn->prepare("
+            INSERT INTO payments (student_id, amount, payment_method, reference_no, academic_year_id, semester, description, status, verified_by, verified_at, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'verified', ?, NOW(), NOW())
+        ");
+        if ($dp_stmt === false) {
+            throw new Exception('Failed to prepare down payment query: ' . $conn->error);
+        }
+        $dp_stmt->bind_param("idssissi", $student_id, $downpayment_amount, $payment_method, $reference_no, $current_ay_id, $semester, $dp_description, $recorded_by);
+        if (!$dp_stmt->execute()) {
+            throw new Exception('Failed to record down payment: ' . $conn->error);
+        }
+
+        // Notify student
+        create_notification(
+            $student_id,
+            'Year Level Advanced',
+            'You have been advanced to ' . $next_yl['year_name'] . '. Down payment of ₱' . number_format($downpayment_amount, 2) . ' recorded.',
+            'enrollment',
+            null,
+            $recorded_by
+        );
+
+        logAuditSimple($conn, "Year advancement: student {$student_id}, type {$student_type}, from level {$current['year_level_id']} to {$new_year_level_id}, semester {$semester}, downpayment ₱" . number_format($downpayment_amount, 2));
 
         $conn->commit();
+
+        // Recalculate balance after downpayment
+        $new_semester_balance = getSemesterOutstandingBalance($student_id, $current_ay_id, $semester);
+        $new_total_balance = getAllOutstandingBalance($student_id);
+
         echo json_encode([
             'success' => true,
-            'message' => "Student advanced to {$next_yl['year_name']}. {$result['enrolled_count']} subject(s) enrolled for {$semester} semester.",
+            'message' => "Student advanced to {$next_yl['year_name']}. {$result['enrolled_count']} subject(s) enrolled for {$semester} semester. Down payment of ₱" . number_format($downpayment_amount, 2) . ' recorded.',
             'meta' => array_merge($result, [
                 'new_year_level_id' => $new_year_level_id,
-                'new_year_level_name' => $next_yl['year_name']
+                'new_year_level_name' => $next_yl['year_name'],
+                'downpayment_amount' => $downpayment_amount,
+                'downpayment_reference' => $reference_no,
+                'semester_balance' => $new_semester_balance,
+                'total_balance' => $new_total_balance
             ])
         ]);
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+}
+
+function previewAdvance() {
+    global $conn, $branch_id, $current_ay_id;
+
+    $student_id = (int)($_GET['student_id'] ?? 0);
+    $semester = normalizeSemester($_GET['semester'] ?? '1st');
+
+    if (!$student_id || !verifyStudentInRegistrarBranch($student_id, $branch_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid student']);
+        return;
+    }
+
+    $current = getLatestTermEnrollment($student_id);
+    if (!$current) {
+        echo json_encode(['success' => false, 'message' => 'No current enrollment found.']);
+        return;
+    }
+
+    $program_type = $current['program_type'];
+    $program_id = (int)$current['program_id'];
+
+    // Find next year level
+    if ($program_type === 'college') {
+        $next_yl_stmt = $conn->prepare("
+            SELECT pyl.id, pyl.year_level, pyl.year_name
+            FROM program_year_levels pyl
+            INNER JOIN program_year_levels current_pyl ON current_pyl.id = ?
+            WHERE pyl.program_id = ? AND pyl.year_level = current_pyl.year_level + 1 AND pyl.is_active = 1
+            LIMIT 1
+        ");
+        $next_yl_stmt->bind_param("ii", $current['year_level_id'], $program_id);
+    } else {
+        $next_yl_stmt = $conn->prepare("
+            SELECT sgl.id, sgl.grade_level as year_level, sgl.grade_name as year_name
+            FROM shs_grade_levels sgl
+            INNER JOIN shs_grade_levels current_sgl ON current_sgl.id = ?
+            WHERE sgl.strand_id = ? AND sgl.grade_level = current_sgl.grade_level + 1 AND sgl.is_active = 1
+            LIMIT 1
+        ");
+        $next_yl_stmt->bind_param("ii", $current['year_level_id'], $program_id);
+    }
+
+    $next_yl_stmt->execute();
+    $next_yl = $next_yl_stmt->get_result()->fetch_assoc();
+
+    if (!$next_yl) {
+        echo json_encode(['success' => false, 'message' => 'At highest year level.']);
+        return;
+    }
+
+    $tuition_fee = lookupTuitionFee($program_type, $program_id, (int)$next_yl['id'], $semester, $current_ay_id);
+    $adjustments = previewActiveAdjustments($tuition_fee, $current_ay_id);
+    $adjusted_fee = max(0, $tuition_fee - $adjustments['total_discount'] + $adjustments['total_penalty']);
+    $min_downpayment = $adjusted_fee > 0 ? ceil($adjusted_fee * 0.25) : 0;
+
+    echo json_encode([
+        'success' => true,
+        'current_year' => $current['year_level_name'] ?? '',
+        'next_year' => $next_yl['year_name'],
+        'next_year_level_id' => $next_yl['id'],
+        'semester' => $semester,
+        'tuition_fee' => $tuition_fee,
+        'adjusted_fee' => $adjusted_fee,
+        'min_downpayment' => $min_downpayment,
+        'discounts' => $adjustments['discounts'],
+        'penalties' => $adjustments['penalties'],
+        'total_discount' => $adjustments['total_discount'],
+        'total_penalty' => $adjustments['total_penalty'],
+        'program_code' => $current['program_code'] ?? ''
+    ]);
+}
+
+/**
+ * Preview what discounts/penalties would apply to a tuition fee without inserting anything.
+ * Used by previewAdvance and enrollNextYear validation.
+ */
+function previewActiveAdjustments($base_tuition_fee, $academic_year_id) {
+    global $conn;
+
+    $today = date('Y-m-d');
+    $academic_year_id = (int)$academic_year_id;
+    $discounts = [];
+    $penalties = [];
+    $total_discount = 0;
+    $total_penalty = 0;
+
+    // Active discounts
+    $disc_stmt = $conn->prepare("
+        SELECT id, name, discount_type, value FROM tuition_discounts
+        WHERE is_active = 1 AND start_date <= ? AND end_date >= ?
+          AND (academic_year_id = ? OR academic_year_id IS NULL)
+        ORDER BY id ASC
+    ");
+    $disc_stmt->bind_param("ssi", $today, $today, $academic_year_id);
+    $disc_stmt->execute();
+    $disc_result = $disc_stmt->get_result();
+    while ($row = $disc_result->fetch_assoc()) {
+        $amt = 0;
+        if ($row['discount_type'] === 'percentage') {
+            $amt = round($base_tuition_fee * ($row['value'] / 100), 2);
+        } else {
+            $amt = round((float)$row['value'], 2);
+        }
+        if ($amt > 0) {
+            $desc = $row['name'] . ' (' . ($row['discount_type'] === 'percentage' ? $row['value'] . '%' : '₱' . number_format($row['value'], 2)) . ')';
+            $discounts[] = ['description' => $desc, 'amount' => $amt];
+            $total_discount += $amt;
+        }
+    }
+
+    // Active penalties
+    $pen_stmt = $conn->prepare("
+        SELECT id, name, penalty_type, value FROM tuition_penalties
+        WHERE is_active = 1 AND start_date <= ?
+          AND (academic_year_id = ? OR academic_year_id IS NULL)
+        ORDER BY id ASC
+    ");
+    $pen_stmt->bind_param("si", $today, $academic_year_id);
+    $pen_stmt->execute();
+    $pen_result = $pen_stmt->get_result();
+    while ($row = $pen_result->fetch_assoc()) {
+        $amt = 0;
+        if ($row['penalty_type'] === 'percentage') {
+            $amt = round($base_tuition_fee * ($row['value'] / 100), 2);
+        } else {
+            $amt = round((float)$row['value'], 2);
+        }
+        if ($amt > 0) {
+            $desc = $row['name'] . ' (' . ($row['penalty_type'] === 'percentage' ? $row['value'] . '%' : '₱' . number_format($row['value'], 2)) . ')';
+            $penalties[] = ['description' => $desc, 'amount' => $amt];
+            $total_penalty += $amt;
+        }
+    }
+
+    return [
+        'discounts' => $discounts,
+        'penalties' => $penalties,
+        'total_discount' => round($total_discount, 2),
+        'total_penalty' => round($total_penalty, 2),
+    ];
+}
+
+function lookupTuitionFee($program_type, $program_id, $year_level_id, $semester, $academic_year_id) {
+    global $conn;
+
+    $program_type = $program_type === 'shs' ? 'shs' : 'college';
+    $semester = normalizeSemester($semester);
+
+    $stmt = $conn->prepare("
+        SELECT tuition_fee
+        FROM program_tuition_fees
+        WHERE program_id = ? AND is_active = 1
+          AND semester = ?
+          AND program_type = ?
+          AND (year_level_id = ? OR year_level_id IS NULL)
+          AND (academic_year_id = ? OR academic_year_id IS NULL)
+        ORDER BY
+            CASE WHEN year_level_id = ? THEN 0 ELSE 1 END,
+            CASE WHEN academic_year_id = ? THEN 0 ELSE 1 END,
+            id DESC
+        LIMIT 1
+    ");
+    $stmt->bind_param("issiiii", $program_id, $semester, $program_type, $year_level_id, $academic_year_id, $year_level_id, $academic_year_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+
+    if (!$row) {
+        // Fallback without program_type
+        $fallback = $conn->prepare("
+            SELECT tuition_fee
+            FROM program_tuition_fees
+            WHERE program_id = ? AND is_active = 1
+              AND semester = ?
+              AND (year_level_id = ? OR year_level_id IS NULL)
+              AND (academic_year_id = ? OR academic_year_id IS NULL)
+            ORDER BY
+                CASE WHEN year_level_id = ? THEN 0 ELSE 1 END,
+                CASE WHEN academic_year_id = ? THEN 0 ELSE 1 END,
+                id DESC
+            LIMIT 1
+        ");
+        $fallback->bind_param("isiiii", $program_id, $semester, $year_level_id, $academic_year_id, $year_level_id, $academic_year_id);
+        $fallback->execute();
+        $row = $fallback->get_result()->fetch_assoc();
+    }
+
+    return (float)($row['tuition_fee'] ?? 0);
 }
 
 function getStudentBalance() {
@@ -560,7 +848,7 @@ function recordDownPayment() {
         return;
     }
 
-    $valid_methods = ['cash', 'bank_transfer', 'gcash', 'online'];
+    $valid_methods = ['cash', 'bank_transfer', 'online', 'check'];
     if (!in_array($payment_method, $valid_methods)) {
         $payment_method = 'cash';
     }
@@ -569,10 +857,20 @@ function recordDownPayment() {
     $description = 'Down payment upon enrollment';
     $reference_no = 'DP-' . date('Ymd') . '-' . str_pad($student_id, 4, '0', STR_PAD_LEFT) . '-' . substr(uniqid(), -4);
 
+    // Flush any pending results from prior queries
+    while ($conn->more_results() && $conn->next_result()) {
+        $r = $conn->store_result();
+        if ($r) $r->free();
+    }
+
     $stmt = $conn->prepare("
-        INSERT INTO payments (student_id, amount, payment_method, reference_number, academic_year_id, semester, description, status, verified_by, verified_at, created_at)
+        INSERT INTO payments (student_id, amount, payment_method, reference_no, academic_year_id, semester, description, status, verified_by, verified_at, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, 'verified', ?, NOW(), NOW())
     ");
+    if ($stmt === false) {
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
+        return;
+    }
     $stmt->bind_param("idssissi", $student_id, $amount, $payment_method, $reference_no, $current_ay_id, $semester, $description, $recorded_by);
     
     if ($stmt->execute()) {
@@ -589,10 +887,12 @@ function recordDownPayment() {
         );
         
         $new_balance = getSemesterOutstandingBalance($student_id, $current_ay_id, $semester);
+        $new_total_balance = getAllOutstandingBalance($student_id);
         echo json_encode([
             'success' => true,
             'message' => 'Down payment of ₱' . number_format($amount, 2) . ' recorded successfully. Ref: ' . $reference_no,
             'new_balance' => $new_balance,
+            'new_total_balance' => $new_total_balance,
             'reference_number' => $reference_no
         ]);
     } else {
@@ -1145,16 +1445,17 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     $recorded_by = (int)$recorded_by;
     $semester = normalizeSemester($semester);
 
-    // Check if fee already exists for this term
+    // Check if fee already exists for this term AND year level
     $existing_stmt = $conn->prepare("
         SELECT id, amount FROM student_fees
         WHERE student_id = ?
           AND academic_year_id = ?
           AND semester = ?
+          AND (year_level_id = ? OR (year_level_id IS NULL AND ? = 0))
           AND (fee_type IN ('Tuition Fee', 'Tuition') OR description = 'Tuition Fee')
         LIMIT 1
     ");
-    $existing_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $existing_stmt->bind_param("iisii", $student_id, $academic_year_id, $semester, $year_level_id, $year_level_id);
     $existing_stmt->execute();
     $existing_result = $existing_stmt->get_result();
     if ($existing_result->num_rows > 0) {
@@ -1213,10 +1514,10 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     // Insert base tuition fee
     $description = "Auto-assessed tuition for {$semester} semester enrollment";
     $insert_fee = $conn->prepare("
-        INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
-        VALUES (?, 'Tuition Fee', ?, ?, ?, ?, ?, NOW())
+        INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, year_level_id, description, created_by, created_at)
+        VALUES (?, 'Tuition Fee', ?, ?, ?, ?, ?, ?, NOW())
     ");
-    $insert_fee->bind_param("idissi", $student_id, $tuition_fee, $academic_year_id, $semester, $description, $recorded_by);
+    $insert_fee->bind_param("idisisi", $student_id, $tuition_fee, $academic_year_id, $semester, $year_level_id, $description, $recorded_by);
     $insert_fee->execute();
 
     // Apply active discounts (today between start_date and end_date)
@@ -1243,10 +1544,10 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
             $neg_amount = -$discount_amount;
             $disc_desc = "Discount: " . $disc['name'] . " (" . ($disc['discount_type'] === 'percentage' ? $disc['value'] . '%' : '₱' . number_format($disc['value'], 2)) . ")";
             $disc_insert = $conn->prepare("
-                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
-                VALUES (?, 'Discount', ?, ?, ?, ?, ?, NOW())
+                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, year_level_id, description, created_by, created_at)
+                VALUES (?, 'Discount', ?, ?, ?, ?, ?, ?, NOW())
             ");
-            $disc_insert->bind_param("idissi", $student_id, $neg_amount, $academic_year_id, $semester, $disc_desc, $recorded_by);
+            $disc_insert->bind_param("idisisi", $student_id, $neg_amount, $academic_year_id, $semester, $year_level_id, $disc_desc, $recorded_by);
             $disc_insert->execute();
         }
     }
@@ -1272,10 +1573,10 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
         if ($penalty_amount > 0) {
             $pen_desc = "Penalty: " . $pen['name'] . " (" . ($pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2)) . ")";
             $pen_insert = $conn->prepare("
-                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, description, created_by, created_at)
-                VALUES (?, 'Penalty', ?, ?, ?, ?, ?, NOW())
+                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, year_level_id, description, created_by, created_at)
+                VALUES (?, 'Penalty', ?, ?, ?, ?, ?, ?, NOW())
             ");
-            $pen_insert->bind_param("idissi", $student_id, $penalty_amount, $academic_year_id, $semester, $pen_desc, $recorded_by);
+            $pen_insert->bind_param("idisisi", $student_id, $penalty_amount, $academic_year_id, $semester, $year_level_id, $pen_desc, $recorded_by);
             $pen_insert->execute();
         }
     }

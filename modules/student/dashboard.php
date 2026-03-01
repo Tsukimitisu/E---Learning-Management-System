@@ -120,12 +120,7 @@ if ($section_id > 0) {
     while ($row = $subjects_query->fetch_assoc()) { $subjects[] = $row; }
 }
 
-$stats = ['total_subjects' => count($subjects), 'total_attendance' => 0, 'attendance_rate' => 0, 'average_grade' => 0, 'pending_assessments' => 0];
-$attendance_stats = $conn->query("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count FROM attendance WHERE student_id = $student_id")->fetch_assoc();
-if ($attendance_stats['total'] > 0) {
-    $stats['total_attendance'] = $attendance_stats['total'];
-    $stats['attendance_rate'] = round(($attendance_stats['present_count'] / $attendance_stats['total']) * 100, 1);
-}
+$stats = ['total_subjects' => count($subjects), 'average_grade' => 0, 'pending_assessments' => 0];
 $grade_avg = $conn->query("SELECT AVG(final_grade) as avg_grade FROM grades WHERE student_id = $student_id AND final_grade > 0")->fetch_assoc();
 $stats['average_grade'] = $grade_avg['avg_grade'] ? round($grade_avg['avg_grade'], 2) : 0;
 $pending = $conn->query("SELECT COUNT(*) as count FROM assessment_scores ascore INNER JOIN assessments a ON ascore.assessment_id = a.id WHERE ascore.student_id = $student_id AND ascore.status = 'pending'")->fetch_assoc();

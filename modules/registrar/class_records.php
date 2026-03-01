@@ -70,12 +70,11 @@ include '../../includes/header.php';
                         <th class="text-center">Final</th>
                         <th class="text-center">GWA</th>
                         <th class="text-center">Status</th>
-                        <th class="text-center">Attendance</th>
                         <th class="text-center pe-4">Payment</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="7" class="text-center py-5 text-muted fst-italic small">Please select a class section from the dropdown above to load records.</td></tr>
+                    <tr><td colspan="6" class="text-center py-5 text-muted fst-italic small">Please select a class section from the dropdown above to load records.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -99,24 +98,24 @@ document.getElementById('classSelect').addEventListener('change', async function
     }
 
     if (!classId) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted small">Select a class section above to view records</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted small">Select a class section above to view records</td></tr>';
         return;
     }
 
     // Show Loading
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm text-maroon"></div><p class="mt-2 small text-muted">Retrieving student data...</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm text-maroon"></div><p class="mt-2 small text-muted">Retrieving student data...</p></td></tr>';
 
     try {
         const response = await fetch(`process/get_class_records.php?class_id=${classId}`);
         const data = await response.json();
         
         if (data.status !== 'success') {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Failed to load records. Please try again.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Failed to load records. Please try again.</td></tr>';
             return;
         }
 
         if (data.records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No students enrolled in this section.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No students enrolled in this section.</td></tr>';
             return;
         }
 
@@ -133,12 +132,6 @@ document.getElementById('classSelect').addEventListener('change', async function
                 <td class="text-center">
                     <span class="badge rounded-pill bg-light text-dark border px-3">${r.remarks ?? 'N/A'}</span>
                 </td>
-                <td class="text-center">
-                    <div class="small fw-bold">${r.attendance_percentage ?? 0}%</div>
-                    <div class="progress mt-1" style="height: 4px; width: 60px; margin: 0 auto;">
-                        <div class="progress-bar bg-success" style="width: ${r.attendance_percentage ?? 0}%"></div>
-                    </div>
-                </td>
                 <td class="text-center pe-4">
                     <span class="badge rounded-pill bg-opacity-10 bg-info text-info border border-info border-opacity-25 px-3">
                         ${r.payment_status}
@@ -148,7 +141,7 @@ document.getElementById('classSelect').addEventListener('change', async function
         `).join('');
 
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Server communication error.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Server communication error.</td></tr>';
     }
 });
 </script>

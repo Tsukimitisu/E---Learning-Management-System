@@ -49,11 +49,6 @@ try {
             }
             break;
 
-        case 'low_attendance':
-            $issue_description = "Persistent low attendance in class ID: $id";
-            $severity = 'medium';
-            break;
-
         case 'academic_failure':
             $issue_description = "Multiple students failing in class ID: $id";
             $severity = 'high';

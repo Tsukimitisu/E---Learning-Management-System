@@ -20,15 +20,11 @@ $query = "
         s.student_no,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
         g.midterm, g.final, g.final_grade, g.remarks,
-        COUNT(DISTINCT a.id) as total_attendance,
-        SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_count,
-        ROUND((SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) / NULLIF(COUNT(DISTINCT a.id),0)) * 100, 2) as attendance_percentage,
         COALESCE(p.payment_status, 'No Payment') as payment_status
     FROM enrollments e
     INNER JOIN students s ON e.student_id = s.user_id
     INNER JOIN user_profiles up ON s.user_id = up.user_id
     LEFT JOIN grades g ON s.user_id = g.student_id AND g.class_id = e.class_id
-    LEFT JOIN attendance a ON s.user_id = a.student_id AND a.class_id = e.class_id
     LEFT JOIN (
         SELECT student_id, 
                CASE WHEN SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) > 0 

@@ -17,35 +17,143 @@
         background-color: #f8f9fa;
     }
 
-    /* --- FANTASTIC REPORT UI --- */
-    .report-card {
+    /* --- CLASS SELECTOR BAR --- */
+    .class-selector-bar {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .class-selector-bar .form-select {
+        border-radius: 0 10px 10px 0;
+        border-color: #e9ecef;
+        font-weight: 500;
+    }
+
+    .class-selector-bar .input-group-text {
+        border-radius: 10px 0 0 10px;
+        border-color: #e9ecef;
+    }
+
+    .quick-action-btn {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* --- CLASS INFO BANNER --- */
+    .class-info-banner {
         background: white;
-        border-radius: 20px;
+        border-radius: 14px;
+        padding: 18px 24px;
         border: none;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border-left: 4px solid var(--maroon);
     }
 
-    .report-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 25px rgba(0, 51, 102, 0.1);
+    .badge.bg-maroon-light {
+        background-color: rgba(128, 0, 0, 0.1) !important;
+        color: #800000;
+        font-weight: 600;
     }
 
-    .report-icon-bg {
-        width: 60px;
-        height: 60px;
-        border-radius: 15px;
-        display: flex;
+    .badge.bg-blue-light {
+        background-color: rgba(0, 51, 102, 0.1) !important;
+        color: #003366;
+        font-weight: 600;
+    }
+
+    /* --- REPORT TABS --- */
+    .report-tabs {
+        gap: 6px;
+    }
+
+    .report-tabs .nav-link {
+        border-radius: 10px;
+        padding: 10px 20px;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s;
+    }
+
+    .report-tabs .nav-link:hover {
+        color: var(--maroon);
+        border-color: var(--maroon);
+        background: rgba(128, 0, 0, 0.03);
+    }
+
+    .report-tabs .nav-link.active {
+        background: var(--maroon);
+        color: white;
+        border-color: var(--maroon);
+        box-shadow: 0 4px 12px rgba(128, 0, 0, 0.25);
+    }
+
+    /* --- REPORT PANEL --- */
+    .report-panel {
+        background: white;
+        border-radius: 14px;
+        padding: 24px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .report-panel .table {
+        font-size: 0.85rem;
+    }
+
+    .report-panel .table thead th {
+        border-bottom: 2px solid #e9ecef;
+        font-size: 0.72rem;
+        letter-spacing: 0.5px;
+    }
+
+    .report-panel .table td {
+        vertical-align: middle;
+        border-color: #f5f5f5;
+    }
+
+    .report-panel .table tbody tr:hover {
+        background-color: #fafafa;
+    }
+
+    /* --- ANALYTICS STAT CARDS --- */
+    .analytics-stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid #f0f0f0;
+    }
+
+    .analytics-stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+    }
+
+    .analytics-stat-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        color: #6c757d;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    /* --- EMPTY STATE --- */
+    .empty-state-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #f0f2f5;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
-        margin-bottom: 20px;
     }
 
+    /* --- STATS SUMMARY (Bottom) --- */
     .stats-summary-card {
         background: white;
         border-radius: 15px;
@@ -60,6 +168,7 @@
         height: 50px;
     }
 
+    /* --- BUTTONS --- */
     .btn-generate {
         background-color: var(--maroon);
         color: white;
@@ -75,9 +184,21 @@
         transform: scale(1.02);
     }
 
-    /* Mobile Logic */
+    .text-maroon { color: #800000 !important; }
+
+    /* --- CHARTS --- */
+    canvas {
+        max-width: 100%;
+    }
+
+    /* --- MOBILE --- */
     @media (max-width: 768px) {
-        .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; }
+        .header-fixed-part { padding: 15px; }
         .body-scroll-part { padding: 15px 15px 100px 15px; }
         .stat-divider { display: none; }
+        .report-panel { padding: 16px; }
+        .class-info-banner { padding: 14px 16px; }
+        .report-tabs .nav-link { padding: 8px 14px; font-size: 0.8rem; }
+        .analytics-stat-value { font-size: 1.3rem; }
+        .quick-action-btn { font-size: 0.72rem; padding: 4px 10px !important; }
     }

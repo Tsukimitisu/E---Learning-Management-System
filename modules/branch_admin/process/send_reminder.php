@@ -23,28 +23,6 @@ try {
     $target_user_id = null;
 
     switch ($type) {
-        case 'attendance':
-            // Reminder to teacher about low attendance
-            $query = "
-                SELECT u.id, CONCAT(up.first_name, ' ', up.last_name) as teacher_name,
-                       cl.section_name, s.subject_code
-                FROM classes cl
-                LEFT JOIN subjects s ON cl.subject_id = s.id
-                LEFT JOIN users u ON cl.teacher_id = u.id
-                LEFT JOIN user_profiles up ON u.id = up.user_id
-                WHERE cl.id = ?
-            ";
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
-
-            if ($result) {
-                $target_user_id = $result['id'];
-                $message = "Reminder: Class {$result['subject_code']} - {$result['section_name']} has low attendance rates. Please review and address attendance issues.";
-            }
-            break;
-
         case 'academic':
             // Notification to student about academic performance
             $target_user_id = $id;

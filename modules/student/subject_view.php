@@ -62,16 +62,6 @@ $assessments = $conn->query("
     LIMIT 10
 ");
 
-// Get attendance for this subject
-$attendance = $conn->query("
-    SELECT att.*
-    FROM attendance att
-    INNER JOIN classes cl ON att.class_id = cl.id
-    WHERE cl.curriculum_subject_id = $subject_id AND att.student_id = $student_id
-    ORDER BY att.attendance_date DESC
-    LIMIT 10
-");
-
 // Get grade components for this subject
 $grade_components = $conn->query("
     SELECT gc.*, sgd.score
@@ -232,40 +222,6 @@ include '../../includes/header.php';
         </div>
 
         <div class="row">
-            <!-- Attendance -->
-            <div class="col-lg-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-check text-success me-2"></i>Recent Attendance</h5>
-                        <a href="attendance.php" class="btn btn-sm btn-outline-success">View All</a>
-                    </div>
-                    <div class="card-body p-0">
-                        <?php if ($attendance->num_rows == 0): ?>
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-calendar-x"></i>
-                            <p class="small mb-0">No attendance records</p>
-                        </div>
-                        <?php else: ?>
-                        <ul class="list-group list-group-flush">
-                            <?php while ($att = $attendance->fetch_assoc()): 
-                                $att_colors = ['present' => 'success', 'absent' => 'danger', 'late' => 'warning', 'excused' => 'info'];
-                            ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>
-                                    <?php echo date('M d, Y', strtotime($att['attendance_date'])); ?>
-                                    <small class="text-muted">(<?php echo date('l', strtotime($att['attendance_date'])); ?>)</small>
-                                </span>
-                                <span class="badge bg-<?php echo $att_colors[$att['status']] ?? 'secondary'; ?>">
-                                    <?php echo ucfirst($att['status']); ?>
-                                </span>
-                            </li>
-                            <?php endwhile; ?>
-                        </ul>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
             <!-- Grade Components -->
             <div class="col-lg-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">

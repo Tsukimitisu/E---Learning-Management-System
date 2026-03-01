@@ -195,7 +195,7 @@ include '../../includes/header.php';
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white p-3 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-blue">2. Assign Academic Path</h6>
-                        <span class="badge bg-light text-maroon border" id="selectedStudentHeader"></span>
+                        <span class="badge bg-dark text-maroon border" id="selectedStudentHeader"></span>
                     </div>
                     <div class="card-body p-4">
                         <!-- Navigation Tabs -->
@@ -359,6 +359,27 @@ include '../../includes/header.php';
 </div>
 
 <?php include '../../includes/footer.php'; ?>
+
+<!-- Advance Year Level Modal (with mandatory downpayment) -->
+<div class="modal fade" id="advanceYearModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header p-4 text-white" style="background: linear-gradient(135deg, var(--blue), var(--maroon)); border: none;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-arrow-up-circle-fill me-2"></i>Advance Year Level</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="advanceYearBody">
+                <div class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Loading...</div>
+            </div>
+            <div class="modal-footer border-0 p-4 bg-light">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="confirmAdvanceBtn" onclick="confirmAdvanceYear()" disabled>
+                    <i class="bi bi-arrow-up-circle me-1"></i> Advance & Pay
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Enrollment Fee Assessment Result Modal -->
 <div class="modal fade" id="feeResultModal" tabindex="-1" data-bs-backdrop="static">
@@ -727,9 +748,15 @@ function showCurrentEnrollment(card) {
                                 <span class="badge ${balance > 0 ? 'bg-danger' : 'bg-success'} px-3 py-2">
                                     Balance: \u20b1${Number(balance).toLocaleString('en-PH', {minimumFractionDigits: 2})}
                                 </span>
-                                <button class="btn btn-sm btn-primary fw-bold rounded-pill" onclick="advanceToNextYear()">
-                                    <i class="bi bi-arrow-up-circle me-1"></i>Advance Year
-                                </button>
+                                ${balance > 0 
+                                    ? `<button class="btn btn-sm btn-secondary fw-bold rounded-pill" disabled title="Student must be fully paid before advancing">
+                                        <i class="bi bi-lock me-1"></i>Advance Year
+                                       </button>
+                                       <span class="text-danger small fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Fully paid required</span>`
+                                    : `<button class="btn btn-sm btn-primary fw-bold rounded-pill" onclick="advanceToNextYear()">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Advance Year
+                                       </button>`
+                                }
                                 <button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="resetProgramSelection(); document.getElementById('currentEnrollmentCard').style.display='none';">
                                     <i class="bi bi-arrow-repeat me-1"></i>RE-ASSIGN
                                 </button>
@@ -754,17 +781,170 @@ function advanceToNextYear() {
     }
     
     const semester = getSelectedSemester();
+    const body = document.getElementById('advanceYearBody');
+    const confirmBtn = document.getElementById('confirmAdvanceBtn');
+    confirmBtn.disabled = true;
+    
+    // Show modal with loading state
+    body.innerHTML = '<div class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary me-2"></span> Fetching advancement details...</div>';
+    new bootstrap.Modal(document.getElementById('advanceYearModal')).show();
+    
+    // Fetch preview data
+    fetch(`process/program_enrollment_api.php?action=preview_advance&student_id=${selectedStudentId}&semester=${semester}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) {
+                body.innerHTML = `<div class="alert alert-danger border-0"><i class="bi bi-x-circle me-1"></i> ${data.message}</div>`;
+                return;
+            }
+            
+            const baseFee = parseFloat(data.tuition_fee || 0);
+            const adjustedFee = parseFloat(data.adjusted_fee || baseFee);
+            const fee = adjustedFee > 0 ? adjustedFee : baseFee;
+            const minDp = parseFloat(data.min_downpayment || 0);
+            const semLabel = semester === '2nd' ? '2nd Semester' : (semester === 'summer' ? 'Summer' : '1st Semester');
+            const discounts = data.discounts || [];
+            const penalties = data.penalties || [];
+            
+            let html = `
+                <div class="text-center mb-4">
+                    <div class="bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-arrow-up-circle text-primary fs-3"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">${escapeHtml(data.program_code)}</h6>
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <span class="badge bg-secondary">${escapeHtml(data.current_year)}</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="badge bg-primary px-3">${escapeHtml(data.next_year)}</span>
+                    </div>
+                    <span class="badge bg-info bg-opacity-10 text-info mt-2">${semLabel}</span>
+                </div>
+                
+                <div class="border rounded-4 p-3 mb-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted fw-bold text-uppercase">Base Tuition Fee</span>
+                        <span class="fw-bold fs-5" style="color: var(--maroon);">${baseFee > 0 ? '₱' + baseFee.toLocaleString('en-PH', {minimumFractionDigits: 2}) : 'Not configured'}</span>
+                    </div>`;
+
+            // Show discount line items
+            if (discounts.length > 0) {
+                discounts.forEach(d => {
+                    html += `
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-success"><i class="bi bi-tag-fill me-1"></i>${escapeHtml(d.description)}</span>
+                        <span class="fw-bold text-success">-₱${parseFloat(d.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>`;
+                });
+            }
+            // Show penalty line items
+            if (penalties.length > 0) {
+                penalties.forEach(p => {
+                    html += `
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(p.description)}</span>
+                        <span class="fw-bold text-danger">+₱${parseFloat(p.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>`;
+                });
+            }
+            // Show adjusted total if adjustments present
+            if (discounts.length > 0 || penalties.length > 0) {
+                html += `
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-bold text-uppercase" style="color: var(--blue);">Adjusted Tuition Fee</span>
+                        <span class="fw-bold fs-5" style="color: var(--blue);">₱${fee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>`;
+            }
+
+            html += `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Min. Down Payment (25%)</span>
+                        <span class="fw-bold text-primary">₱${minDp.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                </div>
+
+                <div class="border border-primary rounded-4 p-3 bg-primary bg-opacity-5">
+                    <p class="small fw-bold text-primary text-uppercase mb-3"><i class="bi bi-cash-stack me-1"></i> Mandatory Down Payment</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold mb-1">Amount (₱) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="advanceDownpaymentAmount" 
+                                   min="${minDp}" max="${fee > 0 ? fee : 999999}" step="0.01" value="${minDp > 0 ? minDp : ''}" 
+                                   placeholder="Min: ₱${minDp.toLocaleString('en-PH', {minimumFractionDigits: 2})}"
+                                   oninput="validateAdvanceDownpayment(${minDp}, ${fee})">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold mb-1">Payment Method <span class="text-danger">*</span></label>
+                            <select class="form-select" id="advancePaymentMethod">
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="online">Online Payment</option>
+                                <option value="check">Check</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="advancePaymentFeedback" class="mt-2"></div>`;
+                    
+            if (fee > 0 && minDp > 0) {
+                const remaining = fee - minDp;
+                const perTerm = Math.ceil(remaining / 4);
+                html += `
+                    <div class="mt-3 small text-muted text-center border-top pt-2">
+                        <i class="bi bi-info-circle me-1"></i> Remaining ₱${remaining.toLocaleString('en-PH', {minimumFractionDigits: 2})} payable in 4 terms × ₱${perTerm.toLocaleString('en-PH', {minimumFractionDigits: 2})}
+                    </div>`;
+            }
+            
+            html += `</div>`;
+            
+            body.innerHTML = html;
+            
+            // Enable confirm button if min DP met
+            validateAdvanceDownpayment(minDp, fee);
+        })
+        .catch(() => {
+            body.innerHTML = '<div class="alert alert-danger border-0"><i class="bi bi-x-circle me-1"></i> Failed to load advancement preview.</div>';
+        });
+}
+
+function validateAdvanceDownpayment(minDp, maxFee) {
+    const input = document.getElementById('advanceDownpaymentAmount');
+    const btn = document.getElementById('confirmAdvanceBtn');
+    const feedback = document.getElementById('advancePaymentFeedback');
+    if (!input || !btn) return;
+    
+    const amount = parseFloat(input.value) || 0;
+    
+    if (amount >= minDp && amount > 0) {
+        btn.disabled = false;
+        feedback.innerHTML = amount >= maxFee && maxFee > 0
+            ? '<div class="small text-success"><i class="bi bi-check-circle me-1"></i>Full payment — no remaining balance.</div>'
+            : '';
+    } else {
+        btn.disabled = true;
+        if (input.value !== '' && amount < minDp) {
+            feedback.innerHTML = `<div class="small text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Minimum is ₱${minDp.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>`;
+        } else {
+            feedback.innerHTML = '';
+        }
+    }
+}
+
+function confirmAdvanceYear() {
+    const btn = document.getElementById('confirmAdvanceBtn');
+    const amount = parseFloat(document.getElementById('advanceDownpaymentAmount').value) || 0;
+    const method = document.getElementById('advancePaymentMethod').value;
+    
+    if (amount <= 0) {
+        document.getElementById('advancePaymentFeedback').innerHTML = '<div class="small text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Down payment amount is required.</div>';
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+    
+    const semester = getSelectedSemester();
     const studentType = getSelectedEnrollmentType();
     const previousSchool = document.getElementById('previousSchoolInput').value || '';
-    
-    if (isNonRegularType(studentType) && !previousSchool) {
-        showAlert('warning', 'Previous school is required for non-regular students.');
-        return;
-    }
-    
-    if (!confirm('Advance this student to the next year level? Tuition fees will be automatically assessed for the selected semester.')) {
-        return;
-    }
     
     const fd = new FormData();
     fd.append('action', 'enroll_next_year');
@@ -773,15 +953,29 @@ function advanceToNextYear() {
     fd.append('student_type', studentType);
     fd.append('previous_school', previousSchool);
     fd.append('completed_subject_ids', JSON.stringify([]));
+    fd.append('downpayment_amount', amount);
+    fd.append('payment_method', method);
     
     fetch('process/program_enrollment_api.php', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(d => {
+            // Close advance modal
+            const advModal = bootstrap.Modal.getInstance(document.getElementById('advanceYearModal'));
+            if (advModal) advModal.hide();
+            
             if (d.success) {
                 showFeeResultModal(d);
             } else {
                 showAlert('danger', d.message);
             }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-up-circle me-1"></i> Advance & Pay';
+        })
+        .catch(() => {
+            showAlert('danger', 'Network error during advancement.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-up-circle me-1"></i> Advance & Pay';
         });
 }
 
@@ -923,10 +1117,44 @@ function showFeeResultModal(response) {
             </div>
         </div>`;
 
-    // Down payment section - mandatory when fee > 0 and balance > 0
+    // Down payment section
     const doneBtn = document.getElementById('feeResultDoneBtn');
     const effectiveFee = (discountsApplied.length > 0 || penaltiesApplied.length > 0) ? adjustedFee : fee;
-    if (fee > 0 && semesterBalance > 0) {
+    const alreadyPaidDP = parseFloat(meta.downpayment_amount || 0);
+    const dpReference = meta.downpayment_reference || '';
+
+    if (fee > 0 && alreadyPaidDP > 0 && dpReference) {
+        // Downpayment was already recorded during advancement — show summary instead of form
+        html += `
+        <div class="border border-success rounded-4 overflow-hidden mb-3" id="downpaymentSection">
+            <div class="p-3 bg-success bg-opacity-10">
+                <p class="small fw-bold text-success text-uppercase mb-2"><i class="bi bi-check-circle-fill me-1"></i> Down Payment Recorded</p>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <div class="border rounded-3 p-2 bg-white text-center h-100">
+                            <small class="text-muted d-block">Down Payment Paid</small>
+                            <span class="fw-bold text-success">₱${alreadyPaidDP.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded-3 p-2 bg-white text-center h-100">
+                            <small class="text-muted d-block">Remaining Balance</small>
+                            <span class="fw-bold text-danger">₱${semesterBalance.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="small text-muted mb-0 text-center">Reference: <strong>${escapeHtml(dpReference)}</strong></p>
+            </div>
+        </div>`;
+        if (doneBtn) {
+            doneBtn.disabled = false;
+            doneBtn.title = '';
+            doneBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Done';
+            doneBtn.classList.remove('btn-secondary');
+            doneBtn.classList.add('btn-success');
+        }
+    } else if (fee > 0 && semesterBalance > 0) {
+        // No downpayment yet — show mandatory downpayment form
         const downpayment = Math.ceil(effectiveFee * 0.25);
         const remaining = effectiveFee - downpayment;
         const perTerm = Math.ceil(remaining / 4);
@@ -959,8 +1187,8 @@ function showFeeResultModal(response) {
                         <select class="form-select" id="downpaymentMethod">
                             <option value="cash">Cash</option>
                             <option value="bank_transfer">Bank Transfer</option>
-                            <option value="gcash">GCash</option>
                             <option value="online">Online Payment</option>
+                            <option value="check">Check</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -1031,6 +1259,28 @@ function processDownPayment() {
                 const section = document.getElementById('downpaymentSection');
                 if (section) section.classList.remove('border-danger');
                 if (section) section.classList.add('border-success');
+
+                // Update displayed balance numbers with new values
+                if (typeof d.new_balance !== 'undefined') {
+                    const newSemBal = parseFloat(d.new_balance);
+                    const newTotBal = parseFloat(d.new_total_balance ?? d.new_balance);
+                    const balanceRows = document.querySelectorAll('#feeResultBody .d-flex.justify-content-between');
+                    balanceRows.forEach(row => {
+                        const label = row.querySelector('.text-muted');
+                        const valueEl = row.querySelector('.fw-bold:last-child');
+                        if (label && valueEl) {
+                            const labelText = label.textContent.trim();
+                            if (labelText.includes('Semester') && labelText.includes('Balance')) {
+                                valueEl.textContent = '₱' + newSemBal.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                                valueEl.className = 'fw-bold ' + (newSemBal > 0 ? 'text-danger' : 'text-success');
+                            } else if (labelText.includes('Total') && labelText.includes('Balance')) {
+                                valueEl.textContent = '₱' + newTotBal.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                                valueEl.className = 'fw-bold ' + (newTotBal > 0 ? 'text-danger' : 'text-success');
+                            }
+                        }
+                    });
+                }
+
                 // Enable Done button
                 const doneBtn = document.getElementById('feeResultDoneBtn');
                 if (doneBtn) {
