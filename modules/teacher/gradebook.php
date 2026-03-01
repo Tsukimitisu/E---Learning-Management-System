@@ -119,6 +119,7 @@ if ($use_subject_roster) {
                 WHEN st.student_type = 'transferee' THEN 'transferee'
                 ELSE 'irregular'
             END as student_type,
+            sse.status as enrollment_status,
             g.id as grade_id,
             g.prelim,
             g.midterm,
@@ -133,7 +134,7 @@ if ($use_subject_roster) {
         INNER JOIN user_profiles up ON u.id = up.user_id
         LEFT JOIN students st ON u.id = st.user_id
         LEFT JOIN grades g ON u.id = g.student_id AND g.section_id = ? AND g.subject_id = ?
-        WHERE sse.section_id = ? AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status = 'enrolled'
+        WHERE sse.section_id = ? AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status IN ('enrolled','credited')
         ORDER BY up.last_name, up.first_name
     ");
     $students->bind_param("iiiii", $section_id, $subject_id, $section_id, $subject_id, $current_ay_id);
@@ -357,7 +358,8 @@ include '../../includes/header.php';
                             $remarks_class = 'bg-danger';
                         }
                     ?>
-                    <tr data-student-id="<?php echo $student['user_id']; ?>" data-grade-id="<?php echo $student['grade_id'] ?? 0; ?>" data-version="<?php echo $student['version'] ?? 0; ?>">
+                    <?php $is_credited = (($student['enrollment_status'] ?? '') === 'credited'); ?>
+                    <tr data-student-id="<?php echo $student['user_id']; ?>" data-grade-id="<?php echo $student['grade_id'] ?? 0; ?>" data-version="<?php echo $student['version'] ?? 0; ?>"<?php echo $is_credited ? ' data-credited="1"' : ''; ?>>
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
                                 <div class="me-3">
@@ -366,7 +368,9 @@ include '../../includes/header.php';
                                 <div>
                                     <div class="fw-bold text-dark">
                                         <?php echo htmlspecialchars($student['student_name']); ?>
-                                        <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
+                                        <?php if ($is_credited): ?>
+                                            <span class="badge bg-info text-white ms-2"><i class="bi bi-patch-check-fill me-1"></i>Credited Subject</span>
+                                        <?php elseif (($student['student_type'] ?? 'regular') !== 'regular'): ?>
                                             <span class="badge bg-warning text-dark ms-2"><?php echo ucfirst($student['student_type'] ?? 'irregular'); ?> Student</span>
                                         <?php endif; ?>
                                     </div>
@@ -374,6 +378,18 @@ include '../../includes/header.php';
                                 </div>
                             </div>
                         </td>
+                        <?php if ($is_credited): ?>
+                        <td class="text-center" colspan="4">
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info px-4 py-2">
+                                <i class="bi bi-patch-check-fill me-1"></i> Credited — Not Gradable
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-save-row save-grade-btn" disabled title="Credited Subject">
+                                <i class="bi bi-lock-fill me-1"></i> N/A
+                            </button>
+                        </td>
+                        <?php else: ?>
                         <td class="text-center">
                             <?php 
                                 // Get grade value for selected term
@@ -405,6 +421,7 @@ include '../../includes/header.php';
                                 <i class="bi bi-check2 me-1"></i> SAVE
                             </button>
                         </td>
+                        <?php endif; ?>
                     </tr>
                     <?php 
                         $counter++;
@@ -512,6 +529,9 @@ function updateRatingAndRemarks(row, grade) {
 }
 
 async function saveGrade(row, btn) {
+    // Skip credited students
+    if (row.dataset.credited === '1') return true;
+
     const studentId = row.dataset.studentId;
     const gradeId = row.dataset.gradeId || 0;
     const gradeVersion = parseInt(row.dataset.version || '0', 10) || 0;
@@ -659,17 +679,19 @@ function getGradeData() {
     
     const students = [];
     rows.forEach((row, index) => {
+        const isCredited = row.dataset.credited === '1';
         const gradeInput = row.querySelector('.term-grade-input');
-        const currentGrade = parseFloat(gradeInput?.value) || '';
+        const currentGrade = isCredited ? '' : (parseFloat(gradeInput?.value) || '');
         
         students.push({
             no: index + 1,
             studentNo: row.querySelector('.student-no')?.textContent?.trim() || '',
-            studentName: row.querySelector('.fw-bold.text-dark')?.textContent?.trim() || '',
+            studentName: row.querySelector('.fw-bold.text-dark')?.childNodes[0]?.textContent?.trim() || row.querySelector('.fw-bold.text-dark')?.textContent?.trim() || '',
             grade: currentGrade,
-            rating: row.querySelector('.rating-badge')?.textContent?.trim() || '',
-            remarks: row.querySelector('.remarks-badge')?.textContent?.trim() || '',
-            notes: row.querySelector('.notes-input')?.value?.trim() || ''
+            rating: isCredited ? 'CREDITED' : (row.querySelector('.rating-badge')?.textContent?.trim() || ''),
+            remarks: isCredited ? 'Credited Subject' : (row.querySelector('.remarks-badge')?.textContent?.trim() || ''),
+            notes: isCredited ? '' : (row.querySelector('.notes-input')?.value?.trim() || ''),
+            isCredited: isCredited
         });
     });
     
@@ -715,12 +737,12 @@ function exportToExcel(editable = true) {
         [''],
         ['═══════════════════════════════════════════════════════════════════════════════════════════════════════'],
         [''],
-        ['NO.', 'STUDENT NUMBER', 'STUDENT NAME', 'AVERAGE', 'RATING', 'REMARKS', 'NOTES'],
+        ['NO.', 'STUDENT NUMBER', 'STUDENT NAME', 'AVERAGE', 'RATING', 'REMARKS', 'STATUS', 'NOTES'],
     ];
     
     // Add student data
     data.students.forEach(student => {
-        sheetData.push([student.no, student.studentNo, student.studentName, student.grade, student.rating, student.remarks, student.notes]);
+        sheetData.push([student.no, student.studentNo, student.studentName, student.grade, student.rating, student.remarks, student.isCredited ? 'CREDITED' : 'Regular', student.notes]);
     });
     
     // Add footer
@@ -751,12 +773,13 @@ function exportToExcel(editable = true) {
         { wch: 12 },  // Average
         { wch: 15 },  // Rating
         { wch: 12 },  // Remarks
+        { wch: 14 },  // Status
         { wch: 30 }   // Notes
     ];
     
     // Merge cells for header title
     ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
     ];
     
     // Add sheet protection only if not editable
@@ -861,6 +884,7 @@ function exportToPDF() {
                         <th>Average</th>
                         <th>Rating</th>
                         <th>Remarks</th>
+                        <th>Status</th>
                         <th>Notes</th>
                     </tr>
                 </thead>
@@ -870,9 +894,10 @@ function exportToPDF() {
                             <td>${s.no}</td>
                             <td>${s.studentNo}</td>
                             <td>${s.studentName}</td>
-                            <td>${s.grade || ''}</td>
+                            <td>${s.isCredited ? '' : (s.grade || '')}</td>
                             <td>${s.rating}</td>
                             <td class="${s.remarks === 'PASSED' ? 'passed' : (s.remarks === 'FAILED' ? 'failed' : '')}">${s.remarks}</td>
+                            <td>${s.isCredited ? 'CREDITED' : 'Regular'}</td>
                             <td>${s.notes}</td>
                         </tr>
                     `).join('')}

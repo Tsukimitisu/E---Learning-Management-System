@@ -28,6 +28,7 @@ $students = $conn->query("
         up.last_name,
         COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
         st.course_id,
+        COALESCE(st.student_type, 'regular') as student_type,
         COALESCE(p.program_code, ss.strand_code) as program_code,
         COALESCE(p.program_name, ss.strand_name) as program_name,
         CASE 
@@ -122,6 +123,11 @@ include '../../includes/header.php';
                                         <div class="flex-grow-1">
                                             <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.85rem;"><?php echo htmlspecialchars($student['first_name'] . ' ' . $student['last_name']); ?></h6>
                                             <small class="text-muted d-block" style="font-size: 0.7rem;"><?php echo htmlspecialchars($student['student_no'] ?? 'NO-ID'); ?></small>
+                                            <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
+                                                <span class="badge bg-info text-white mt-1" style="font-size: 0.6rem;">
+                                                    <i class="bi bi-patch-check-fill me-1"></i><?php echo ucfirst($student['student_type']); ?>
+                                                </span>
+                                            <?php endif; ?>
                                             <span class="badge <?php echo $student['enrolled_sections'] > 0 ? 'bg-success' : 'bg-warning text-dark'; ?> mt-1" style="font-size: 0.6rem;">
                                                 <?php echo $student['enrolled_sections']; ?> Enrollments
                                             </span>

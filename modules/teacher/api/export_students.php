@@ -72,7 +72,7 @@ if ($subject_id > 0 && $has_subject_enrollment_table) {
                 WHEN st.student_type = 'transferee' THEN 'transferee'
                 ELSE 'irregular'
             END as student_type,
-            sse.status
+            sse.status as enrollment_status
         FROM student_subject_enrollments sse
         INNER JOIN users u ON sse.student_id = u.id
         INNER JOIN user_profiles up ON u.id = up.user_id
@@ -80,7 +80,7 @@ if ($subject_id > 0 && $has_subject_enrollment_table) {
         WHERE sse.section_id = ?
           AND sse.subject_id = ?
           AND sse.academic_year_id = ?
-          AND sse.status = 'enrolled'
+          AND sse.status IN ('enrolled','credited')
         ORDER BY up.last_name, up.first_name
     ";
     $stmt = $conn->prepare($students_query);
@@ -140,8 +140,8 @@ while ($student = $students->fetch_assoc()) {
         $student['last_name'],
         $student['first_name'],
         $student['email'],
-        ucfirst((string)($student['student_type'] ?? 'regular')),
-        ucfirst($student['status'])
+        ($student['enrollment_status'] ?? '') === 'credited' ? 'Credited (Transferee)' : ucfirst((string)($student['student_type'] ?? 'regular')),
+        ($student['enrollment_status'] ?? '') === 'credited' ? 'Credited' : ucfirst($student['status'] ?? $student['enrollment_status'] ?? 'enrolled')
     ]);
 }
 

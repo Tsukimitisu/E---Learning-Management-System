@@ -31,6 +31,21 @@ if ($student_id == 0 || $section_id == 0 || $subject_id == 0) {
     exit();
 }
 
+// Block grade entry for credited (transferee) subjects
+$check_credited = $conn->prepare("
+    SELECT status FROM student_subject_enrollments
+    WHERE student_id = ? AND subject_id = ? AND section_id = ? AND status = 'credited'
+    LIMIT 1
+");
+if ($check_credited) {
+    $check_credited->bind_param("iii", $student_id, $subject_id, $section_id);
+    $check_credited->execute();
+    if ($check_credited->get_result()->num_rows > 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Cannot enter grades for a credited subject. This student has already completed this subject at a previous institution.']);
+        exit();
+    }
+}
+
 // Verify teacher is assigned to this subject
 $verify = $conn->prepare("SELECT id FROM teacher_subject_assignments WHERE teacher_id = ? AND curriculum_subject_id = ? AND academic_year_id = ? AND is_active = 1");
 $verify->bind_param("iii", $teacher_id, $subject_id, $current_ay_id);

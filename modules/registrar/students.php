@@ -53,6 +53,7 @@ $branch_condition = $branch_id > 0 ? "up.branch_id = $branch_id" : "1=1";
 $students_query = "
     SELECT 
         s.user_id, s.student_no, s.course_id,
+        COALESCE(s.student_type, 'regular') as student_type,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
         u.email, u.status,
         COALESCE(p.program_code, ss.strand_code) as course_code, 
@@ -200,7 +201,14 @@ include '../../includes/header.php';
                         data-status="<?php echo htmlspecialchars($student['status']); ?>">
                         <td class="ps-4 fw-bold text-maroon small"><?php echo htmlspecialchars($student['student_no']); ?></td>
                         <td>
-                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($student['full_name']); ?></div>
+                            <div class="fw-bold text-dark">
+                                <?php echo htmlspecialchars($student['full_name']); ?>
+                                <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
+                                    <span class="badge bg-<?php echo $student['student_type'] === 'transferee' ? 'info' : 'warning'; ?> ms-1" style="font-size:0.65rem;">
+                                        <?php echo ucfirst($student['student_type']); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                             <small class="text-muted small"><?php echo htmlspecialchars($student['email']); ?></small>
                         </td>
                         <td><small class="text-muted fw-bold"><?php echo htmlspecialchars($student['course_code'] ? ($student['course_code'].' - '.$student['course_title']) : 'Unassigned'); ?></small></td>

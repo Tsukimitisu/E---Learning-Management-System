@@ -86,6 +86,7 @@ if ($use_subject_roster) {
                    WHEN st.student_type = 'transferee' THEN 'transferee'
                    ELSE 'irregular'
                END as student_type,
+               sse.status as enrollment_status,
                up.contact_no as phone,
                CONCAT(up.first_name, ' ', up.last_name) as name,
                sse.created_at as enrolled_at
@@ -93,7 +94,7 @@ if ($use_subject_roster) {
         INNER JOIN users u ON sse.student_id = u.id
         INNER JOIN user_profiles up ON u.id = up.user_id
         LEFT JOIN students st ON u.id = st.user_id
-        WHERE sse.section_id = ? AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status = 'enrolled'
+        WHERE sse.section_id = ? AND sse.subject_id = ? AND sse.academic_year_id = ? AND sse.status IN ('enrolled','credited')
         ORDER BY up.last_name, up.first_name
     ");
     $students_query->bind_param("iii", $section_id, $subject_id, $current_ay_id);
@@ -212,7 +213,9 @@ include '../../includes/header.php';
                                 </div>
                                 <div class="fw-bold text-dark">
                                     <?php echo htmlspecialchars($student['name']); ?>
-                                    <?php if (($student['student_type'] ?? 'regular') !== 'regular'): ?>
+                                    <?php if (($student['enrollment_status'] ?? '') === 'credited'): ?>
+                                        <span class="badge bg-info text-white ms-2"><i class="bi bi-patch-check-fill me-1"></i>Credited Subject</span>
+                                    <?php elseif (($student['student_type'] ?? 'regular') !== 'regular'): ?>
                                         <span class="badge bg-warning text-dark ms-2"><?php echo ucfirst($student['student_type'] ?? 'irregular'); ?> Student</span>
                                     <?php endif; ?>
                                 </div>

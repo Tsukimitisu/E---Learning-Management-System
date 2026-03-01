@@ -710,7 +710,7 @@ function getStudentsByProgram() {
                 INNER JOIN curriculum_subjects cs ON cs.id = sse.subject_id
                 WHERE sse.student_id = u.id
                   AND sse.academic_year_id = ?
-                  AND sse.status = 'enrolled'
+                  AND sse.status IN ('enrolled','credited')
                   AND cs.program_id = ?
                   " . ($year_level_id ? "AND cs.year_level_id = ?" : "") . "
             )
@@ -723,7 +723,7 @@ function getStudentsByProgram() {
                 INNER JOIN curriculum_subjects cs ON cs.id = sse.subject_id
                 WHERE sse.student_id = u.id
                   AND sse.academic_year_id = ?
-                  AND sse.status = 'enrolled'
+                  AND sse.status IN ('enrolled','credited')
                   AND cs.shs_strand_id = ?
                   " . ($year_level_id ? "AND cs.shs_grade_level_id = ?" : "") . "
             )
@@ -856,8 +856,24 @@ function syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $curr
             updated_at = NOW()
     ");
 
+    // Also prepare an upsert for credited subjects
+    $credit_upsert = $conn->prepare("
+        INSERT INTO student_subject_enrollments
+            (student_id, subject_id, section_id, academic_year_id, status, enrollment_type, recorded_by)
+        VALUES (?, ?, ?, ?, 'credited', ?, ?)
+        ON DUPLICATE KEY UPDATE
+            section_id = VALUES(section_id),
+            status = 'credited',
+            enrollment_type = VALUES(enrollment_type),
+            recorded_by = VALUES(recorded_by),
+            updated_at = NOW()
+    ");
+
     foreach ($subject_ids as $subject_id) {
         if (isset($completed_map[$subject_id])) {
+            // Enroll with 'credited' status so they appear in class list but are not gradable
+            $credit_upsert->bind_param("iiiisi", $student_id, $subject_id, $section_id, $current_ay_id, $student_type, $recorded_by);
+            $credit_upsert->execute();
             continue;
         }
         $upsert->bind_param("iiiisi", $student_id, $subject_id, $section_id, $current_ay_id, $student_type, $recorded_by);
@@ -920,7 +936,7 @@ function hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_i
     $eligibility_sql = "
         SELECT COUNT(*) as cnt
         FROM student_subject_enrollments
-        WHERE student_id = ? AND academic_year_id = ? AND status = 'enrolled'
+        WHERE student_id = ? AND academic_year_id = ? AND status IN ('enrolled','credited')
           AND subject_id IN (" . implode(',', array_fill(0, count($subject_ids), '?')) . ")
     ";
     $eligibility_stmt = $conn->prepare($eligibility_sql);

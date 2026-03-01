@@ -785,9 +785,14 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         }
     }
 
-    // Build target enrollment list (exclude completed subjects)
+    // Build target enrollment list (non-credited subjects)
     $target_subject_ids = array_values(array_filter($subject_ids, static function ($sid) use ($completed_map) {
         return !isset($completed_map[$sid]);
+    }));
+
+    // Credited subjects to enroll with 'credited' status
+    $credited_subject_ids = array_values(array_filter($subject_ids, static function ($sid) use ($completed_map) {
+        return isset($completed_map[$sid]);
     }));
 
     // Exclude already enrolled/completed for this AY to prevent duplicates
@@ -814,24 +819,25 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         return !isset($existing_map[$sid]);
     }));
 
-    // Drop currently-enrolled rows for newly marked-completed subjects in this AY
-    if (!empty($completed_map)) {
-        $completed_ids = array_keys($completed_map);
-        $drop_sql = "
-            UPDATE student_subject_enrollments
-            SET status = 'dropped', updated_at = NOW()
-            WHERE student_id = ? AND academic_year_id = ?
-              AND status = 'enrolled'
-              AND subject_id IN (" . placeholders(count($completed_ids)) . ")
-        ";
-        $drop_stmt = $conn->prepare($drop_sql);
-        $drop_types = 'ii' . str_repeat('i', count($completed_ids));
-        $drop_params = array_merge([$student_id, $current_ay_id], $completed_ids);
-        $drop_stmt->bind_param($drop_types, ...$drop_params);
-        $drop_stmt->execute();
+    // Mark credited subjects as 'credited' (upsert — converts 'enrolled' to 'credited' if re-processed)
+    if (!empty($credited_subject_ids)) {
+        $credit_enroll = $conn->prepare("
+            INSERT INTO student_subject_enrollments
+                (student_id, subject_id, section_id, academic_year_id, status, enrollment_type, recorded_by)
+            VALUES (?, ?, NULL, ?, 'credited', ?, ?)
+            ON DUPLICATE KEY UPDATE
+                status = 'credited',
+                enrollment_type = VALUES(enrollment_type),
+                recorded_by = VALUES(recorded_by),
+                updated_at = NOW()
+        ");
+        foreach ($credited_subject_ids as $sid) {
+            $credit_enroll->bind_param("iiisi", $student_id, $sid, $current_ay_id, $student_type, $recorded_by);
+            $credit_enroll->execute();
+        }
     }
 
-    // Insert subject enrollments
+    // Insert regular subject enrollments
     $enrolled_count = 0;
     if (!empty($to_enroll)) {
         $insert_enroll = $conn->prepare("
