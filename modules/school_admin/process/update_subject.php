@@ -53,6 +53,13 @@ try {
     );
     
     if ($stmt->execute()) {
+        send_realtime_update('curriculum_updated', [
+            'action' => 'subject_updated',
+            'subject_id' => $subject_id,
+            'subject_code' => $subject_code,
+            'program_id' => $program_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Subject updated successfully', 'debug_post' => $debug_post]);
     } else {
         echo json_encode([

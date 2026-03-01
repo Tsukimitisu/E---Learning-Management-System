@@ -36,7 +36,7 @@ $current_ay = $conn->query("SELECT * FROM academic_years WHERE is_active = 1 LIM
 $current_ay_id = $current_ay['id'] ?? 0;
 
 if ($section_id == 0 || $subject_id == 0) {
-    header('Location: grading.php');
+    header('Location: subjects.php');
     exit();
 }
 
@@ -50,7 +50,7 @@ $verify->execute();
 $result = $verify->get_result();
 
 if ($result->num_rows == 0) {
-    header('Location: grading.php');
+    header('Location: subjects.php');
     exit();
 }
 
@@ -184,7 +184,7 @@ include '../../includes/header.php';
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-modern">
-                    <li class="breadcrumb-item"><a href="grading.php">Grading</a></li>
+                    <li class="breadcrumb-item"><a href="subjects.php">My Classes</a></li>
                     <li class="breadcrumb-item"><a href="grading_sections.php?subject_id=<?php echo $subject_id; ?>"><?php echo htmlspecialchars($class_info['subject_code']); ?></a></li>
                     <li class="breadcrumb-item active"><?php echo htmlspecialchars($class_info['section_name']); ?></li>
                 </ol>

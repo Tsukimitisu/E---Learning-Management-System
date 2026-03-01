@@ -4,14 +4,99 @@ const BASE_URL = '/elms_system/';
 $(document).ready(function() {
     initializeFormHandlers();
 
-    // Listen for real-time update events
+    // Listen for real-time update events (Socket.IO)
     window.addEventListener('elms-realtime-update', function(e) {
-        // Reload curriculum data (customize as needed)
+        var detail = e.detail || {};
+        var eventName = detail.event || '';
+        var data = detail.data || {};
+
+        // Handle curriculum-specific updates
+        if (eventName === 'curriculum_updated' || (data && data.event === 'curriculum_updated')) {
+            var currData = data.data || data;
+            // Don't reload if this user triggered the change (they handle their own reload)
+            if (currData.updated_by && currData.updated_by == (window.USER_ID || 0)) return;
+            handleCurriculumRealtimeUpdate(currData);
+            return;
+        }
+
+        // Legacy fallback
         if (typeof loadCurriculumData === 'function') loadCurriculumData();
         if (typeof loadTracks === 'function') loadTracks();
         if (typeof loadPrograms === 'function') loadPrograms();
     });
+
+    // Polling fallback for deployed environments without Socket.IO
+    startCurriculumPolling();
 });
+
+// === REAL-TIME CURRICULUM UPDATE HANDLER ===
+var _curriculumRealtimeDebounce = null;
+function handleCurriculumRealtimeUpdate(data) {
+    // Debounce: if multiple events arrive close together, only reload once
+    if (_curriculumRealtimeDebounce) clearTimeout(_curriculumRealtimeDebounce);
+    _curriculumRealtimeDebounce = setTimeout(function() {
+        // Show a toast/alert to the user
+        if (typeof showAlert === 'function') {
+            showAlert('Curriculum was updated by another admin. Refreshing...', 'info');
+        }
+        // Preserve current tab state
+        var currentTab = getCurrentCollegeTab();
+        var programId = window.currentProgramId || null;
+        if (typeof collegeReloadWithTab === 'function' && currentTab) {
+            setTimeout(function() { collegeReloadWithTab(currentTab, programId); }, 1500);
+        } else {
+            setTimeout(function() { location.reload(); }, 1500);
+        }
+    }, 500);
+}
+
+function getCurrentCollegeTab() {
+    var activeBtn = document.querySelector('#collegeTabs .nav-link.active');
+    if (!activeBtn) return null;
+    var target = activeBtn.getAttribute('data-bs-target') || '';
+    if (target === '#programs') return 'programs';
+    if (target === '#college-yearlevels') return 'yearlevels';
+    if (target === '#college-subjects') return 'subjects';
+    return null;
+}
+
+// === POLLING FALLBACK (for deployed environments without Socket.IO) ===
+var _lastCurriculumHash = null;
+function startCurriculumPolling() {
+    // Only poll if Socket.IO is not connected
+    if (window.ELMS_REALTIME_ENABLED && window.elmsSocket && window.elmsSocket.connected) {
+        // Socket is active, re-check in 30s in case it disconnects
+        setTimeout(startCurriculumPolling, 30000);
+        return;
+    }
+    pollCurriculumChanges();
+}
+
+function pollCurriculumChanges() {
+    // Check if we're on the curriculum page
+    if (!document.getElementById('collegeTabs')) return;
+
+    fetch((window.BASE_URL || '/elms_system/') + 'api/curriculum.php?action=check_hash&t=' + Date.now())
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'success' && data.hash) {
+                if (_lastCurriculumHash === null) {
+                    // First load — just store the hash
+                    _lastCurriculumHash = data.hash;
+                } else if (_lastCurriculumHash !== data.hash) {
+                    // Data changed — trigger reload
+                    _lastCurriculumHash = data.hash;
+                    handleCurriculumRealtimeUpdate({ action: 'poll_detected_change' });
+                }
+            }
+        })
+        .catch(function() { /* silently ignore poll errors */ });
+
+    // Poll every 10 seconds when socket is down
+    if (!(window.elmsSocket && window.elmsSocket.connected)) {
+        setTimeout(pollCurriculumChanges, 10000);
+    }
+}
 
 // Toggle SHS/College fields based on subject type selection
 function updateSubjectForm() {
@@ -625,6 +710,12 @@ function loadStrands(trackId) {
 }
 
 // ========== COLLEGE SUBJECT MANAGEMENT ==========
+function collegeReloadWithTab(tab, programId) {
+    var url = window.location.pathname + '?tab=' + (tab || 'subjects');
+    if (programId) url += '&pid=' + programId;
+    window.location.href = url;
+}
+
 function addCollegeSubject() {
     const formData = new FormData(document.getElementById('addCollegeSubjectForm'));
     fetch(BASE_URL + 'modules/school_admin/process/add_subject.php', {
@@ -636,7 +727,7 @@ function addCollegeSubject() {
             showAlert('College subject added successfully!', 'success');
             $('#addCollegeSubjectModal').modal('hide');
             document.getElementById('addCollegeSubjectForm').reset();
-            setTimeout(() => location.reload(), 1500);
+            setTimeout(() => collegeReloadWithTab('subjects', window.currentProgramId), 1500);
         } else showAlert(data.message, 'danger');
     })
     .catch(() => showAlert('Error adding college subject', 'danger'));
@@ -750,8 +841,7 @@ function updateCollegeSubject() {
         if (data.status === 'success') {
             showAlert('Subject updated successfully!', 'success');
             $('#editCollegeSubjectModal').modal('hide');
-            // Reload only the subject table content via AJAX, keep tab
-            reloadCollegeSubjectsTable(true);
+            setTimeout(() => collegeReloadWithTab('subjects', window.currentProgramId), 1500);
         } else showAlert(data.message + (data.sql_error ? ' (SQL: ' + data.sql_error + ')' : '') + (data.debug_post ? '\nDebug: ' + JSON.stringify(data.debug_post) : ''), 'danger');
     })
     .catch(error => {
@@ -771,7 +861,7 @@ function deleteCollegeSubject(subjectId, subjectCode) {
         .then(data => {
             if (data.status === 'success') {
                 showAlert('Subject deleted successfully!', 'success');
-                reloadCollegeSubjectsTable();
+                setTimeout(() => collegeReloadWithTab('subjects', window.currentProgramId), 1500);
             } else showAlert(data.message, 'danger');
         })
         .catch(error => showAlert('Error deleting subject', 'danger'));
@@ -782,12 +872,13 @@ function reloadCollegeSubjectsTable(keepTab) {
     fetch(BASE_URL + 'modules/school_admin/college_curriculum.php?ajax=subjects')
         .then(res => res.text())
         .then(html => {
-            // Extract the subject table from the returned HTML
+            // Extract the subject grid from the returned HTML
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            const newTable = doc.querySelector('#college-subjects .main-card-modern');
-            if (newTable) {
-                document.querySelector('#college-subjects .main-card-modern').innerHTML = newTable.innerHTML;
+            const newGrid = doc.querySelector('#collegeSubjectGrid');
+            const currentGrid = document.querySelector('#collegeSubjectGrid');
+            if (newGrid && currentGrid) {
+                currentGrid.innerHTML = newGrid.innerHTML;
                 if (keepTab) {
                     // Ensure the subject tab stays active
                     const tabTrigger = document.querySelector('#college-subjects-tab');

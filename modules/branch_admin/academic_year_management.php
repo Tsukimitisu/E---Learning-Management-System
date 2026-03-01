@@ -97,6 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $to_yl = $to_year_level_id ?? null; $to_shs = $to_shs_grade ?? null; $promoted_by = $_SESSION['user_id'];
             $log->bind_param("iiiiiiiiiisi", $student['student_id'], $from_ay_id, $to_ay_id, $student['year_level_id'], $to_yl, $student['shs_grade_level_id'], $to_shs, $student['program_id'], $student['shs_strand_id'], $branch_id, $promotion_type, $promoted_by);
             $log->execute();
+            
+            // Mark previous term enrollments as completed
+            $update_term = $conn->prepare("UPDATE student_term_enrollments SET status = 'completed', updated_at = NOW() WHERE student_id = ? AND academic_year_id = ? AND status = 'enrolled'");
+            $update_term->bind_param("ii", $student['student_id'], $from_ay_id);
+            $update_term->execute();
+            
+            // Mark previous subject enrollments as completed
+            $update_subj = $conn->prepare("UPDATE student_subject_enrollments SET status = 'completed', updated_at = NOW() WHERE student_id = ? AND academic_year_id = ? AND status = 'enrolled'");
+            $update_subj->bind_param("ii", $student['student_id'], $from_ay_id);
+            $update_subj->execute();
+            
             $promoted_count++;
         }
         $message = "$promoted_count students processed for promotion!";

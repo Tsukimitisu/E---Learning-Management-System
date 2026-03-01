@@ -963,6 +963,27 @@ try {
             ]);
             break;
 
+        case 'check_hash':
+            // Lightweight poll endpoint: returns a hash of curriculum data timestamps
+            // so clients can detect changes without downloading full data
+            $hash_query = $conn->query("
+                SELECT 
+                    COALESCE(MAX(cs.updated_at), '0') AS sub_max,
+                    COALESCE(MAX(p.updated_at), '0') AS prog_max,
+                    (SELECT COUNT(*) FROM curriculum_subjects WHERE subject_type = 'college') AS sub_count,
+                    (SELECT COUNT(*) FROM programs) AS prog_count,
+                    (SELECT COUNT(*) FROM program_year_levels) AS yl_count
+                FROM curriculum_subjects cs, programs p
+            ");
+            if ($hash_query) {
+                $hash_row = $hash_query->fetch_assoc();
+                $hash_string = implode('|', $hash_row);
+                echo json_encode(['status' => 'success', 'hash' => md5($hash_string)]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Hash query failed']);
+            }
+            break;
+
         default:
             echo json_encode(['status' => 'error', 'message' => 'Invalid action']);
     }

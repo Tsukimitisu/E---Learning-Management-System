@@ -24,6 +24,11 @@ try {
     $stmt->bind_param("siiii", $year_name, $year_number, $semesters, $is_active, $year_id);
     
     if ($stmt->execute()) {
+        send_realtime_update('curriculum_updated', [
+            'action' => 'year_level_updated',
+            'year_id' => $year_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Year level updated successfully']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to update year level']);

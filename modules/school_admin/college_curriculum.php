@@ -9,6 +9,10 @@ if (!isset($_SESSION['user_id']) || $user_role != ROLE_SCHOOL_ADMIN) {
 
 $page_title = "College Curriculum Management";
 
+// Determine active tab from URL parameter
+$active_tab = $_GET['tab'] ?? 'programs';
+$restore_program_id = (int)($_GET['pid'] ?? 0);
+
 /** 
  * ==========================================
  * BACKEND LOGIC - ABSOLUTELY UNTOUCHED
@@ -33,15 +37,42 @@ if ($year_levels_result) {
 
 $college_subjects = [];
 $college_subjects_result = $conn->query("
-    SELECT cs.*, p.program_name, yl.year_name
+    SELECT cs.*, p.program_name, p.program_code, yl.year_name, yl.year_level
     FROM curriculum_subjects cs
     LEFT JOIN programs p ON cs.program_id = p.id
     LEFT JOIN program_year_levels yl ON cs.year_level_id = yl.id
     WHERE cs.subject_type = 'college'
-    ORDER BY cs.subject_code
+    ORDER BY cs.program_id, yl.year_level, cs.semester, cs.subject_code
 ");
 if ($college_subjects_result) {
     while ($row = $college_subjects_result->fetch_assoc()) { $college_subjects[] = $row; }
+}
+
+// Group subjects by program → year_level → semester
+$subjects_by_program = [];
+foreach ($college_subjects as $sub) {
+    $pid = $sub['program_id'] ?? 0;
+    $ylid = $sub['year_level_id'] ?? 0;
+    $sem = $sub['semester'] ?? 1;
+    if (!isset($subjects_by_program[$pid])) $subjects_by_program[$pid] = [];
+    if (!isset($subjects_by_program[$pid][$ylid])) $subjects_by_program[$pid][$ylid] = [];
+    if (!isset($subjects_by_program[$pid][$ylid][$sem])) $subjects_by_program[$pid][$ylid][$sem] = [];
+    $subjects_by_program[$pid][$ylid][$sem][] = $sub;
+}
+
+// Count subjects per program
+$subject_counts = [];
+foreach ($college_subjects as $sub) {
+    $pid = $sub['program_id'] ?? 0;
+    $subject_counts[$pid] = ($subject_counts[$pid] ?? 0) + 1;
+}
+
+// Build year levels indexed by program
+$year_levels_by_program = [];
+foreach ($year_levels as $yl) {
+    $pid = $yl['program_id'];
+    if (!isset($year_levels_by_program[$pid])) $year_levels_by_program[$pid] = [];
+    $year_levels_by_program[$pid][] = $yl;
 }
 
 include '../../includes/header.php';
@@ -75,17 +106,17 @@ include '../../includes/header.php';
     <!-- Modern Navigation Pills -->
     <ul class="nav nav-pills nav-pills-modern mb-4 animate__animated animate__fadeIn" id="collegeTabs" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" id="programs-tab" data-bs-toggle="pill" data-bs-target="#programs" type="button">
+            <button class="nav-link <?php echo $active_tab === 'programs' ? 'active' : ''; ?>" id="programs-tab" data-bs-toggle="pill" data-bs-target="#programs" type="button">
                 <i class="bi bi-mortarboard-fill me-2"></i>Programs (<?php echo count($programs); ?>)
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="college-yearlevels-tab" data-bs-toggle="pill" data-bs-target="#college-yearlevels" type="button">
+            <button class="nav-link <?php echo $active_tab === 'yearlevels' ? 'active' : ''; ?>" id="college-yearlevels-tab" data-bs-toggle="pill" data-bs-target="#college-yearlevels" type="button">
                 <i class="bi bi-calendar-range me-2"></i>Year Levels
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="college-subjects-tab" data-bs-toggle="pill" data-bs-target="#college-subjects" type="button">
+            <button class="nav-link <?php echo $active_tab === 'subjects' ? 'active' : ''; ?>" id="college-subjects-tab" data-bs-toggle="pill" data-bs-target="#college-subjects" type="button">
                 <i class="bi bi-book-half me-2"></i>Subjects (<?php echo count($college_subjects); ?>)
             </button>
         </li>
@@ -94,7 +125,7 @@ include '../../includes/header.php';
     <div class="tab-content" id="collegeTabContent">
 
         <!-- TAB 1: PROGRAMS -->
-        <div class="tab-pane fade show active" id="programs" role="tabpanel">
+        <div class="tab-pane fade <?php echo $active_tab === 'programs' ? 'show active' : ''; ?>" id="programs" role="tabpanel">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="fw-bold text-muted text-uppercase small mb-0" style="letter-spacing: 1px;">Degree Programs</h6>
                 <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addProgramModal">
@@ -128,7 +159,7 @@ include '../../includes/header.php';
         </div>
 
         <!-- TAB 2: YEAR LEVELS -->
-        <div class="tab-pane fade" id="college-yearlevels" role="tabpanel">
+        <div class="tab-pane fade <?php echo $active_tab === 'yearlevels' ? 'show active' : ''; ?>" id="college-yearlevels" role="tabpanel">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="fw-bold text-muted text-uppercase small mb-0" style="letter-spacing: 1px;">Year Level Structure</h6>
                 <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addCollegeYearModal">
@@ -173,53 +204,188 @@ include '../../includes/header.php';
             </div>
         </div>
 
-        <!-- TAB 3: SUBJECTS -->
-        <div class="tab-pane fade" id="college-subjects" role="tabpanel">
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-maroon-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addCollegeSubjectModal">
-                    <i class="bi bi-plus-circle me-1"></i> Add Subject
-                </button>
-            </div>
-            <div class="main-card-modern">
-                <div class="table-responsive">
-                    <table class="table table-hover table-modern align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Code & Title</th>
-                                <th class="text-center">Units</th>
-                                <th class="text-center">Lec/Lab</th>
-                                <th>Academic Program</th>
-                                <th>Year/Sem</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-end pe-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($college_subjects as $subject): ?>
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="fw-bold text-dark"><?php echo htmlspecialchars($subject['subject_code']); ?></div>
-                                    <small class="text-muted text-truncate d-block" style="max-width: 200px;"><?php echo htmlspecialchars($subject['subject_title']); ?></small>
-                                </td>
-                                <td class="text-center fw-bold text-maroon"><?php echo $subject['units']; ?></td>
-                                <td class="text-center small text-muted"><?php echo $subject['lecture_hours']; ?> / <?php echo $subject['lab_hours']; ?></td>
-                                <td><span class="badge bg-light text-dark border border-blue px-3"><?php echo htmlspecialchars($subject['program_name'] ?? 'Unassigned'); ?></span></td>
-                                <td><small class="fw-bold"><?php echo htmlspecialchars($subject['year_name'] ?? 'N/A'); ?></small><br><small class="text-muted"><?php echo $subject['semester'] ?? 'N/A'; ?></small></td>
-                                <td class="text-center">
-                                    <span class="badge rounded-pill bg-<?php echo $subject['is_active'] ? 'success' : 'secondary'; ?> px-3">
-                                        <?php echo $subject['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
-                                    </span>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <div class="d-flex justify-content-end gap-1">
-                                        <button class="btn btn-sm btn-white border shadow-sm text-warning" onclick="editCollegeSubject(<?php echo $subject['id']; ?>)"><i class="bi bi-pencil-fill"></i></button>
-                                        <button class="btn btn-sm btn-white border shadow-sm text-danger" onclick="deleteCollegeSubject(<?php echo $subject['id']; ?>, '<?php echo htmlspecialchars($subject['subject_code']); ?>')"><i class="bi bi-trash-fill"></i></button>
+        <!-- TAB 3: SUBJECTS (Program Cards View) -->
+        <div class="tab-pane fade <?php echo $active_tab === 'subjects' ? 'show active' : ''; ?>" id="college-subjects" role="tabpanel">
+            
+            <!-- VIEW 1: Program Cards Grid -->
+            <div id="subjectProgramCards">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="fw-bold text-muted text-uppercase small mb-0" style="letter-spacing: 1px;">
+                        <i class="bi bi-grid-3x3-gap-fill me-1"></i> Select a Program to Manage Subjects
+                    </h6>
+                    <span class="badge bg-light text-dark border px-3 py-2">
+                        <i class="bi bi-book me-1"></i> Total Subjects: <?php echo count($college_subjects); ?>
+                    </span>
+                </div>
+                <div class="row g-4">
+                    <?php foreach ($programs as $program): 
+                        $pCount = $subject_counts[$program['id']] ?? 0;
+                        $pYearLevels = $year_levels_by_program[$program['id']] ?? [];
+                    ?>
+                    <div class="col-md-6 col-lg-4 animate__animated animate__zoomIn">
+                        <div class="subject-prog-card" onclick="showProgramSubjects(<?php echo $program['id']; ?>, '<?php echo htmlspecialchars(addslashes($program['code'])); ?>', '<?php echo htmlspecialchars(addslashes($program['name'])); ?>')" role="button">
+                            <div class="subject-prog-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold"><?php echo htmlspecialchars($program['code']); ?></h6>
+                                    <span class="badge bg-white text-dark rounded-pill small"><?php echo htmlspecialchars($program['degree_level']); ?></span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h6 class="fw-bold text-dark mb-3"><?php echo htmlspecialchars($program['name']); ?></h6>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="badge rounded-pill bg-primary px-3 me-1">
+                                            <i class="bi bi-book me-1"></i><?php echo $pCount; ?> Subject<?php echo $pCount !== 1 ? 's' : ''; ?>
+                                        </span>
                                     </div>
-                                </td>
-                            </tr>
+                                    <span class="badge rounded-pill bg-<?php echo $program['is_active'] ? 'success' : 'secondary'; ?> px-3">
+                                        <?php echo $program['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($pYearLevels)): ?>
+                                <div class="mt-3 pt-3 border-top">
+                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">Year Levels:</small>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        <?php foreach ($pYearLevels as $yl): ?>
+                                        <span class="badge bg-light text-dark border" style="font-size: 0.65rem;"><?php echo htmlspecialchars($yl['year_name']); ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                <div class="text-center mt-3">
+                                    <small class="text-primary fw-bold"><i class="bi bi-arrow-right-circle me-1"></i>Click to manage subjects</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- VIEW 2: Program Subject Detail (Hidden by default) -->
+            <div id="subjectProgramDetail" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm" onclick="backToProgramCards()">
+                            <i class="bi bi-arrow-left me-1"></i> All Programs
+                        </button>
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color: var(--blue);" id="detailProgramName"></h5>
+                            <small class="text-muted" id="detailProgramCode"></small>
+                        </div>
+                    </div>
+                    <button class="btn btn-maroon-pill shadow-sm" onclick="openAddSubjectForProgram()">
+                        <i class="bi bi-plus-circle me-1"></i> Add Subject
+                    </button>
+                </div>
+
+                <!-- Year Level / Semester Accordion -->
+                <div id="yearSemAccordion">
+                    <?php foreach ($programs as $program): 
+                        $pYearLevels = $year_levels_by_program[$program['id']] ?? [];
+                        $pSubjects = $subjects_by_program[$program['id']] ?? [];
+                    ?>
+                    <div class="program-subjects-section" id="programSection_<?php echo $program['id']; ?>" style="display: none;">
+                        <?php if (empty($pYearLevels)): ?>
+                            <div class="text-center py-5">
+                                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                                <h6 class="mt-3 text-muted">No Year Levels Defined</h6>
+                                <p class="text-muted small">Please add year levels for this program first in the "Year Levels" tab.</p>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($pYearLevels as $yl): 
+                                $ylSubjects = $pSubjects[$yl['id']] ?? [];
+                                $semCount = $yl['semesters_count'] ?? 2;
+                                $totalYlSubjects = 0;
+                                foreach ($ylSubjects as $semSubs) $totalYlSubjects += count($semSubs);
+                            ?>
+                            <div class="year-level-section mb-4">
+                                <div class="year-level-header-card" onclick="toggleYearLevel(this)">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="year-icon-box">
+                                                <i class="bi bi-calendar-range"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold"><?php echo htmlspecialchars($yl['year_name']); ?></h6>
+                                                <small class="text-muted"><?php echo $semCount; ?> Semester<?php echo $semCount > 1 ? 's' : ''; ?> &bull; <?php echo $totalYlSubjects; ?> Subject<?php echo $totalYlSubjects !== 1 ? 's' : ''; ?></small>
+                                            </div>
+                                        </div>
+                                        <i class="bi bi-chevron-down toggle-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="year-level-body" style="display: none;">
+                                    <?php for ($sem = 1; $sem <= $semCount; $sem++): 
+                                        $semSubjects = $ylSubjects[$sem] ?? [];
+                                        $totalUnits = 0;
+                                        foreach ($semSubjects as $s) $totalUnits += (float)$s['units'];
+                                    ?>
+                                    <div class="semester-section">
+                                        <div class="semester-header">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold">
+                                                    <i class="bi bi-mortarboard me-2"></i>
+                                                    <?php echo $sem == 1 ? '1st' : '2nd'; ?> Semester
+                                                </span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-primary rounded-pill"><?php echo count($semSubjects); ?> subject<?php echo count($semSubjects) !== 1 ? 's' : ''; ?></span>
+                                                    <span class="badge bg-dark rounded-pill"><?php echo $totalUnits; ?> units</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php if (empty($semSubjects)): ?>
+                                        <div class="text-center py-4">
+                                            <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                                            <p class="text-muted small mt-2 mb-0">No subjects assigned for this semester</p>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-modern align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="ps-4">Code & Title</th>
+                                                        <th class="text-center">Units</th>
+                                                        <th class="text-center">Lec/Lab</th>
+                                                        <th>Prerequisites</th>
+                                                        <th class="text-center">Status</th>
+                                                        <th class="text-end pe-4">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($semSubjects as $subject): ?>
+                                                    <tr>
+                                                        <td class="ps-4">
+                                                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($subject['subject_code']); ?></div>
+                                                            <small class="text-muted text-truncate d-block" style="max-width: 250px;"><?php echo htmlspecialchars($subject['subject_title']); ?></small>
+                                                        </td>
+                                                        <td class="text-center fw-bold text-maroon"><?php echo $subject['units']; ?></td>
+                                                        <td class="text-center small text-muted"><?php echo $subject['lecture_hours']; ?> / <?php echo $subject['lab_hours']; ?></td>
+                                                        <td><small class="text-muted"><?php echo htmlspecialchars($subject['prerequisites'] ?: '—'); ?></small></td>
+                                                        <td class="text-center">
+                                                            <span class="badge rounded-pill bg-<?php echo $subject['is_active'] ? 'success' : 'secondary'; ?> px-3">
+                                                                <?php echo $subject['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-end pe-4">
+                                                            <div class="d-flex justify-content-end gap-1">
+                                                                <button class="btn btn-sm btn-white border shadow-sm text-warning" onclick="editCollegeSubject(<?php echo $subject['id']; ?>)"><i class="bi bi-pencil-fill"></i></button>
+                                                                <button class="btn btn-sm btn-white border shadow-sm text-danger" onclick="deleteCollegeSubject(<?php echo $subject['id']; ?>, '<?php echo htmlspecialchars($subject['subject_code']); ?>')"><i class="bi bi-trash-fill"></i></button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
@@ -237,10 +403,15 @@ include '../../includes/header.php';
 <script>
 window.collegePrograms = <?php echo json_encode($programs); ?>;
 window.collegeYearLevels = <?php echo json_encode($year_levels); ?>;
+window.currentProgramId = null;
+window.currentProgramCode = '';
+window.currentProgramName = '';
+
 function goBack() {
     if (document.referrer && document.referrer.includes('/elms_system/')) { window.history.back(); } 
     else { window.location.href = 'curriculum.php'; }
 }
+
 function filterYearLevelsByProgram() {
     const programId = document.getElementById('collegeSubjectProgram')?.value;
     const yearLevelSelect = document.getElementById('collegeSubjectYearLevel');
@@ -256,6 +427,78 @@ function filterYearLevelsByProgram() {
         yearLevelSelect.appendChild(option);
     });
 }
+
+// Show subjects for a specific program
+function showProgramSubjects(programId, programCode, programName) {
+    window.currentProgramId = programId;
+    window.currentProgramCode = programCode;
+    window.currentProgramName = programName;
+
+    document.getElementById('subjectProgramCards').style.display = 'none';
+    document.getElementById('subjectProgramDetail').style.display = 'block';
+    document.getElementById('detailProgramName').textContent = programName;
+    document.getElementById('detailProgramCode').textContent = programCode;
+
+    // Hide all program sections, show the selected one
+    document.querySelectorAll('.program-subjects-section').forEach(el => el.style.display = 'none');
+    const section = document.getElementById('programSection_' + programId);
+    if (section) {
+        section.style.display = 'block';
+        // Auto-expand first year level
+        const firstYearHeader = section.querySelector('.year-level-header-card');
+        if (firstYearHeader) {
+            const body = firstYearHeader.nextElementSibling;
+            if (body && body.style.display === 'none') {
+                body.style.display = 'block';
+                firstYearHeader.querySelector('.toggle-icon')?.classList.add('rotated');
+            }
+        }
+    }
+}
+
+// Back to program cards
+function backToProgramCards() {
+    document.getElementById('subjectProgramDetail').style.display = 'none';
+    document.getElementById('subjectProgramCards').style.display = 'block';
+    window.currentProgramId = null;
+    // Collapse all year levels
+    document.querySelectorAll('.year-level-body').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.toggle-icon').forEach(el => el.classList.remove('rotated'));
+}
+
+// Toggle year level accordion
+function toggleYearLevel(header) {
+    const body = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon?.classList.add('rotated');
+    } else {
+        body.style.display = 'none';
+        icon?.classList.remove('rotated');
+    }
+}
+
+// Open add subject modal with program pre-selected
+function openAddSubjectForProgram() {
+    const programSelect = document.getElementById('collegeSubjectProgram');
+    if (programSelect && window.currentProgramId) {
+        programSelect.value = window.currentProgramId;
+        filterYearLevelsByProgram();
+    }
+    new bootstrap.Modal(document.getElementById('addCollegeSubjectModal')).show();
+}
+
+// Restore program detail view if pid is in URL
+<?php if ($restore_program_id > 0 && $active_tab === 'subjects'): ?>
+(function() {
+    var pid = <?php echo $restore_program_id; ?>;
+    var prog = window.collegePrograms.find(function(p) { return p.id == pid; });
+    if (prog) {
+        showProgramSubjects(pid, prog.code || '', prog.name || '');
+    }
+})();
+<?php endif; ?>
 </script>
 </body>
 </html>

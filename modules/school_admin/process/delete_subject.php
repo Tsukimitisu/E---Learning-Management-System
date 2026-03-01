@@ -17,6 +17,11 @@ try {
     $stmt->bind_param("i", $subject_id);
     
     if ($stmt->execute()) {
+        send_realtime_update('curriculum_updated', [
+            'action' => 'subject_deleted',
+            'subject_id' => $subject_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Subject deleted successfully']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to delete subject']);

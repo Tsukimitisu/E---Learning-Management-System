@@ -46,6 +46,11 @@ if ($action === 'delete') {
         $stmt = $conn->prepare("DELETE FROM programs WHERE id = ?");
         $stmt->bind_param("i", $program_id);
         if ($stmt->execute()) {
+            send_realtime_update('curriculum_updated', [
+                'action' => 'program_deleted',
+                'program_id' => $program_id,
+                'updated_by' => $_SESSION['user_id']
+            ], 'school_admin');
             echo json_encode(['status' => 'success', 'message' => 'Program deleted successfully']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Failed to delete program']);
@@ -66,6 +71,11 @@ if ($action === 'toggle_status') {
         $stmt = $conn->prepare("UPDATE programs SET is_active = ? WHERE id = ?");
         $stmt->bind_param("ii", $new_status, $program_id);
         if ($stmt->execute()) {
+            send_realtime_update('curriculum_updated', [
+                'action' => 'program_updated',
+                'program_id' => $program_id,
+                'updated_by' => $_SESSION['user_id']
+            ], 'school_admin');
             echo json_encode(['status' => 'success', 'message' => $new_status ? 'Program activated successfully' : 'Program deactivated successfully']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Failed to update program status']);
@@ -91,6 +101,11 @@ try {
     $stmt->bind_param("sssiii", $program_code, $program_name, $degree_level, $school_id, $is_active, $program_id);
     
     if ($stmt->execute()) {
+        send_realtime_update('curriculum_updated', [
+            'action' => 'program_updated',
+            'program_id' => $program_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Program updated successfully']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to update program']);

@@ -136,8 +136,8 @@ include '../../includes/header.php';
         </h4>
         <p class="text-muted small mb-0"><?php echo htmlspecialchars($subject['subject_title']); ?></p>
     </div>
-    <a href="grading.php" class="btn btn-outline-secondary btn-sm px-4 shadow-sm">
-        <i class="bi bi-arrow-left me-1"></i> Back to Grade Management
+    <a href="subjects.php" class="btn btn-outline-secondary btn-sm px-4 shadow-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Classes
     </a>
 </div>
 

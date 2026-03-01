@@ -67,6 +67,13 @@ try {
     
     if ($stmt->execute()) {
         $subject_id = $conn->insert_id;
+        send_realtime_update('curriculum_updated', [
+            'action' => 'subject_added',
+            'subject_id' => $subject_id,
+            'subject_code' => $subject_code,
+            'program_id' => $program_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode([
             'status' => 'success',
             'message' => 'Subject added successfully',

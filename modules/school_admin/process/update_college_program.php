@@ -30,6 +30,11 @@ try {
         $audit->bind_param("iss", $_SESSION['user_id'], $action, $ip);
         $audit->execute();
         
+        send_realtime_update('curriculum_updated', [
+            'action' => 'program_updated',
+            'program_id' => $program_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Program updated successfully']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to update program']);

@@ -367,6 +367,27 @@ include '../../includes/header.php';
 
 <?php include '../../includes/footer.php'; ?>
 
+<!-- Enrollment Fee Assessment Result Modal -->
+<div class="modal fade" id="feeResultModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header p-4 text-white" style="background: linear-gradient(135deg, #28a745, #20c997); border: none;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Enrollment Successful</h5>
+            </div>
+            <div class="modal-body p-4" id="feeResultBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between">
+                <a href="students.php" class="btn btn-outline-secondary rounded-pill px-3"><i class="bi bi-people me-1"></i> View Students</a>
+                <div class="d-flex gap-2">
+                    <a href="payment_history.php" class="btn btn-outline-primary rounded-pill px-3" id="feeResultPaymentLink"><i class="bi bi-credit-card me-1"></i> Record Payment</a>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" onclick="closeFeeModalAndReload()"><i class="bi bi-check-lg me-1"></i> Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- --- JAVASCRIPT LOGIC - UNTOUCHED & RE-WIRED --- -->
 <script>
 const TRANSFEREE_MODE = <?php echo $is_transferee_mode ? 'true' : 'false'; ?>;
@@ -501,6 +522,9 @@ function enrollStudent() {
         return;
     }
 
+    const confirmBtn = document.querySelector('[onclick="enrollStudent()"]');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...'; }
+
     const fd = new FormData();
     fd.append('action', 'enroll_program'); fd.append('student_id', selectedStudentId); fd.append('program_type', selectedProgramType); fd.append('program_id', selectedProgramId); fd.append('year_level_id', selectedYearLevelId);
     fd.append('semester', getSelectedSemester());
@@ -508,7 +532,15 @@ function enrollStudent() {
     fd.append('previous_school', document.getElementById('previousSchoolInput').value || '');
     fd.append('completed_subject_ids', JSON.stringify([]));
     fetch('process/program_enrollment_api.php', { method: 'POST', body: fd }).then(r => r.json()).then(d => {
-        if (d.success) { showAlert('success', d.message); setTimeout(() => location.reload(), 1200); } else showAlert('danger', d.message);
+        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Confirm Enrollment'; }
+        if (d.success) {
+            showFeeResultModal(d);
+        } else {
+            showAlert('danger', d.message);
+        }
+    }).catch(() => {
+        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Confirm Enrollment'; }
+        showAlert('danger', 'Network error. Please try again.');
     });
 }
 
@@ -657,10 +689,9 @@ function submitIrregularEnrollment() {
         .then(r => r.json())
         .then(d => {
             if (d.success) {
-                showAlert('success', d.message);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('irregularEnrollModal'));
                 if (modal) modal.hide();
-                setTimeout(() => location.reload(), 1200);
+                showFeeResultModal(d);
             } else {
                 showAlert('danger', d.message || 'Failed to save non-regular enrollment.');
             }
@@ -678,10 +709,91 @@ function escapeHtml(value) {
 
 function showCurrentEnrollment(card) {
     const info = document.getElementById('currentEnrollmentInfo');
+    const cardEl = document.getElementById('currentEnrollmentCard');
+    
     if (card.dataset.hasProgram === '1') {
-        info.innerHTML = `<div class="d-flex align-items-center justify-content-between"><div><span class="badge bg-success px-3">REGISTERED</span> <span class="badge bg-light text-dark border">TYPE: ${card.dataset.programType.toUpperCase()}</span></div><button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="resetProgramSelection(); document.getElementById('currentEnrollmentCard').style.display='none';"><i class="bi bi-arrow-repeat me-1"></i>RE-ASSIGN</button></div>`;
-        document.getElementById('currentEnrollmentCard').style.display = 'block';
-    } else document.getElementById('currentEnrollmentCard').style.display = 'none';
+        // Show loading state immediately
+        info.innerHTML = `<div class="text-center py-2"><span class="spinner-border spinner-border-sm me-2"></span> Loading enrollment details...</div>`;
+        cardEl.style.display = 'block';
+        
+        // Fetch detailed enrollment info and balance from API
+        fetch(`process/program_enrollment_api.php?action=get_student_balance&student_id=${selectedStudentId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.latest_enrollment) {
+                    const enrollment = data.latest_enrollment;
+                    const balance = data.balance;
+                    const typeBadge = enrollment.student_type === 'transferee' 
+                        ? 'bg-warning text-dark' 
+                        : (enrollment.student_type === 'irregular' ? 'bg-info' : 'bg-secondary');
+                    info.innerHTML = `
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <span class="badge bg-success px-3">ENROLLED</span>
+                                <span class="fw-bold ms-2">${enrollment.program_code || card.dataset.programType.toUpperCase()} &mdash; ${enrollment.year_level_name || ''}</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary ms-2">${enrollment.semester} Sem</span>
+                                <span class="badge ${typeBadge} ms-2">${(enrollment.student_type || 'regular').toUpperCase()}</span>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="badge ${balance > 0 ? 'bg-danger' : 'bg-success'} px-3 py-2">
+                                    Balance: \u20b1${Number(balance).toLocaleString('en-PH', {minimumFractionDigits: 2})}
+                                </span>
+                                <button class="btn btn-sm btn-primary fw-bold rounded-pill" onclick="advanceToNextYear()">
+                                    <i class="bi bi-arrow-up-circle me-1"></i>Advance Year
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="resetProgramSelection(); document.getElementById('currentEnrollmentCard').style.display='none';">
+                                    <i class="bi bi-arrow-repeat me-1"></i>RE-ASSIGN
+                                </button>
+                            </div>
+                        </div>`;
+                } else {
+                    info.innerHTML = `<div class="d-flex align-items-center justify-content-between"><div><span class="badge bg-success px-3">REGISTERED</span> <span class="badge bg-light text-dark border">TYPE: ${card.dataset.programType.toUpperCase()}</span></div><button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="resetProgramSelection(); document.getElementById('currentEnrollmentCard').style.display='none';"><i class="bi bi-arrow-repeat me-1"></i>RE-ASSIGN</button></div>`;
+                }
+            })
+            .catch(() => {
+                info.innerHTML = `<div class="d-flex align-items-center justify-content-between"><div><span class="badge bg-success px-3">REGISTERED</span></div><button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="resetProgramSelection(); document.getElementById('currentEnrollmentCard').style.display='none';"><i class="bi bi-arrow-repeat me-1"></i>RE-ASSIGN</button></div>`;
+            });
+    } else {
+        cardEl.style.display = 'none';
+    }
+}
+
+function advanceToNextYear() {
+    if (!selectedStudentId) {
+        showAlert('warning', 'Please select a student first.');
+        return;
+    }
+    
+    const semester = getSelectedSemester();
+    const studentType = getSelectedEnrollmentType();
+    const previousSchool = document.getElementById('previousSchoolInput').value || '';
+    
+    if (isNonRegularType(studentType) && !previousSchool) {
+        showAlert('warning', 'Previous school is required for non-regular students.');
+        return;
+    }
+    
+    if (!confirm('Advance this student to the next year level? Tuition fees will be automatically assessed for the selected semester.')) {
+        return;
+    }
+    
+    const fd = new FormData();
+    fd.append('action', 'enroll_next_year');
+    fd.append('student_id', selectedStudentId);
+    fd.append('semester', semester);
+    fd.append('student_type', studentType);
+    fd.append('previous_school', previousSchool);
+    fd.append('completed_subject_ids', JSON.stringify([]));
+    
+    fetch('process/program_enrollment_api.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showFeeResultModal(d);
+            } else {
+                showAlert('danger', d.message);
+            }
+        });
 }
 
 /** 4. BULK ENROLL LOGIC */
@@ -704,6 +816,120 @@ function processBulkEnroll() {
     const fd = new FormData();
     fd.append('action', 'bulk_enroll_program'); fd.append('program_type', document.getElementById('bulkProgramType').value); fd.append('program_id', document.getElementById('bulkProgram').value); fd.append('year_level_id', document.getElementById('bulkYearLevel').value); fd.append('semester', normalizeSemester(document.getElementById('bulkSemester').value)); fd.append('student_ids', JSON.stringify(ids)); fd.append('student_type', 'regular');
     fetch('process/program_enrollment_api.php', { method: 'POST', body: fd }).then(r => r.json()).then(d => { if (d.success) location.reload(); else alert(d.message); });
+}
+
+function showFeeResultModal(response) {
+    const meta = response.meta || {};
+    const fee = parseFloat(meta.tuition_fee_assessed || 0);
+    const semesterBalance = parseFloat(meta.semester_balance || 0);
+    const totalBalance = parseFloat(meta.total_balance || 0);
+    const semester = meta.semester || '1st';
+    const studentType = meta.student_type || 'regular';
+    const enrolledCount = meta.enrolled_count || 0;
+    const completedCount = meta.completed_count || 0;
+    const totalSubjects = meta.total_subjects || 0;
+
+    const semesterLabel = semester === '2nd' ? '2nd Semester' : (semester === 'summer' ? 'Summer' : '1st Semester');
+    const programText = document.getElementById('selectedProgramText')?.textContent || '';
+    const yearText = document.getElementById('selectedYearText')?.textContent || '';
+    const studentName = document.getElementById('selectedStudentHeader')?.textContent || '';
+
+    const typeBadge = studentType === 'transferee' 
+        ? '<span class="badge bg-warning text-dark">TRANSFEREE</span>'
+        : (studentType === 'irregular' ? '<span class="badge bg-info">IRREGULAR</span>' : '<span class="badge bg-secondary">REGULAR</span>');
+
+    let html = `
+        <div class="text-center mb-4">
+            <div class="bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width:60px;height:60px;">
+                <i class="bi bi-check-lg text-success fs-3"></i>
+            </div>
+            <p class="text-muted small mb-1">${escapeHtml(studentName)}</p>
+            <h5 class="fw-bold mb-1">${escapeHtml(programText)} &mdash; ${escapeHtml(yearText)}</h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary">${semesterLabel}</span> ${typeBadge}
+        </div>
+
+        <div class="bg-light rounded-4 p-3 mb-3">
+            <div class="row g-2 text-center">
+                <div class="col-4">
+                    <div class="fw-bold fs-5 text-primary">${totalSubjects}</div>
+                    <small class="text-muted">Total Subjects</small>
+                </div>
+                <div class="col-4">
+                    <div class="fw-bold fs-5 text-success">${enrolledCount}</div>
+                    <small class="text-muted">Enrolled</small>
+                </div>
+                <div class="col-4">
+                    <div class="fw-bold fs-5 text-warning">${completedCount}</div>
+                    <small class="text-muted">Credited</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="border rounded-4 overflow-hidden mb-3">
+            <div class="p-3 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-muted fw-bold text-uppercase">Assessed Tuition Fee</span>
+                    <span class="fw-bold fs-5" style="color: var(--maroon);">₱${fee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>`;
+    
+    if (fee > 0) {
+        html += `
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-muted">${semesterLabel} Balance</span>
+                    <span class="fw-bold ${semesterBalance > 0 ? 'text-danger' : 'text-success'}">₱${semesterBalance.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">Total Outstanding Balance</span>
+                    <span class="fw-bold ${totalBalance > 0 ? 'text-danger' : 'text-success'}">₱${totalBalance.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>`;
+    } else {
+        html += `
+                <div class="alert alert-warning small mb-0 mt-2 py-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i> No tuition fee configured for this program/semester. Please configure it in <a href="tuition_fees.php" class="fw-bold">Tuition Fee Management</a>.
+                </div>`;
+    }
+
+    html += `
+            </div>
+        </div>`;
+
+    if (fee > 0) {
+        const downpayment = Math.ceil(fee * 0.25);
+        const remaining = fee - downpayment;
+        const perTerm = Math.ceil(remaining / 4);
+        html += `
+        <div class="bg-light rounded-4 p-3">
+            <p class="small text-muted fw-bold text-uppercase mb-2"><i class="bi bi-calculator me-1"></i> Payment Options</p>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="border rounded-3 p-2 bg-white text-center h-100">
+                        <small class="text-muted d-block">Full Payment</small>
+                        <span class="fw-bold text-success">₱${fee.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="border rounded-3 p-2 bg-white text-center h-100">
+                        <small class="text-muted d-block">Down Payment (25%)</small>
+                        <span class="fw-bold text-primary">₱${downpayment.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 small text-muted text-center">
+                Installment: 4 terms × ₱${perTerm.toLocaleString('en-PH', {minimumFractionDigits: 2})} after down payment
+            </div>
+        </div>`;
+    }
+
+    document.getElementById('feeResultBody').innerHTML = html;
+    const feeModal = new bootstrap.Modal(document.getElementById('feeResultModal'));
+    feeModal.show();
+}
+
+function closeFeeModalAndReload() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('feeResultModal'));
+    if (modal) modal.hide();
+    location.reload();
 }
 
 function showAlert(type, message) {

@@ -28,6 +28,11 @@ try {
     $stmt->bind_param("i", $year_id);
     
     if ($stmt->execute()) {
+        send_realtime_update('curriculum_updated', [
+            'action' => 'year_level_deleted',
+            'year_id' => $year_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Year level deleted successfully']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to delete year level']);

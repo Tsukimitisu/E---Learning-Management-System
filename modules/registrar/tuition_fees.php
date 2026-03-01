@@ -18,18 +18,34 @@ while ($row = $year_levels_result->fetch_assoc()) {
     $year_levels_by_program[$row['program_id']][] = $row;
 }
 
+// Fetch SHS strands
+$shs_strands_result = $conn->query("SELECT id, strand_code, strand_name FROM shs_strands WHERE is_active = 1 ORDER BY strand_code");
+
+// Fetch SHS grade levels
+$shs_grade_levels_result = $conn->query("SELECT id, strand_id, grade_name, grade_level FROM shs_grade_levels WHERE is_active = 1 ORDER BY strand_id, grade_level");
+$grade_levels_by_strand = [];
+while ($row = $shs_grade_levels_result->fetch_assoc()) {
+    $grade_levels_by_strand[$row['strand_id']][] = $row;
+}
+
 // Fetch current academic year
 $current_ay = $conn->query("SELECT id, year_name FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
 $current_ay_id = $current_ay['id'] ?? 0;
 
 // Fetch existing tuition fees
 $tuition_fees_query = "
-    SELECT ptf.*, p.program_code, p.program_name, pyl.year_name
+    SELECT ptf.*,
+           COALESCE(ptf.program_type, 'college') as program_type,
+           COALESCE(p.program_code, ss.strand_code) as program_code,
+           COALESCE(p.program_name, ss.strand_name) as program_name,
+           COALESCE(pyl.year_name, sgl.grade_name) as year_name
     FROM program_tuition_fees ptf
-    LEFT JOIN programs p ON ptf.program_id = p.id
-    LEFT JOIN program_year_levels pyl ON ptf.year_level_id = pyl.id
+    LEFT JOIN programs p ON ptf.program_id = p.id AND COALESCE(ptf.program_type, 'college') = 'college'
+    LEFT JOIN shs_strands ss ON ptf.program_id = ss.id AND ptf.program_type = 'shs'
+    LEFT JOIN program_year_levels pyl ON ptf.year_level_id = pyl.id AND COALESCE(ptf.program_type, 'college') = 'college'
+    LEFT JOIN shs_grade_levels sgl ON ptf.year_level_id = sgl.id AND ptf.program_type = 'shs'
     WHERE ptf.is_active = 1
-    ORDER BY p.program_code, pyl.year_level, ptf.semester
+    ORDER BY ptf.program_type, COALESCE(p.program_code, ss.strand_code), COALESCE(pyl.year_level, sgl.grade_level), ptf.semester
 ";
 $tuition_fees_result = $conn->query($tuition_fees_query);
 
@@ -120,6 +136,7 @@ include '../../includes/header.php';
                 <thead>
                     <tr>
                         <th class="ps-4">Program</th>
+                        <th>Type</th>
                         <th>Year Level</th>
                         <th>Semester</th>
                         <th class="text-end">Tuition Fee</th>
@@ -134,6 +151,7 @@ include '../../includes/header.php';
                                 <div class="fw-bold text-dark"><?php echo htmlspecialchars($fee['program_code']); ?></div>
                                 <small class="text-muted"><?php echo htmlspecialchars($fee['program_name']); ?></small>
                             </td>
+                            <td><span class="badge bg-<?php echo ($fee['program_type'] ?? 'college') === 'shs' ? 'success' : 'primary'; ?> bg-opacity-75"><?php echo strtoupper($fee['program_type'] ?? 'college'); ?></span></td>
                             <td><?php echo htmlspecialchars($fee['year_name'] ?? 'All'); ?></td>
                             <td><span class="badge bg-primary bg-opacity-10 text-primary"><?php echo $fee['semester']; ?> Sem</span></td>
                             <td class="text-end fw-bold text-maroon">₱<?php echo number_format($fee['tuition_fee'], 2); ?></td>
@@ -149,7 +167,7 @@ include '../../includes/header.php';
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
                                 No tuition fees configured yet. Click "Add Tuition Fee" to get started.
                             </td>
@@ -198,16 +216,23 @@ include '../../includes/header.php';
             <form id="addTuitionForm">
                 <div class="modal-body p-4 bg-light">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Program <span class="text-danger">*</span></label>
-                            <select class="form-select" name="program_id" id="add_program_id" required onchange="loadYearLevels(this.value, 'add_year_level_id')">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Level Type <span class="text-danger">*</span></label>
+                            <select class="form-select" name="program_type" id="add_program_type" required onchange="switchProgramType('add')">
+                                <option value="college">College</option>
+                                <option value="shs">SHS</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Program/Strand <span class="text-danger">*</span></label>
+                            <select class="form-select" name="program_id" id="add_program_id" required onchange="loadYearLevelsForType('add')">
                                 <option value="">-- Select Program --</option>
                                 <?php $programs_result->data_seek(0); while ($p = $programs_result->fetch_assoc()): ?>
-                                <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option>
+                                <option value="<?php echo $p['id']; ?>" data-type="college"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Year Level</label>
                             <select class="form-select" name="year_level_id" id="add_year_level_id">
                                 <option value="">-- All Year Levels --</option>
@@ -249,16 +274,23 @@ include '../../includes/header.php';
                 <input type="hidden" name="id" id="edit_id">
                 <div class="modal-body p-4 bg-light">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Program <span class="text-danger">*</span></label>
-                            <select class="form-select" name="program_id" id="edit_program_id" required onchange="loadYearLevels(this.value, 'edit_year_level_id')">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Level Type <span class="text-danger">*</span></label>
+                            <select class="form-select" name="program_type" id="edit_program_type" required onchange="switchProgramType('edit')">
+                                <option value="college">College</option>
+                                <option value="shs">SHS</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Program/Strand <span class="text-danger">*</span></label>
+                            <select class="form-select" name="program_id" id="edit_program_id" required onchange="loadYearLevelsForType('edit')">
                                 <option value="">-- Select Program --</option>
                                 <?php $programs_result->data_seek(0); while ($p = $programs_result->fetch_assoc()): ?>
-                                <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option>
+                                <option value="<?php echo $p['id']; ?>" data-type="college"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Year Level</label>
                             <select class="form-select" name="year_level_id" id="edit_year_level_id">
                                 <option value="">-- All Year Levels --</option>
@@ -291,21 +323,57 @@ include '../../includes/header.php';
 <?php include '../../includes/footer.php'; ?>
 
 <script>
-// Year levels data from PHP
+// Data from PHP
 const yearLevelsByProgram = <?php echo json_encode($year_levels_by_program); ?>;
+const gradeLevelsByStrand = <?php echo json_encode($grade_levels_by_strand); ?>;
+const allPrograms = <?php $programs_result->data_seek(0); $prg_arr = []; while ($p = $programs_result->fetch_assoc()) { $prg_arr[] = $p; } echo json_encode($prg_arr); ?>;
+const allStrands = <?php $shs_strands_result->data_seek(0); $str_arr = []; while ($s = $shs_strands_result->fetch_assoc()) { $str_arr[] = $s; } echo json_encode($str_arr); ?>;
 
+function switchProgramType(prefix) {
+    const type = document.getElementById(prefix + '_program_type').value;
+    const programSelect = document.getElementById(prefix + '_program_id');
+    const yearSelect = document.getElementById(prefix + '_year_level_id');
+    programSelect.innerHTML = '<option value="">-- Select --</option>';
+    yearSelect.innerHTML = '<option value="">-- All Levels --</option>';
+    
+    if (type === 'college') {
+        allPrograms.forEach(p => {
+            programSelect.innerHTML += `<option value="${p.id}" data-type="college">${p.program_code} - ${p.program_name}</option>`;
+        });
+    } else {
+        allStrands.forEach(s => {
+            programSelect.innerHTML += `<option value="${s.id}" data-type="shs">${s.strand_code} - ${s.strand_name}</option>`;
+        });
+    }
+}
+
+function loadYearLevelsForType(prefix) {
+    const type = document.getElementById(prefix + '_program_type').value;
+    const programId = document.getElementById(prefix + '_program_id').value;
+    const select = document.getElementById(prefix + '_year_level_id');
+    select.innerHTML = '<option value="">-- All Levels --</option>';
+    
+    if (type === 'college' && programId && yearLevelsByProgram[programId]) {
+        yearLevelsByProgram[programId].forEach(level => {
+            select.innerHTML += `<option value="${level.id}">${level.year_name}</option>`;
+        });
+    } else if (type === 'shs' && programId && gradeLevelsByStrand[programId]) {
+        gradeLevelsByStrand[programId].forEach(level => {
+            select.innerHTML += `<option value="${level.id}">${level.grade_name}</option>`;
+        });
+    }
+}
+
+// Legacy compatibility
 function loadYearLevels(programId, selectId) {
     const select = document.getElementById(selectId);
     select.innerHTML = '<option value="">-- All Year Levels --</option>';
-    
     if (programId && yearLevelsByProgram[programId]) {
         yearLevelsByProgram[programId].forEach(level => {
             select.innerHTML += `<option value="${level.id}">${level.year_name}</option>`;
         });
     }
 }
-
-// No longer needed - simplified to single tuition fee
 
 // Add Tuition Form
 document.getElementById('addTuitionForm').addEventListener('submit', async function(e) {
@@ -345,11 +413,20 @@ async function editTuition(id) {
         if (data.success) {
             const fee = data.tuition;
             document.getElementById('edit_id').value = fee.id;
-            document.getElementById('edit_program_id').value = fee.program_id;
-            loadYearLevels(fee.program_id, 'edit_year_level_id');
+            
+            // Set program type first, then switch programs
+            const pType = fee.program_type || 'college';
+            document.getElementById('edit_program_type').value = pType;
+            switchProgramType('edit');
+            
             setTimeout(() => {
-                document.getElementById('edit_year_level_id').value = fee.year_level_id || '';
-            }, 100);
+                document.getElementById('edit_program_id').value = fee.program_id;
+                loadYearLevelsForType('edit');
+                setTimeout(() => {
+                    document.getElementById('edit_year_level_id').value = fee.year_level_id || '';
+                }, 100);
+            }, 50);
+            
             document.getElementById('edit_semester').value = fee.semester;
             document.getElementById('edit_tuition_fee').value = fee.tuition_fee;
             

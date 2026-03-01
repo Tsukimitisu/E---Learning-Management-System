@@ -22,6 +22,11 @@ try {
     $stmt->bind_param("iisi", $program_id, $year_level, $year_name, $semesters_count);
     
     if ($stmt->execute()) {
+        send_realtime_update('curriculum_updated', [
+            'action' => 'year_level_added',
+            'program_id' => $program_id,
+            'updated_by' => $_SESSION['user_id']
+        ], 'school_admin');
         echo json_encode(['status' => 'success', 'message' => 'Year level added successfully']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to add year level']);

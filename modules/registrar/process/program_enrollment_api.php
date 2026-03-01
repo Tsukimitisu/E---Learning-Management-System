@@ -37,6 +37,12 @@ switch ($action) {
     case 'get_subjects_for_enrollment':
         getSubjectsForEnrollment();
         break;
+    case 'enroll_next_year':
+        enrollNextYear();
+        break;
+    case 'get_student_balance':
+        getStudentBalance();
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
@@ -375,6 +381,129 @@ function getSubjectsForEnrollment() {
     echo json_encode(['success' => true, 'subjects' => $payload]);
 }
 
+function enrollNextYear() {
+    global $conn, $branch_id, $current_ay_id;
+
+    $student_id = (int)($_POST['student_id'] ?? 0);
+    $semester = normalizeSemester($_POST['semester'] ?? '1st');
+    $student_type = normalizeStudentType($_POST['student_type'] ?? '');
+    $previous_school = clean_input($_POST['previous_school'] ?? '');
+    $completed_subject_ids = parseIdList($_POST['completed_subject_ids'] ?? '[]');
+    $completed_subject_details = parseCompletedSubjectDetails($_POST['completed_subject_details'] ?? '{}');
+
+    if (!$student_id) {
+        echo json_encode(['success' => false, 'message' => 'Student ID is required']);
+        return;
+    }
+    if ($current_ay_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'No active academic year.']);
+        return;
+    }
+    if (!verifyStudentInRegistrarBranch($student_id, $branch_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid student']);
+        return;
+    }
+
+    // Get current enrollment
+    $current = getLatestTermEnrollment($student_id);
+    if (!$current) {
+        echo json_encode(['success' => false, 'message' => 'Student has no current enrollment to advance from.']);
+        return;
+    }
+
+    $program_type = $current['program_type'];
+    $program_id = (int)$current['program_id'];
+
+    // Keep existing student type if not specified
+    if (empty($student_type) || $student_type === 'regular') {
+        $student_type = normalizeStudentType($current['student_type'] ?? 'regular');
+    }
+    if (in_array($student_type, ['irregular', 'transferee'], true) && empty($previous_school)) {
+        $previous_school = $current['previous_school'] ?? '';
+    }
+
+    // Find next year level
+    if ($program_type === 'college') {
+        $next_yl_stmt = $conn->prepare("
+            SELECT pyl.id, pyl.year_level, pyl.year_name
+            FROM program_year_levels pyl
+            INNER JOIN program_year_levels current_pyl ON current_pyl.id = ?
+            WHERE pyl.program_id = ? AND pyl.year_level = current_pyl.year_level + 1 AND pyl.is_active = 1
+            LIMIT 1
+        ");
+        $next_yl_stmt->bind_param("ii", $current['year_level_id'], $program_id);
+    } else {
+        $next_yl_stmt = $conn->prepare("
+            SELECT sgl.id, sgl.grade_level as year_level, sgl.grade_name as year_name
+            FROM shs_grade_levels sgl
+            INNER JOIN shs_grade_levels current_sgl ON current_sgl.id = ?
+            WHERE sgl.strand_id = ? AND sgl.grade_level = current_sgl.grade_level + 1 AND sgl.is_active = 1
+            LIMIT 1
+        ");
+        $next_yl_stmt->bind_param("ii", $current['year_level_id'], $program_id);
+    }
+
+    $next_yl_stmt->execute();
+    $next_yl = $next_yl_stmt->get_result()->fetch_assoc();
+
+    if (!$next_yl) {
+        echo json_encode(['success' => false, 'message' => 'Student is at the highest year level — no further advancement available (may be ready for graduation).']);
+        return;
+    }
+
+    $new_year_level_id = (int)$next_yl['id'];
+
+    $conn->begin_transaction();
+    try {
+        // Mark previous term enrollment as completed
+        $complete_stmt = $conn->prepare("UPDATE student_term_enrollments SET status = 'completed', updated_at = NOW() WHERE student_id = ? AND id = ?");
+        $complete_stmt->bind_param("ii", $student_id, $current['id']);
+        $complete_stmt->execute();
+
+        $result = applyProgramEnrollment(
+            $student_id, $program_type, $program_id, $new_year_level_id,
+            $semester, $student_type, $previous_school,
+            $completed_subject_ids, $completed_subject_details,
+            (int)$_SESSION['user_id'], $current_ay_id
+        );
+
+        logAuditSimple($conn, "Year advancement: student {$student_id}, type {$student_type}, from level {$current['year_level_id']} to {$new_year_level_id}, semester {$semester}");
+
+        $conn->commit();
+        echo json_encode([
+            'success' => true,
+            'message' => "Student advanced to {$next_yl['year_name']}. {$result['enrolled_count']} subject(s) enrolled for {$semester} semester.",
+            'meta' => array_merge($result, [
+                'new_year_level_id' => $new_year_level_id,
+                'new_year_level_name' => $next_yl['year_name']
+            ])
+        ]);
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+function getStudentBalance() {
+    global $conn, $branch_id;
+
+    $student_id = (int)($_GET['student_id'] ?? 0);
+
+    if (!$student_id || !verifyStudentInRegistrarBranch($student_id, $branch_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid student']);
+        return;
+    }
+
+    $total_outstanding = getAllOutstandingBalance($student_id);
+    $latest_enrollment = getLatestTermEnrollment($student_id);
+
+    echo json_encode([
+        'success' => true,
+        'balance' => $total_outstanding,
+        'latest_enrollment' => $latest_enrollment
+    ]);
+}
+
 function applyProgramEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $student_type, $previous_school, $completed_subject_ids, $completed_subject_details, $recorded_by, $current_ay_id) {
     global $conn;
 
@@ -386,10 +515,23 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
     }
 
     if ($semester === '2nd') {
-        ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, '1st', $current_ay_id, $recorded_by);
-        $first_sem_outstanding = getSemesterOutstandingBalance($student_id, $current_ay_id, '1st');
-        if ($first_sem_outstanding > 0.009) {
-            throw new Exception('Cannot enroll to 2nd semester. First semester balance must be fully paid first. Outstanding: ' . number_format($first_sem_outstanding, 2));
+        // For transferees/irregulars enrolling for the first time in 2nd semester, skip 1st sem check
+        $has_first_sem = hasTermEnrollment($student_id, $current_ay_id, '1st');
+        if ($has_first_sem) {
+            ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, '1st', $current_ay_id, $recorded_by);
+            $first_sem_outstanding = getSemesterOutstandingBalance($student_id, $current_ay_id, '1st');
+            if ($first_sem_outstanding > 0.009) {
+                throw new Exception('Cannot enroll to 2nd semester. First semester balance must be fully paid first. Outstanding: ₱' . number_format($first_sem_outstanding, 2));
+            }
+        }
+    }
+
+    // When enrolling at a different year level, enforce all previous balances are paid
+    $latest_enrollment = getLatestTermEnrollment($student_id);
+    if ($latest_enrollment && (int)$latest_enrollment['year_level_id'] !== $year_level_id) {
+        $total_outstanding = getAllOutstandingBalance($student_id);
+        if ($total_outstanding > 0.009) {
+            throw new Exception('Cannot enroll to new year level. All previous balances must be fully paid first. Outstanding: ₱' . number_format($total_outstanding, 2));
         }
     }
 
@@ -428,7 +570,7 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         throw new Exception('Failed to update student enrollment profile.');
     }
 
-    ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, $semester, $current_ay_id, $recorded_by);
+    $assessed_fee = ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, $semester, $current_ay_id, $recorded_by);
     upsertStudentTermEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $current_ay_id, $student_type, $previous_school, $recorded_by);
 
     // Normalize completed-subject list to selected curriculum only
@@ -612,6 +754,10 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         }
     }
 
+    // Get total outstanding balance after fee assessment
+    $total_outstanding = getAllOutstandingBalance($student_id);
+    $semester_balance = getSemesterOutstandingBalance($student_id, $current_ay_id, $semester);
+
     return [
         'semester' => $semester,
         'student_type' => $student_type,
@@ -619,6 +765,9 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
         'completed_count' => count($completed_map),
         'enrolled_count' => $enrolled_count,
         'skipped_duplicate_count' => count($existing_map),
+        'tuition_fee_assessed' => $assessed_fee,
+        'semester_balance' => $semester_balance,
+        'total_balance' => $total_outstanding,
     ];
 }
 
@@ -753,6 +902,66 @@ function getSemesterOutstandingBalance($student_id, $academic_year_id, $semester
     return max(0, round($fees_total - $paid_total, 2));
 }
 
+function hasTermEnrollment($student_id, $academic_year_id, $semester) {
+    global $conn;
+    $student_id = (int)$student_id;
+    $academic_year_id = (int)$academic_year_id;
+    $semester = normalizeSemester($semester);
+
+    // Check term enrollments
+    $stmt = $conn->prepare("SELECT id FROM student_term_enrollments WHERE student_id = ? AND academic_year_id = ? AND semester = ? LIMIT 1");
+    $stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $stmt->execute();
+    if ($stmt->get_result()->num_rows > 0) return true;
+
+    // Fallback: check student_fees for legacy data
+    $fees_stmt = $conn->prepare("SELECT id FROM student_fees WHERE student_id = ? AND academic_year_id = ? AND semester = ? LIMIT 1");
+    $fees_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
+    $fees_stmt->execute();
+    return $fees_stmt->get_result()->num_rows > 0;
+}
+
+function getAllOutstandingBalance($student_id) {
+    global $conn;
+    $student_id = (int)$student_id;
+
+    $fees_stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM student_fees WHERE student_id = ?");
+    $fees_stmt->bind_param("i", $student_id);
+    $fees_stmt->execute();
+    $total_fees = (float)($fees_stmt->get_result()->fetch_assoc()['total'] ?? 0);
+
+    $paid_stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE student_id = ? AND status = 'verified'");
+    $paid_stmt->bind_param("i", $student_id);
+    $paid_stmt->execute();
+    $total_paid = (float)($paid_stmt->get_result()->fetch_assoc()['total'] ?? 0);
+
+    return max(0, round($total_fees - $total_paid, 2));
+}
+
+function getLatestTermEnrollment($student_id) {
+    global $conn;
+    $student_id = (int)$student_id;
+
+    $stmt = $conn->prepare("
+        SELECT ste.*,
+               CASE WHEN ste.program_type = 'college' THEN pyl.year_name ELSE sgl.grade_name END as year_level_name,
+               CASE WHEN ste.program_type = 'college' THEN pyl.year_level ELSE sgl.grade_level END as year_level_num,
+               CASE WHEN ste.program_type = 'college' THEN p.program_code ELSE ss.strand_code END as program_code,
+               CASE WHEN ste.program_type = 'college' THEN p.program_name ELSE ss.strand_name END as program_name
+        FROM student_term_enrollments ste
+        LEFT JOIN program_year_levels pyl ON ste.year_level_id = pyl.id
+        LEFT JOIN shs_grade_levels sgl ON ste.year_level_id = sgl.id
+        LEFT JOIN programs p ON ste.program_id = p.id AND ste.program_type = 'college'
+        LEFT JOIN shs_strands ss ON ste.program_id = ss.id AND ste.program_type = 'shs'
+        WHERE ste.student_id = ?
+        ORDER BY ste.academic_year_id DESC, FIELD(ste.semester, 'summer', '2nd', '1st') DESC
+        LIMIT 1
+    ");
+    $stmt->bind_param("i", $student_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
 function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_level_id, $semester, $academic_year_id, $recorded_by) {
     global $conn;
 
@@ -764,13 +973,9 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     $recorded_by = (int)$recorded_by;
     $semester = normalizeSemester($semester);
 
-    // Tuition fee configuration currently maps to college programs only.
-    if ($program_type !== 'college') {
-        return;
-    }
-
+    // Check if fee already exists for this term
     $existing_stmt = $conn->prepare("
-        SELECT id FROM student_fees
+        SELECT id, amount FROM student_fees
         WHERE student_id = ?
           AND academic_year_id = ?
           AND semester = ?
@@ -779,15 +984,19 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     ");
     $existing_stmt->bind_param("iis", $student_id, $academic_year_id, $semester);
     $existing_stmt->execute();
-    if ($existing_stmt->get_result()->num_rows > 0) {
-        return;
+    $existing_result = $existing_stmt->get_result();
+    if ($existing_result->num_rows > 0) {
+        $existing_row = $existing_result->fetch_assoc();
+        return (float)($existing_row['amount'] ?? 0);
     }
 
+    // Look up configured tuition fee (supports both college and SHS)
     $tuition_stmt = $conn->prepare("
         SELECT tuition_fee
         FROM program_tuition_fees
         WHERE program_id = ? AND is_active = 1
           AND semester = ?
+          AND program_type = ?
           AND (year_level_id = ? OR year_level_id IS NULL)
           AND (academic_year_id = ? OR academic_year_id IS NULL)
         ORDER BY
@@ -796,16 +1005,37 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
             id DESC
         LIMIT 1
     ");
-    $tuition_stmt->bind_param("isiiii", $program_id, $semester, $year_level_id, $academic_year_id, $year_level_id, $academic_year_id);
+    $tuition_stmt->bind_param("issiiii", $program_id, $semester, $program_type, $year_level_id, $academic_year_id, $year_level_id, $academic_year_id);
     $tuition_stmt->execute();
     $tuition_row = $tuition_stmt->get_result()->fetch_assoc();
+
+    // Fallback: try without program_type filter for legacy data
     if (!$tuition_row) {
-        return;
+        $fallback_stmt = $conn->prepare("
+            SELECT tuition_fee
+            FROM program_tuition_fees
+            WHERE program_id = ? AND is_active = 1
+              AND semester = ?
+              AND (year_level_id = ? OR year_level_id IS NULL)
+              AND (academic_year_id = ? OR academic_year_id IS NULL)
+            ORDER BY
+                CASE WHEN year_level_id = ? THEN 0 ELSE 1 END,
+                CASE WHEN academic_year_id = ? THEN 0 ELSE 1 END,
+                id DESC
+            LIMIT 1
+        ");
+        $fallback_stmt->bind_param("isiiii", $program_id, $semester, $year_level_id, $academic_year_id, $year_level_id, $academic_year_id);
+        $fallback_stmt->execute();
+        $tuition_row = $fallback_stmt->get_result()->fetch_assoc();
+    }
+
+    if (!$tuition_row) {
+        return 0;
     }
 
     $tuition_fee = (float)($tuition_row['tuition_fee'] ?? 0);
     if ($tuition_fee <= 0) {
-        return;
+        return 0;
     }
 
     $description = "Auto-assessed tuition for {$semester} semester enrollment";
@@ -815,6 +1045,8 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     ");
     $insert_fee->bind_param("idissi", $student_id, $tuition_fee, $academic_year_id, $semester, $description, $recorded_by);
     $insert_fee->execute();
+
+    return $tuition_fee;
 }
 
 function upsertStudentTermEnrollment($student_id, $program_type, $program_id, $year_level_id, $semester, $academic_year_id, $student_type, $previous_school, $recorded_by) {
@@ -965,5 +1197,8 @@ function ensureIrregularSupportSchema($conn) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
     $conn->query("ALTER TABLE student_term_enrollments MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
+
+    // Extend tuition fee table to support both college and SHS programs
+    $conn->query("ALTER TABLE program_tuition_fees ADD COLUMN IF NOT EXISTS program_type ENUM('college','shs') NOT NULL DEFAULT 'college' AFTER program_id");
 }
 

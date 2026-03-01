@@ -239,54 +239,34 @@ include '../../includes/header.php';
                 </h5>
                 <small class="opacity-75">
                     <i class="bi bi-building me-1"></i><?php echo htmlspecialchars($class['branch_name']); ?> | 
-                    <i class="bi bi-mortarboard me-1"></i><?php echo htmlspecialchars($class['program_name']); ?>
+                    <i class="bi bi-mortarboard me-1"></i><?php echo htmlspecialchars($class['program_name']); ?> |
+                    <i class="bi bi-calendar me-1"></i><?php echo htmlspecialchars($current_ay_name); ?> - <?php echo htmlspecialchars(ucfirst($class['semester_str'])); ?> Semester
                 </small>
             </div>
-            <span class="status-badge active">
-                <i class="bi bi-check-circle me-1"></i> Active
-            </span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark rounded-pill px-3"><?php echo $class['units']; ?> Units</span>
+                <span class="badge bg-light text-dark rounded-pill px-3"><?php echo $program_type; ?></span>
+                <span class="status-badge active">
+                    <i class="bi bi-check-circle me-1"></i> Active
+                </span>
+            </div>
         </div>
         
         <!-- Hero Body -->
         <div class="class-hero-body">
-            <!-- Info Grid -->
-            <div class="class-info-grid">
-                <div class="class-info-item">
-                    <div class="label"><i class="bi bi-book me-1"></i>Subject</div>
-                    <div class="value"><?php echo htmlspecialchars($class['subject_code']); ?></div>
+            <!-- Quick Stats Row -->
+            <div class="d-flex flex-wrap gap-3 mb-4">
+                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-light">
+                    <i class="bi bi-collection text-primary"></i>
+                    <span class="fw-bold small"><?php echo count($class['sections']); ?> Section<?php echo count($class['sections']) != 1 ? 's' : ''; ?></span>
                 </div>
-                
-                <div class="class-info-item">
-                    <div class="label"><i class="bi bi-clock me-1"></i>Schedule</div>
-                    <div class="value">
-                        <?php 
-                        // For now, display section room/general info - can be expanded with actual schedule data
-                        $rooms = array_filter(array_column($class['sections'], 'room'));
-                        echo !empty($rooms) ? htmlspecialchars(implode(', ', array_unique($rooms))) : 'TBA';
-                        ?>
-                    </div>
+                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-light">
+                    <i class="bi bi-people-fill text-maroon"></i>
+                    <span class="fw-bold small"><?php echo $class['total_students']; ?> Student<?php echo $class['total_students'] != 1 ? 's' : ''; ?></span>
                 </div>
-                
-                <div class="class-info-item">
-                    <div class="label"><i class="bi bi-collection me-1"></i>Sections</div>
-                    <div class="value"><?php echo count($class['sections']); ?> Section<?php echo count($class['sections']) != 1 ? 's' : ''; ?></div>
-                </div>
-                
-                <div class="class-info-item">
-                    <div class="label"><i class="bi bi-calendar-event me-1"></i>School Year - Semester</div>
-                    <div class="value"><?php echo htmlspecialchars($current_ay_name); ?> - <?php echo htmlspecialchars(ucfirst($class['semester_str'])); ?></div>
-                </div>
-                
-                <div class="class-info-item highlight">
-                    <div class="label"><i class="bi bi-people me-1"></i>Number of Students</div>
-                    <div class="value"><?php echo $class['total_students']; ?></div>
-                </div>
-                
-                <div class="class-info-item">
-                    <div class="label"><i class="bi bi-info-circle me-1"></i>Notes</div>
-                    <div class="value" style="font-size: 0.85rem;">
-                        <?php echo $class['units']; ?> Units | <?php echo $program_type; ?> | <?php echo htmlspecialchars($class['year_level']); ?>
-                    </div>
+                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-light">
+                    <i class="bi bi-layers text-info"></i>
+                    <span class="fw-bold small"><?php echo htmlspecialchars($class['year_level']); ?></span>
                 </div>
             </div>
             
@@ -296,9 +276,11 @@ include '../../includes/header.php';
                     <h6 class="fw-bold mb-0">
                         <i class="bi bi-grid-3x3 me-2 text-primary"></i>Sections
                     </h6>
-                    <button class="action-btn" onclick="viewSubjectSections(<?php echo $class['subject_id']; ?>)">
-                        <i class="bi bi-eye me-1"></i> View All Sections
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="action-btn" onclick="viewSubjectSections(<?php echo $class['subject_id']; ?>)">
+                            <i class="bi bi-people me-1"></i> View Students
+                        </button>
+                    </div>
                 </div>
                 
                 <?php if (empty($class['sections'])): ?>
@@ -309,16 +291,21 @@ include '../../includes/header.php';
                 <?php else: ?>
                 <div class="section-chips">
                     <?php foreach ($class['sections'] as $section): ?>
-                    <div class="section-chip" onclick="viewSectionStudents(<?php echo $section['id']; ?>, <?php echo $class['subject_id']; ?>)">
+                    <div class="section-chip" onclick="openGradebook(<?php echo $section['id']; ?>, <?php echo $class['subject_id']; ?>)">
                         <div>
                             <div class="section-name"><?php echo htmlspecialchars($section['section_name']); ?></div>
                             <div class="section-info">
                                 <?php echo $section['room'] ? htmlspecialchars($section['room']) : 'No Room'; ?>
                             </div>
                         </div>
-                        <span class="student-count">
-                            <i class="bi bi-people-fill me-1"></i><?php echo $section['student_count']; ?>
-                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="student-count">
+                                <i class="bi bi-people-fill me-1"></i><?php echo $section['student_count']; ?>
+                            </span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2" style="font-size: 0.65rem;">
+                                <i class="bi bi-journal-check me-1"></i>Grade
+                            </span>
+                        </div>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -353,8 +340,8 @@ function viewSubjectSections(subjectId) {
     window.location.href = 'subject_sections.php?subject_id=' + subjectId;
 }
 
-function viewSectionStudents(sectionId, subjectId) {
-    window.location.href = 'section_students.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+function openGradebook(sectionId, subjectId) {
+    window.location.href = 'gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
 }
 </script>
 </body>
