@@ -149,6 +149,7 @@ include '../../includes/header.php';
                 <div class="card-header-modern"><i class="bi bi-plus-circle me-2"></i>Initialization</div>
                 <div class="card-body p-4">
                     <form method="POST">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="action" value="create_academic_year">
                         <div class="mb-3">
                             <label class="form-label-custom">Year Designation (YYYY-YYYY)</label>
@@ -175,6 +176,7 @@ include '../../includes/header.php';
                 <div class="card-header-modern"><i class="bi bi-lightning-charge me-2"></i>Active Deployment</div>
                 <div class="card-body p-4">
                     <form method="POST">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="action" value="set_active_year">
                         <div class="mb-3">
                             <label class="form-label-custom">Select Target Year</label>

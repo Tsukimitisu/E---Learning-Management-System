@@ -72,9 +72,15 @@ if (!function_exists('get_client_ip')) {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+            // Take only the first IP from a comma-separated list
+            $ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
         } else {
             $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        }
+        // Sanitize — only allow valid IP characters to prevent SQL injection
+        $ip = trim($ip);
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            $ip = '0.0.0.0';
         }
         return $ip;
     }

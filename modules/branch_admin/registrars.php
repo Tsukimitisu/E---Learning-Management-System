@@ -228,6 +228,7 @@ include '../../includes/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-6">

@@ -36,3 +36,12 @@
     .btn-maroon-outline:hover { background: var(--maroon); color: white; }
 
     .ajax-loading { opacity: 0.4; pointer-events: none; transition: 0.3s; }
+
+    /* Submission form styles */
+    #submissionForm .form-control { border-radius: 10px; }
+    #submissionForm .form-control:focus { border-color: var(--maroon); box-shadow: 0 0 0 0.2rem rgba(128,0,0,0.15); }
+    #submissionForm textarea { resize: vertical; min-height: 60px; }
+
+    /* Mark Done button on card */
+    .assessment-card .btn-success { border-radius: 10px; font-weight: 600; font-size: 0.8rem; }
+    .assessment-card .d-flex.gap-2 .btn { font-size: 0.8rem; padding: 8px 10px; }

@@ -93,6 +93,16 @@ $stmt->bind_param("ssidssisissssi",
 );
 
 if ($stmt->execute()) {
+    // Notify student about recorded payment
+    create_notification(
+        $student_id,
+        'Payment Recorded',
+        'A payment of ₱' . number_format($amount, 2) . ' has been recorded. Ref: ' . $reference_no,
+        'payment',
+        null,
+        $registrar_id
+    );
+
     echo json_encode([
         'success' => true, 
         'message' => "Payment recorded successfully! Reference: $reference_no, OR: $or_number",

@@ -27,7 +27,9 @@ if ($session_role_key === '') {
         window.USER_ID = <?php echo json_encode($session_user_id); ?>;
         window.USER_ROLE = <?php echo json_encode($session_role_key); ?>;
         window.USER_ROLE_ID = <?php echo json_encode($session_role_id); ?>;
+        window.CSRF_TOKEN = <?php echo json_encode(csrf_token()); ?>;
     </script>
+    <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <script src="/elms_system/assets/js/realtime_loader.js"></script>
     <script src="/elms_system/assets/js/realtime_client.js"></script>
     <meta charset="UTF-8">
@@ -141,6 +143,36 @@ if ($session_role_key === '') {
         .burger-btn:hover { background: #f0f2f5; }
         .notification-wrapper { position: relative; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
         .notification-wrapper:hover { background: #f0f2f5; }
+        /* Notification Dropdown */
+        .notification-dropdown { position: absolute; top: calc(100% + 10px); right: -60px; width: 380px; max-height: 480px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); z-index: 1050; display: none; overflow: hidden; animation: fadeInDropdown 0.2s ease-out; }
+        .notification-dropdown.show { display: block; }
+        .notification-dropdown-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
+        .notification-dropdown-header h6 { margin: 0; font-size: 1rem; font-weight: 700; color: #2c3e50; }
+        .notif-mark-all-btn { background: none; border: none; color: var(--maroon); font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.15s; }
+        .notif-mark-all-btn:hover { background: rgba(128,0,0,0.08); }
+        .notification-dropdown-body { max-height: 380px; overflow-y: auto; }
+        .notification-dropdown-body::-webkit-scrollbar { width: 5px; }
+        .notification-dropdown-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+        .notif-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f8f8f8; text-decoration: none; color: inherit; }
+        .notif-item:hover { background: #f8f9ff; }
+        .notif-item.unread { background: #f0f4ff; }
+        .notif-item.unread:hover { background: #e8edff; }
+        .notif-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .notif-icon.info { background: #e3f2fd; color: #1976d2; }
+        .notif-icon.enrollment { background: #e8f5e9; color: #388e3c; }
+        .notif-icon.grade { background: #fff3e0; color: #f57c00; }
+        .notif-icon.material { background: #f3e5f5; color: #7b1fa2; }
+        .notif-icon.announcement { background: #fff8e1; color: #f9a825; }
+        .notif-icon.payment { background: #e0f7fa; color: #00838f; }
+        .notif-icon.system { background: #fce4ec; color: #c62828; }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-content .notif-title { font-weight: 600; font-size: 0.85rem; color: #2c3e50; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .notif-content .notif-msg { font-size: 0.8rem; color: #666; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px; }
+        .notif-content .notif-time { font-size: 0.7rem; color: #999; }
+        .notif-unread-dot { width: 8px; height: 8px; background: var(--maroon); border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+        .notif-empty { padding: 40px 20px; text-align: center; color: #999; }
+        .notif-empty i { font-size: 2.5rem; margin-bottom: 10px; display: block; color: #ddd; }
+        @media (max-width: 480px) { .notification-dropdown { width: 320px; right: -40px; } }
         .user-profile { display: flex; align-items: center; gap: 15px; padding: 6px 8px 6px 15px; border-radius: 35px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
         .user-profile:hover { background-color: #f8f9fa; border-color: #e9ecef; }
         .user-info-text { text-align: right; line-height: 1.3; }
@@ -224,11 +256,26 @@ if ($session_role_key === '') {
                         <i class="bi bi-list"></i>
                     </button>
                     
-                    <div class="notification-wrapper ms-2">
+                    <div class="notification-wrapper ms-2" id="notificationBell">
                         <i class="bi bi-bell"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" id="notificationBadge" style="display:none; font-size: 0.6rem; padding: 0.35em 0.65em;">
                             <span id="notificationCount">0</span>
                         </span>
+                        <!-- Notification Dropdown -->
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-dropdown-header">
+                                <h6>Notifications</h6>
+                                <button class="notif-mark-all-btn" id="markAllReadBtn" title="Mark all as read">
+                                    <i class="bi bi-check2-all"></i> Mark all read
+                                </button>
+                            </div>
+                            <div class="notification-dropdown-body" id="notificationList">
+                                <div class="notif-empty">
+                                    <i class="bi bi-bell-slash"></i>
+                                    No notifications yet
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

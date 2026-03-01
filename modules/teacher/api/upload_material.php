@@ -124,18 +124,16 @@ try {
         }
     }
 
-    // Push realtime update to relevant students only; fallback to role broadcast.
-    $payload = [
-        'type' => 'material_uploaded',
-        'subject_id' => $subject_id,
-        'file_path' => $file_path,
-        'message' => 'A new learning material has been uploaded.'
-    ];
-
+    // Create persistent notifications for enrolled students
     if (!empty($recipient_ids)) {
-        send_realtime_update('notification', $payload, null, $recipient_ids);
-    } else {
-        send_realtime_update('notification', $payload, 'student');
+        create_bulk_notifications(
+            $recipient_ids,
+            'New Learning Material',
+            'A new learning material has been uploaded for your subject.',
+            'material',
+            null,
+            $teacher_id
+        );
     }
     
     echo json_encode(['status' => 'success', 'message' => 'Material uploaded successfully']);

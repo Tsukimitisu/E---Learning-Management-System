@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settings_update = [
             'max_login_attempts' => (int)$_POST['max_login_attempts'],
             'lockout_duration' => (int)$_POST['lockout_duration'],
+            'lockout_cycles' => (int)$_POST['lockout_cycles'],
             'password_min_length' => (int)$_POST['password_min_length'],
             'password_require_uppercase' => isset($_POST['password_require_uppercase']) ? '1' : '0',
             'password_require_lowercase' => isset($_POST['password_require_lowercase']) ? '1' : '0',
@@ -143,18 +144,25 @@ include '../../includes/header.php';
         <div class="tab-pane fade show active" id="security" role="tabpanel">
             <div class="settings-card p-4">
                 <form method="POST">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="update_security">
                     
                     <h6 class="section-label">Account Lockout Policies</h6>
                     <div class="row g-4 mb-5">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Max Failed Attempts</label>
                             <input type="number" class="form-control border-light shadow-sm" name="max_login_attempts" value="<?php echo $settings['max_login_attempts'] ?? 5; ?>" min="1" max="20">
-                            <small class="text-muted">Attempts before account is temporarily disabled.</small>
+                            <small class="text-muted">Per cycle before lockout.</small>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Lockout Duration (Mins)</label>
-                            <input type="number" class="form-control border-light shadow-sm" name="lockout_duration" value="<?php echo $settings['lockout_duration'] ?? 15; ?>" min="1" max="1440">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Initial Lockout (Mins)</label>
+                            <input type="number" class="form-control border-light shadow-sm" name="lockout_duration" value="<?php echo $settings['lockout_duration'] ?? 1; ?>" min="1" max="1440">
+                            <small class="text-muted">Doubles each cycle.</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Allowed Cycles</label>
+                            <input type="number" class="form-control border-light shadow-sm" name="lockout_cycles" value="<?php echo $settings['lockout_cycles'] ?? 3; ?>" min="1" max="10">
+                            <small class="text-muted">Permanent lock after last cycle.</small>
                         </div>
                     </div>
                     
@@ -199,6 +207,7 @@ include '../../includes/header.php';
                     <i class="bi bi-info-circle-fill text-blue me-2"></i><strong>Configuration Hint:</strong> When using Gmail, utilize a Google "App Password" to bypass legacy login blocks.
                 </div>
                 <form method="POST">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="update_email">
                     <h6 class="section-label">SMTP Infrastructure</h6>
                     <div class="row g-3 mb-4">
@@ -217,6 +226,7 @@ include '../../includes/header.php';
                 <hr class="my-5">
                 <h6 class="fw-bold mb-3"><i class="bi bi-bug me-2"></i>Diagnostics</h6>
                 <form method="POST" class="row g-3">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="test_email">
                     <div class="col-md-4"><input type="email" class="form-control border-light shadow-sm" name="test_email" placeholder="Recipient address..." required></div>
                     <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100 fw-bold">Test Mail</button></div>
@@ -231,6 +241,7 @@ include '../../includes/header.php';
                     <strong>Redirect URI:</strong> <code><?php echo BASE_URL; ?>auth/google_callback.php</code>
                 </div>
                 <form method="POST">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="update_google">
                     <div class="form-check form-switch mb-4">
                         <input class="form-check-input" type="checkbox" name="enable_google_login" id="enGoogle" <?php echo ($settings['enable_google_login'] ?? '0') === '1' ? 'checked' : ''; ?>>

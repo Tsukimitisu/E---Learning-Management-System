@@ -35,6 +35,21 @@ try {
     $audit->bind_param("iss", $_SESSION['user_id'], $action, $ip);
     $audit->execute();
 
+    // Notify all active users
+    $user_query = $conn->query("SELECT id FROM users WHERE status = 'active' AND id != {$_SESSION['user_id']}");
+    $recipient_ids = [];
+    while ($u = $user_query->fetch_assoc()) $recipient_ids[] = (int)$u['id'];
+    if (!empty($recipient_ids)) {
+        create_bulk_notifications(
+            $recipient_ids,
+            'System Announcement',
+            $title,
+            'announcement',
+            null,
+            (int)$_SESSION['user_id']
+        );
+    }
+
     echo json_encode(['status' => 'success', 'message' => 'Announcement published successfully']);
 } catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => 'Error publishing announcement']);

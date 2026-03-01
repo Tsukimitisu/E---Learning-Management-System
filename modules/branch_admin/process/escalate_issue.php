@@ -75,13 +75,15 @@ try {
 
         $escalated_count = 0;
         while ($admin = $school_admins->fetch_assoc()) {
-            // Insert escalation notification
-            $insert_escalation = $conn->prepare("
-                INSERT INTO notifications (user_id, title, message, type, priority, created_by, created_at)
-                VALUES (?, 'Issue Escalation', ?, 'escalation', ?, ?, NOW())
-            ");
-            $insert_escalation->bind_param("issii", $admin['id'], $issue_description, $severity, $_SESSION['user_id']);
-            $insert_escalation->execute();
+            // Create notification via helper (with realtime push)
+            create_notification(
+                (int)$admin['id'],
+                'Issue Escalation',
+                $issue_description,
+                'system',
+                null,
+                $_SESSION['user_id']
+            );
             $escalated_count++;
         }
 

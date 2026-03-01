@@ -20,36 +20,49 @@ require_branch_assignment();
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
 
-// Attendance Report Data
-$attendance_report = $conn->query("
+// Sanitize date inputs — only allow YYYY-MM-DD format
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) $start_date = date('Y-m-01');
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date)) $end_date = date('Y-m-t');
+
+// Attendance Report Data — use prepared statements
+$att_stmt = $conn->prepare("
     SELECT cl.id as class_id, cl.section_name, s.subject_code, s.subject_title, COUNT(DISTINCT e.student_id) as total_enrolled, COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) as total_present, ROUND((COUNT(DISTINCT CASE WHEN a.status = 'present' THEN a.student_id END) * 100.0) / NULLIF(COUNT(DISTINCT e.student_id), 0), 2) as attendance_rate
     FROM classes cl
     LEFT JOIN subjects s ON cl.subject_id = s.id
     LEFT JOIN enrollments e ON cl.id = e.class_id AND e.status = 'approved'
-    LEFT JOIN attendance a ON cl.id = a.class_id AND a.attendance_date BETWEEN '$start_date' AND '$end_date'
-    WHERE cl.branch_id = $branch_id
+    LEFT JOIN attendance a ON cl.id = a.class_id AND a.attendance_date BETWEEN ? AND ?
+    WHERE cl.branch_id = ?
     GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title
     ORDER BY s.subject_code, cl.section_name
 ");
+$att_stmt->bind_param("ssi", $start_date, $end_date, $branch_id);
+$att_stmt->execute();
+$attendance_report = $att_stmt->get_result();
 
 // Academic Performance Report
-$performance_report = $conn->query("
+$perf_stmt = $conn->prepare("
     SELECT cl.id as class_id, cl.section_name, s.subject_code, s.subject_title, COUNT(DISTINCT e.student_id) as total_students, AVG(g.final_grade) as avg_final_grade, COUNT(CASE WHEN g.remarks = 'PASSED' THEN 1 END) as passed_count, ROUND((COUNT(CASE WHEN g.remarks = 'PASSED' THEN 1 END) * 100.0) / NULLIF(COUNT(g.student_id), 0), 2) as pass_rate
     FROM classes cl
     LEFT JOIN subjects s ON cl.subject_id = s.id
     LEFT JOIN enrollments e ON cl.id = e.class_id AND e.status = 'approved'
     LEFT JOIN grades g ON cl.id = g.class_id
-    WHERE cl.branch_id = $branch_id
+    WHERE cl.branch_id = ?
     GROUP BY cl.id, cl.section_name, s.subject_code, s.subject_title
     ORDER BY s.subject_code, cl.section_name
 ");
+$perf_stmt->bind_param("i", $branch_id);
+$perf_stmt->execute();
+$performance_report = $perf_stmt->get_result();
 
 // Enrollment Statistics
-$enrollment_stats = $conn->query("
+$enroll_stmt = $conn->prepare("
     SELECT COUNT(DISTINCT cl.id) as total_classes, SUM(cl.max_capacity) as total_capacity, SUM(cl.current_enrolled) as total_enrolled, ROUND((SUM(cl.current_enrolled) * 100.0) / NULLIF(SUM(cl.max_capacity), 0), 2) as utilization_rate, COUNT(DISTINCT CASE WHEN cl.current_enrolled >= cl.max_capacity THEN cl.id END) as full_classes, COUNT(DISTINCT CASE WHEN cl.current_enrolled >= cl.max_capacity * 0.8 THEN cl.id END) as almost_full_classes
     FROM classes cl
-    WHERE cl.branch_id = $branch_id
-")->fetch_assoc();
+    WHERE cl.branch_id = ?
+");
+$enroll_stmt->bind_param("i", $branch_id);
+$enroll_stmt->execute();
+$enrollment_stats = $enroll_stmt->get_result()->fetch_assoc();
 
 include '../../includes/header.php';
 ?>

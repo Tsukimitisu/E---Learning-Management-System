@@ -113,6 +113,16 @@ function enrollInProgram() {
 
         $conn->commit();
 
+        // Notify student about enrollment
+        create_notification(
+            $student_id,
+            'Enrollment Confirmed',
+            "You have been enrolled in {$result['enrolled_count']} subject(s) for this term.",
+            'enrollment',
+            null,
+            (int)$_SESSION['user_id']
+        );
+
         $message = "Student enrolled successfully. {$result['enrolled_count']} subject(s) enrolled";
         if ($result['completed_count'] > 0) {
             $message .= ", {$result['completed_count']} marked completed from previous school";
@@ -567,6 +577,16 @@ function recordDownPayment() {
     
     if ($stmt->execute()) {
         logAuditSimple($conn, "Down payment recorded: student {$student_id}, amount ₱" . number_format($amount, 2) . ", method {$payment_method}, ref {$reference_no}");
+
+        // Notify student about down payment
+        create_notification(
+            $student_id,
+            'Down Payment Recorded',
+            'Your down payment of ₱' . number_format($amount, 2) . ' has been recorded successfully.',
+            'payment',
+            null,
+            $recorded_by
+        );
         
         $new_balance = getSemesterOutstandingBalance($student_id, $current_ay_id, $semester);
         echo json_encode([

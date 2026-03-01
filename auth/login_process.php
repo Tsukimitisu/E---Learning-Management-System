@@ -23,12 +23,22 @@ if (empty($email) || empty($password)) {
 // Check if account is locked
 if (is_account_locked($email)) {
     $remaining = get_lockout_remaining($email);
-    echo json_encode([
-        'success' => false, 
-        'locked' => true,
-        'lockout_remaining' => $remaining,
-        'message' => "Account is temporarily locked. Please try again in {$remaining} minutes."
-    ]);
+    if ($remaining < 0) {
+        // Permanent lock
+        echo json_encode([
+            'success' => false,
+            'locked' => true,
+            'permanent' => true,
+            'message' => 'Your account has been permanently locked due to too many failed login attempts. Please contact an administrator.'
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'locked' => true,
+            'lockout_remaining' => $remaining,
+            'message' => "Account is temporarily locked. Please try again in {$remaining} minute(s)."
+        ]);
+    }
     exit();
 }
 
@@ -60,10 +70,9 @@ try {
         $conn->rollback();
         record_login_attempt($email, false);
         
-        // Calculate remaining attempts
-        $lockout_duration = (int)get_security_setting('lockout_duration', 15);
-        $recent_attempts = $conn->query("SELECT COUNT(*) as cnt FROM login_attempts WHERE email = '$email' AND success = 0 AND attempted_at > DATE_SUB(NOW(), INTERVAL $lockout_duration MINUTE)")->fetch_assoc()['cnt'];
-        $remaining = max(0, $max_attempts - $recent_attempts);
+        // Calculate remaining attempts using cycle-based logic
+        $info = get_lockout_info($email);
+        $remaining = $info['remaining_attempts'];
         
         echo json_encode([
             'success' => false, 
@@ -80,10 +89,9 @@ try {
         $conn->rollback();
         record_login_attempt($email, false);
         
-        // Calculate remaining attempts
-        $lockout_duration = (int)get_security_setting('lockout_duration', 15);
-        $recent_attempts = $conn->query("SELECT COUNT(*) as cnt FROM login_attempts WHERE email = '$email' AND success = 0 AND attempted_at > DATE_SUB(NOW(), INTERVAL $lockout_duration MINUTE)")->fetch_assoc()['cnt'];
-        $remaining = max(0, $max_attempts - $recent_attempts);
+        // Calculate remaining attempts using cycle-based logic
+        $info = get_lockout_info($email);
+        $remaining = $info['remaining_attempts'];
         
         echo json_encode([
             'success' => false, 

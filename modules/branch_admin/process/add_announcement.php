@@ -42,6 +42,24 @@ try {
     $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
     $audit->bind_param("iss", $_SESSION['user_id'], $action, $ip);
     $audit->execute();
+
+    // Notify users in this branch about the announcement
+    $user_query = $conn->prepare("SELECT u.id FROM users u INNER JOIN user_profiles up ON u.id = up.user_id WHERE up.branch_id = ? AND u.status = 'active' AND u.id != ?");
+    $user_query->bind_param("ii", $branch_id, $_SESSION['user_id']);
+    $user_query->execute();
+    $branch_users = $user_query->get_result();
+    $recipient_ids = [];
+    while ($u = $branch_users->fetch_assoc()) $recipient_ids[] = (int)$u['id'];
+    if (!empty($recipient_ids)) {
+        create_bulk_notifications(
+            $recipient_ids,
+            'Branch Announcement',
+            $title,
+            'announcement',
+            null,
+            (int)$_SESSION['user_id']
+        );
+    }
     
     echo json_encode(['status' => 'success', 'message' => 'Announcement posted successfully']);
 } catch (Exception $e) {

@@ -13,7 +13,7 @@ $registrar_id = $_SESSION['user_id'];
  * BACKEND LOGIC - UNTOUCHED 
  */
 $registrar_profile = $conn->query("SELECT branch_id FROM user_profiles WHERE user_id = $registrar_id")->fetch_assoc();
-$branch_id = $registrar_profile['branch_id'] ?? 0;
+$branch_id = (int)($registrar_profile['branch_id'] ?? 0);
 $branch = $conn->query("SELECT * FROM branches WHERE id = $branch_id")->fetch_assoc();
 
 $start_date = $_GET['start_date'] ?? date('Y-m-01');
@@ -21,13 +21,34 @@ $end_date = $_GET['end_date'] ?? date('Y-m-d');
 $payment_type = $_GET['payment_type'] ?? 'all';
 $search = clean_input($_GET['search'] ?? '');
 
-// Include payments where branch_id matches OR where the student belongs to this branch
-$where = "(p.branch_id = $branch_id OR p.branch_id IS NULL)";
-if ($start_date && $end_date) { $where .= " AND DATE(p.created_at) BETWEEN '$start_date' AND '$end_date'"; }
-if ($payment_type != 'all') { $where .= " AND LOWER(p.payment_type) = LOWER('$payment_type')"; }
-if (!empty($search)) { $where .= " AND (s.student_no LIKE '%$search%' OR up.first_name LIKE '%$search%' OR up.last_name LIKE '%$search%' OR p.or_number LIKE '%$search%' OR p.reference_no LIKE '%$search%')"; }
+// Sanitize date inputs — only allow YYYY-MM-DD format
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) $start_date = date('Y-m-01');
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date)) $end_date = date('Y-m-d');
 
-$summary = $conn->query("
+// Build parameterized query
+$where = "(p.branch_id = ? OR p.branch_id IS NULL)";
+$params = [$branch_id];
+$types = "i";
+
+if ($start_date && $end_date) {
+    $where .= " AND DATE(p.created_at) BETWEEN ? AND ?";
+    $params[] = $start_date;
+    $params[] = $end_date;
+    $types .= "ss";
+}
+if ($payment_type != 'all') {
+    $where .= " AND LOWER(p.payment_type) = LOWER(?)";
+    $params[] = $payment_type;
+    $types .= "s";
+}
+if (!empty($search)) {
+    $search_like = "%{$search}%";
+    $where .= " AND (s.student_no LIKE ? OR up.first_name LIKE ? OR up.last_name LIKE ? OR p.or_number LIKE ? OR p.reference_no LIKE ?)";
+    $params = array_merge($params, [$search_like, $search_like, $search_like, $search_like, $search_like]);
+    $types .= "sssss";
+}
+
+$summary_stmt = $conn->prepare("
     SELECT 
         COUNT(*) as total_count,
         SUM(amount) as total_amount,
@@ -37,9 +58,12 @@ $summary = $conn->query("
     INNER JOIN students s ON p.student_id = s.user_id
     INNER JOIN user_profiles up ON s.user_id = up.user_id
     WHERE $where
-")->fetch_assoc();
+");
+$summary_stmt->bind_param($types, ...$params);
+$summary_stmt->execute();
+$summary = $summary_stmt->get_result()->fetch_assoc();
 
-$payments = $conn->query("
+$payments_stmt = $conn->prepare("
     SELECT p.*, s.student_no, 
            CONCAT(up.first_name, ' ', up.last_name) as student_name,
            CONCAT(rec.first_name, ' ', rec.last_name) as recorded_by_name,
@@ -52,6 +76,9 @@ $payments = $conn->query("
     WHERE $where
     ORDER BY p.created_at DESC
 ");
+$payments_stmt->bind_param($types, ...$params);
+$payments_stmt->execute();
+$payments = $payments_stmt->get_result();
 
 include '../../includes/header.php';
 ?>

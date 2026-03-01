@@ -48,84 +48,145 @@ function record_login_attempt($email, $success = false) {
 // Note: get_client_ip() is defined in config/db.php
 
 /**
- * Check if account is locked out
+ * Get lockout analysis info for an email.
+ * Counts all failed attempts since the last successful login.
+ * Returns cycle info, remaining attempts, and lockout timestamps.
+ */
+function get_lockout_info($email) {
+    global $conn;
+
+    $max_attempts  = (int)get_security_setting('max_login_attempts', 5);
+    $lockout_dur   = (int)get_security_setting('lockout_duration', 1);   // initial minutes
+    $lockout_cycles = (int)get_security_setting('lockout_cycles', 3);
+
+    // Last successful login timestamp
+    $stmt = $conn->prepare("SELECT MAX(attempted_at) as last_success FROM login_attempts WHERE email = ? AND success = 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $last_success = $stmt->get_result()->fetch_assoc()['last_success'];
+
+    // All failed attempts since last success (ordered chronologically)
+    if ($last_success) {
+        $stmt = $conn->prepare("SELECT attempted_at FROM login_attempts WHERE email = ? AND success = 0 AND attempted_at > ? ORDER BY attempted_at ASC");
+        $stmt->bind_param("ss", $email, $last_success);
+    } else {
+        $stmt = $conn->prepare("SELECT attempted_at FROM login_attempts WHERE email = ? AND success = 0 ORDER BY attempted_at ASC");
+        $stmt->bind_param("s", $email);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $failures = [];
+    while ($row = $result->fetch_assoc()) {
+        $failures[] = $row['attempted_at'];
+    }
+
+    $total          = count($failures);
+    $completed      = ($max_attempts > 0) ? intdiv($total, $max_attempts) : 0;
+    $in_cycle       = ($max_attempts > 0) ? ($total % $max_attempts) : 0;
+
+    return [
+        'total_failures'     => $total,
+        'completed_cycles'   => $completed,
+        'failures_in_cycle'  => $in_cycle,
+        'remaining_attempts' => $max_attempts - $in_cycle,
+        'max_attempts'       => $max_attempts,
+        'lockout_duration'   => $lockout_dur,
+        'lockout_cycles'     => $lockout_cycles,
+        'failure_times'      => $failures,
+    ];
+}
+
+/**
+ * Check if account is locked out.
+ *
+ * Logic (cycle-based with escalating lockout):
+ *  - Failures are counted since the last successful login (reset only on success).
+ *  - Every  `max_attempts`  consecutive failures = 1 completed cycle.
+ *  - Cycle 1 lockout = lockout_duration minutes, cycle 2 = 2×, … cycle N = N×.
+ *  - When completed_cycles >= lockout_cycles  →  permanent lock (account deactivated).
  */
 function is_account_locked($email) {
     global $conn;
-    
-    $max_attempts = (int)get_security_setting('max_login_attempts', 5);
-    $lockout_duration = (int)get_security_setting('lockout_duration', 15);
-    
-    // Count recent failed attempts
-    $stmt = $conn->prepare("
-        SELECT COUNT(*) as attempts 
-        FROM login_attempts 
-        WHERE email = ? 
-        AND success = 0 
-        AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)
-    ");
-    $stmt->bind_param("si", $email, $lockout_duration);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
-    
-    if ($result['attempts'] >= $max_attempts) {
-        // Lock the user account
-        $update = $conn->prepare("UPDATE users SET status = 'inactive' WHERE email = ?");
+
+    $info = get_lockout_info($email);
+
+    // Not enough failures for any lockout
+    if ($info['total_failures'] < $info['max_attempts']) {
+        return false;
+    }
+
+    $completed = $info['completed_cycles'];
+
+    // ── Permanent lock ──────────────────────────────────────────
+    if ($completed >= $info['lockout_cycles']) {
+        // Deactivate the user account
+        $update = $conn->prepare("UPDATE users SET status = 'inactive' WHERE email = ? AND status = 'active'");
         $update->bind_param("s", $email);
         $update->execute();
-        // Log to audit_logs and security_logs
-        $user_id = null;
-        $get_id = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $get_id->bind_param("s", $email);
-        $get_id->execute();
-        $res = $get_id->get_result();
-        if ($row = $res->fetch_assoc()) {
-            $user_id = $row['id'];
-        }
-        $ip = get_client_ip();
-        $action = 'Account locked due to failed login attempts';
-        if ($user_id) {
-            // Always log to audit_logs
-            $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
-            $audit->bind_param("iss", $user_id, $action, $ip);
-            $audit->execute();
-            // Always log to security_logs
-            $sec_stmt = $conn->prepare("INSERT INTO security_logs (user_id, event_type, details, ip_address, user_agent, severity, created_at) VALUES (?, 'account_locked', ?, ?, ?, 'high', NOW())");
-            $sec_stmt->bind_param("isss", $user_id, $action, $ip, $user_agent);
-            $sec_stmt->execute();
+
+        if ($update->affected_rows > 0) {
+            // Log once
+            $user_id = null;
+            $get_id = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            $get_id->bind_param("s", $email);
+            $get_id->execute();
+            $res = $get_id->get_result();
+            if ($row = $res->fetch_assoc()) $user_id = $row['id'];
+
+            $ip = get_client_ip();
+            $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            if ($user_id) {
+                $audit = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, 'Account permanently locked - max lockout cycles exceeded', ?)");
+                $audit->bind_param("is", $user_id, $ip);
+                $audit->execute();
+                $sec = $conn->prepare("INSERT INTO security_logs (user_id, event_type, details, ip_address, user_agent, severity, created_at) VALUES (?, 'account_locked', 'Permanently locked after exhausting all lockout cycles', ?, ?, 'critical', NOW())");
+                $sec->bind_param("iss", $user_id, $ip, $ua);
+                $sec->execute();
+            }
         }
         return true;
     }
+
+    // ── Temporary lockout ───────────────────────────────────────
+    // The lockout was triggered at the cycle-boundary failure
+    // (failure #completed_cycles × max_attempts, 0-based index = that − 1)
+    $boundary_idx       = ($completed * $info['max_attempts']) - 1;
+    $lockout_trigger     = strtotime($info['failure_times'][$boundary_idx]);
+    $lockout_minutes     = $completed * $info['lockout_duration'];
+    $lockout_end         = $lockout_trigger + ($lockout_minutes * 60);
+
+    if (time() < $lockout_end) {
+        return true;   // still within lockout window
+    }
+
+    // Lockout expired — user may attempt the next cycle
     return false;
 }
 
 /**
- * Get remaining lockout time in minutes
+ * Get remaining lockout time in minutes.
+ * Returns  0 if not locked, -1 if permanently locked.
  */
 function get_lockout_remaining($email) {
-    global $conn;
-    
-    $lockout_duration = (int)get_security_setting('lockout_duration', 15);
-    
-    $stmt = $conn->prepare("
-        SELECT attempted_at 
-        FROM login_attempts 
-        WHERE email = ? AND success = 0 
-        ORDER BY attempted_at DESC 
-        LIMIT 1
-    ");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
-    
-    if ($result) {
-        $last_attempt = strtotime($result['attempted_at']);
-        $lockout_end = $last_attempt + ($lockout_duration * 60);
-        $remaining = ceil(($lockout_end - time()) / 60);
-        return max(0, $remaining);
+    $info = get_lockout_info($email);
+
+    if ($info['total_failures'] < $info['max_attempts']) {
+        return 0;
     }
-    
-    return 0;
+
+    $completed = $info['completed_cycles'];
+
+    if ($completed >= $info['lockout_cycles']) {
+        return -1;   // permanent
+    }
+
+    $boundary_idx    = ($completed * $info['max_attempts']) - 1;
+    $lockout_trigger = strtotime($info['failure_times'][$boundary_idx]);
+    $lockout_minutes = $completed * $info['lockout_duration'];
+    $lockout_end     = $lockout_trigger + ($lockout_minutes * 60);
+    $remaining_sec   = $lockout_end - time();
+
+    return ($remaining_sec > 0) ? (int)ceil($remaining_sec / 60) : 0;
 }
 
 /**

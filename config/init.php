@@ -12,7 +12,19 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_samesite', 'Strict');
     ini_set('session.gc_maxlifetime', 3600); // 1 hour
     
+    // Secure cookie flag — only send over HTTPS
+    $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+    ini_set('session.cookie_secure', $is_https ? 1 : 0);
+    
     session_start();
+    
+    // Session timeout enforcement — expire after 1 hour of inactivity
+    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > 3600) {
+        session_unset();
+        session_destroy();
+        session_start();
+    }
+    $_SESSION['last_activity'] = time();
 }
 
 // Security Headers
@@ -77,9 +89,17 @@ define('ROLE_STUDENT', 6);
 // Timezone
 date_default_timezone_set('Asia/Manila');
 
-// Error Reporting (Development Mode)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Error Reporting — suppress in production, enable in development
+$elms_env_mode = strtolower(trim((string)elms_env('ELMS_ENV', 'production')));
+if ($elms_env_mode === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    ini_set('error_log', __DIR__ . '/../logs/php_errors.log');
+}
 
 // Include Database Configuration
 require_once __DIR__ . '/db.php';
@@ -108,9 +128,48 @@ if (isset($conn) && $conn && !$conn->connect_error) {
 // Include Helper Functions
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/realtime_helper.php';
+require_once __DIR__ . '/../includes/notification_helper.php';
 
 // Include RBAC System
 require_once __DIR__ . '/../includes/rbac.php';
+
+// ============================
+//  CSRF Auto-Enforcement
+// ============================
+// Automatically validate CSRF token on POST/PUT/DELETE requests
+// for authenticated users, unless the endpoint explicitly opts out.
+if (!empty($_SESSION['user_id']) && in_array($_SERVER['REQUEST_METHOD'] ?? '', ['POST', 'PUT', 'DELETE'])) {
+    // Skip CSRF for the login endpoint itself (no session when first logging in)
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $csrf_skip_paths = [
+        '/auth/login_process.php',
+        '/auth/google_callback.php',
+    ];
+    $skip_csrf = false;
+    foreach ($csrf_skip_paths as $path) {
+        if (strpos($request_uri, $path) !== false) {
+            $skip_csrf = true;
+            break;
+        }
+    }
+    if (!$skip_csrf) {
+        // Check token from POST body, GET param, or X-CSRF-Token header
+        $token = $_POST['csrf_token'] ?? $_GET['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!verify_csrf($token)) {
+            http_response_code(403);
+            $accepts_json = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+            $is_xhr = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+            if ($accepts_json || $is_xhr || strpos($content_type, 'application/json') !== false) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'status' => 'error', 'message' => 'Security token expired. Please refresh the page and try again.']);
+            } else {
+                echo '<!DOCTYPE html><html><body style="font-family:sans-serif;padding:40px;text-align:center;"><h2>Session Expired</h2><p>Your security token has expired. Please <a href="javascript:location.reload()">refresh the page</a> and try again.</p></body></html>';
+            }
+            exit();
+        }
+    }
+}
 
 // Track active session for concurrent user support
 if (!empty($_SESSION['user_id']) && isset($conn) && $conn && !$conn->connect_error) {

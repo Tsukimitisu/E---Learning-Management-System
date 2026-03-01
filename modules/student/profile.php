@@ -184,6 +184,7 @@ include '../../includes/header.php';
                 <div class="form-header"><i class="bi bi-person-lines-fill me-2"></i>Update Personal Details</div>
                 <div class="card-body p-4">
                     <form method="POST">
+                        <?php echo csrf_field(); ?>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted text-uppercase">First Name</label>
@@ -220,6 +221,7 @@ include '../../includes/header.php';
                 <div class="form-header"><i class="bi bi-shield-lock-fill me-2 text-warning"></i>Security Credentials</div>
                 <div class="card-body p-4">
                     <form method="POST">
+                        <?php echo csrf_field(); ?>
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold text-dark text-uppercase">Current Password</label>

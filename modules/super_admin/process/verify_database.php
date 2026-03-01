@@ -95,7 +95,8 @@ foreach ($migrations as $table => $sql) {
 $default_settings = [
     ['registration_enabled', '1', 'boolean', 'Allow new user registration'],
     ['max_login_attempts', '5', 'number', 'Maximum failed login attempts before lockout'],
-    ['lockout_duration', '30', 'number', 'Minutes to lock account after failed attempts'],
+    ['lockout_duration', '1', 'number', 'Initial lockout duration in minutes (escalates each cycle)'],
+    ['lockout_cycles', '3', 'number', 'Allowed lockout cycles before permanent lock'],
     ['password_min_length', '8', 'number', 'Minimum password length'],
     ['password_require_uppercase', '1', 'boolean', 'Require uppercase letters in passwords'],
     ['password_require_lowercase', '1', 'boolean', 'Require lowercase letters in passwords'],

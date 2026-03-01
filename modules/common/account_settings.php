@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
                 if ($stmt->execute([$hashed, $user_id])) {
                     $success_message = 'Password updated successfully!';
-                    try { $ip = get_client_ip(); $conn->query("INSERT INTO audit_logs (user_id, action, ip_address) VALUES ({$user_id}, 'Password changed', '{$ip}')"); } catch (Exception $e) {}
+                    try { $ip = get_client_ip(); $audit_stmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, 'Password changed', ?)"); $audit_stmt->bind_param("is", $user_id, $ip); $audit_stmt->execute(); } catch (Exception $e) {}
                 } else { $error_message = 'Failed to update password.'; }
             }
         }
@@ -69,8 +69,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute([$user_id])) {
             $success_message = 'Google account unlinked successfully!';
             $user['google_email'] = null;
-            try { $ip = get_client_ip(); $conn->query("INSERT INTO audit_logs (user_id, action, ip_address) VALUES ({$user_id}, 'Google account unlinked', '{$ip}')"); } catch (Exception $e) {}
+            try { $ip = get_client_ip(); $audit_stmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, 'Google account unlinked', ?)"); $audit_stmt->bind_param("is", $user_id, $ip); $audit_stmt->execute(); } catch (Exception $e) {}
         } else { $error_message = 'Failed to unlink Google account.'; }
+    } elseif ($action === 'export_my_data') {
+        // RA 10173 - Right to data portability
+        $export = ['exported_at' => date('c'), 'user' => []];
+        // Basic user info
+        $s = $pdo->prepare("SELECT id, email, status, created_at, updated_at FROM users WHERE id = ?");
+        $s->execute([$user_id]);
+        $export['user']['account'] = $s->fetch(PDO::FETCH_ASSOC);
+        // Profile
+        $s = $pdo->prepare("SELECT first_name, last_name, middle_name, contact_number, address, date_of_birth, gender FROM user_profiles WHERE user_id = ?");
+        $s->execute([$user_id]);
+        $export['user']['profile'] = $s->fetch(PDO::FETCH_ASSOC) ?: [];
+        // Enrollment records (students)
+        try { $s = $pdo->prepare("SELECT * FROM enrollments WHERE student_id = ?"); $s->execute([$user_id]); $export['user']['enrollments'] = $s->fetchAll(PDO::FETCH_ASSOC); } catch (Exception $e) { $export['user']['enrollments'] = []; }
+        // Grades
+        try { $s = $pdo->prepare("SELECT * FROM grades WHERE student_id = ?"); $s->execute([$user_id]); $export['user']['grades'] = $s->fetchAll(PDO::FETCH_ASSOC); } catch (Exception $e) { $export['user']['grades'] = []; }
+        // Payments
+        try { $s = $pdo->prepare("SELECT * FROM payments WHERE student_id = ?"); $s->execute([$user_id]); $export['user']['payments'] = $s->fetchAll(PDO::FETCH_ASSOC); } catch (Exception $e) { $export['user']['payments'] = []; }
+        // Login history
+        try { $s = $pdo->prepare("SELECT attempted_at, ip_address, success FROM login_attempts WHERE email = ? ORDER BY attempted_at DESC LIMIT 50"); $s->execute([$user['email']]); $export['user']['login_history'] = $s->fetchAll(PDO::FETCH_ASSOC); } catch (Exception $e) { $export['user']['login_history'] = []; }
+        // Audit log
+        try { $ip = get_client_ip(); $audit_stmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, 'Personal data exported (RA 10173)', ?)"); $audit_stmt->bind_param("is", $user_id, $ip); $audit_stmt->execute(); } catch (Exception $e) {}
+
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename="my_data_export_' . date('Y-m-d') . '.json"');
+        echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    } elseif ($action === 'request_data_deletion') {
+        // RA 10173 - Right to erasure / blocking
+        try {
+            $ip = get_client_ip();
+            $audit_stmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address) VALUES (?, 'Data deletion requested (RA 10173)', ?)");
+            $audit_stmt->bind_param("is", $user_id, $ip);
+            $audit_stmt->execute();
+            // Notify super admins
+            if (function_exists('create_notification')) {
+                $s = $pdo->prepare("SELECT ur.user_id FROM user_roles ur WHERE ur.role_id = 1");
+                $s->execute();
+                $admins = $s->fetchAll(PDO::FETCH_COLUMN);
+                foreach ($admins as $admin_id) {
+                    create_notification($admin_id, 'Data Deletion Request', 'User #' . $user_id . ' (' . $user['email'] . ') has requested data deletion under RA 10173.', 'data_privacy');
+                }
+            }
+            $success_message = 'Your data deletion request has been submitted. The Data Protection Officer will process your request within 30 days as required by RA 10173.';
+        } catch (Exception $e) {
+            $error_message = 'Failed to submit deletion request. Please contact your administrator.';
+        }
     }
 }
 
@@ -250,6 +296,7 @@ include '../../includes/header.php';
                                     </div>
                                 </div>
                                 <form method="post" onsubmit="return confirm('Are you sure you want to unlink Google?');">
+                                    <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="unlink_google">
                                     <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle fs-5"></i></button>
                                 </form>
@@ -270,6 +317,7 @@ include '../../includes/header.php';
                     <div class="card-header-modern"><i class="bi bi-key-fill me-2"></i>Update Password</div>
                     <div class="card-body p-4">
                         <form method="post" id="passwordForm">
+                            <?php echo csrf_field(); ?>
                             <input type="hidden" name="action" value="change_password">
                             
                             <div class="row g-3 mb-4">
@@ -344,6 +392,43 @@ include '../../includes/header.php';
                                 <?php endforeach; endif; ?>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Data Privacy Rights (RA 10173) -->
+                <div class="card-modern mt-4">
+                    <div class="card-header-modern bg-white"><i class="bi bi-shield-lock me-2"></i>Data Privacy Rights (RA 10173)</div>
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-3">Under the Data Privacy Act of 2012 (RA 10173), you have the right to access, correct, and request deletion of your personal data.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <h6 class="fw-bold small"><i class="bi bi-download me-2 text-primary"></i>Download My Data</h6>
+                                    <p class="text-muted small mb-2">Export all personal data we hold about you in JSON format.</p>
+                                    <form method="post">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="action" value="export_my_data">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm fw-bold"><i class="bi bi-file-earmark-arrow-down me-1"></i> Export Data</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <h6 class="fw-bold small"><i class="bi bi-trash3 me-2 text-danger"></i>Request Data Deletion</h6>
+                                    <p class="text-muted small mb-2">Request erasure of your personal data. Processed within 30 days.</p>
+                                    <form method="post" onsubmit="return confirm('Are you sure? This will notify the administrator to begin the data deletion process.');">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="action" value="request_data_deletion">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm fw-bold"><i class="bi bi-envelope-exclamation me-1"></i> Request Deletion</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-top">
+                            <a href="/elms_system/privacy_policy.php" class="text-decoration-none small fw-bold" style="color: var(--maroon);"><i class="bi bi-file-text me-1"></i> Read our full Privacy Policy</a>
+                            <span class="mx-2 text-muted">|</span>
+                            <a href="/elms_system/terms_of_service.php" class="text-decoration-none small fw-bold" style="color: var(--blue);"><i class="bi bi-file-earmark-text me-1"></i> Terms of Service</a>
+                        </div>
                     </div>
                 </div>
             </div>

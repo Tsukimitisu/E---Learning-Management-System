@@ -100,9 +100,9 @@
         path: getRealtimeSocketPath(),
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: Infinity,
-        reconnectionDelayMax: 15000,
+        reconnectionDelay: 2000,
+        reconnectionAttempts: 5,
+        reconnectionDelayMax: 30000,
         randomizationFactor: 0.5,
         timeout: 10000
       });
@@ -142,11 +142,11 @@
       });
 
       socket.on('connect_error', function(err) {
-        console.error('Socket connection error:', err);
+        // Silent — notifications work via polling regardless
       });
 
       socket.on('error', function(err) {
-        console.error('Socket error:', err);
+        // Silent — notifications work via polling regardless
       });
 
       socket.on('disconnect', function(reason) {

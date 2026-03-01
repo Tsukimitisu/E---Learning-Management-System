@@ -152,8 +152,8 @@ $google_url = $google_enabled ? get_google_oauth_url() : null;
                 
                 <div id="lockoutWarning" class="lockout-warning d-none">
                     <i class="bi bi-shield-exclamation me-2"></i>
-                    <strong>Account Temporarily Locked</strong>
-                    <p class="mb-0 mt-1 small">Too many failed attempts. Please try again in <span id="lockoutTime">0</span> minutes.</p>
+                    <strong id="lockoutTitle">Account Temporarily Locked</strong>
+                    <p class="mb-0 mt-1 small" id="lockoutMessage">Too many failed attempts. Please try again in <span id="lockoutTime">0</span> minutes.</p>
                 </div>
 
                 <form id="loginForm">
@@ -212,6 +212,11 @@ $google_url = $google_enabled ? get_google_oauth_url() : null;
                 <span>All Right Reserved</span>
                 <img src="assets/image/datamexlogo.png" alt="Datamex Logo">
                 <span class="fw-bold" style="color: var(--primary-maroon);">DCSA</span>
+            </div>
+            <div class="text-center mt-2" style="font-size: 0.75rem;">
+                <a href="privacy_policy.php" class="text-muted text-decoration-none me-2">Privacy Policy</a>
+                <span class="text-muted">|</span>
+                <a href="terms_of_service.php" class="text-muted text-decoration-none ms-2">Terms of Service</a>
             </div>
         </div>
     </div>
@@ -278,7 +283,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Check if account is locked
                 if (data.locked) {
                     lockoutWarning.classList.remove('d-none');
-                    lockoutTime.textContent = data.lockout_remaining || 15;
+                    if (data.permanent) {
+                        document.getElementById('lockoutTitle').textContent = 'Account Permanently Locked';
+                        document.getElementById('lockoutMessage').innerHTML = 'Too many failed attempts. Your account has been permanently locked. Please contact an administrator.';
+                    } else {
+                        document.getElementById('lockoutTitle').textContent = 'Account Temporarily Locked';
+                        document.getElementById('lockoutMessage').innerHTML = 'Too many failed attempts. Please try again in <span id="lockoutTime">' + (data.lockout_remaining || 1) + '</span> minute(s).';
+                    }
                     alertMessage.classList.add('d-none');
                 } else {
                     alertMessage.classList.remove('d-none', 'alert-success');

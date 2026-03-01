@@ -28,6 +28,7 @@ $allowed_settings = [
     'registration_enabled',
     'max_login_attempts',
     'lockout_duration',
+    'lockout_cycles',
     'password_min_length',
     'password_require_uppercase',
     'password_require_lowercase',
@@ -57,6 +58,7 @@ switch ($setting_key) {
         break;
     case 'max_login_attempts':
     case 'lockout_duration':
+    case 'lockout_cycles':
     case 'password_min_length':
     case 'session_timeout':
         if (!is_numeric($setting_value) || $setting_value < 1) {

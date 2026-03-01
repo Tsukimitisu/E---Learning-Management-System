@@ -95,7 +95,6 @@
         if ($_SESSION['role_id'] == ROLE_STUDENT) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-house-door"></i> <span>Dashboard</span></a></li>
             <li><a href="my_classes.php" class="<?php echo (in_array($current_page, ['my_classes.php', 'subject_view.php'])) ? 'active' : ''; ?>"><i class="bi bi-book"></i> <span>My Classes</span></a></li>
-            <li><a href="schedule.php" class="<?php echo ($current_page == 'schedule.php') ? 'active' : ''; ?>"><i class="bi bi-calendar3"></i> <span>Class Schedule</span></a></li>
             <li><a href="grades.php" class="<?php echo ($current_page == 'grades.php') ? 'active' : ''; ?>"><i class="bi bi-award"></i> <span>My Grades</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-pencil-square"></i> <span>Assessments</span></a></li>
             <li><a href="materials.php" class="<?php echo ($current_page == 'materials.php') ? 'active' : ''; ?>"><i class="bi bi-cloud-download"></i> <span>Learning Materials</span></a></li>

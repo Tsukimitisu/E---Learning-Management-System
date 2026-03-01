@@ -79,14 +79,17 @@ try {
     }
 
     if ($target_user_id && $message) {
-        // Insert notification (assuming notifications table exists)
-        $insert_notification = $conn->prepare("
-            INSERT INTO notifications (user_id, title, message, type, created_by, created_at)
-            VALUES (?, 'Branch Admin Reminder', ?, 'reminder', ?, NOW())
-        ");
-        $insert_notification->bind_param("isi", $target_user_id, $message, $_SESSION['user_id']);
+        // Create persistent notification using the helper
+        create_notification(
+            $target_user_id,
+            'Branch Admin Reminder',
+            $message,
+            'system',
+            null,
+            $_SESSION['user_id']
+        );
 
-        if ($insert_notification->execute()) {
+        if (true) {
             // Log the action
             $ip = get_client_ip();
             $action = "Sent $type reminder to user ID $target_user_id";
