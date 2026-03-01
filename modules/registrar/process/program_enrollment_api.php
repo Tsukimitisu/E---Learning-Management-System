@@ -1,7 +1,16 @@
 <?php
+// Buffer ALL output so stray warnings/notices don't corrupt JSON
+ob_start();
+
 require_once '../../../config/init.php';
 
+// Discard any output produced by init (session tracking, warnings, etc.)
+ob_end_clean();
+
 header('Content-Type: application/json');
+
+// Suppress display_errors for JSON API responses
+ini_set('display_errors', 0);
 
 $user_role = $_SESSION['role_id'] ?? $_SESSION['role'] ?? null;
 if (!isset($_SESSION['user_id']) || $user_role != ROLE_REGISTRAR) {
@@ -312,13 +321,17 @@ function getSubjectsForEnrollment() {
     $year_level_id = (int)($_GET['year_level_id'] ?? 0);
     $semester = normalizeSemester($_GET['semester'] ?? '1st');
     $student_id = (int)($_GET['student_id'] ?? 0);
+    $all_semesters = ($_GET['all_semesters'] ?? '0') === '1';
 
     if (!$program_type || !$program_id || !$year_level_id) {
         echo json_encode(['success' => false, 'message' => 'Missing parameters']);
         return;
     }
 
-    $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, $semester);
+    // For transferee/irregular validation, load ALL subjects across all semesters
+    $subjects = $all_semesters
+        ? getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, 'summer')
+        : getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, $semester);
     if (empty($subjects)) {
         echo json_encode(['success' => true, 'subjects' => []]);
         return;
@@ -537,7 +550,8 @@ function applyProgramEnrollment($student_id, $program_type, $program_id, $year_l
 
     $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, $semester);
     if (empty($subjects)) {
-        throw new Exception('No curriculum subjects found for selected level and semester.');
+        // If no subjects for specific semester, try loading all semesters
+        $subjects = getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_id, 'summer');
     }
 
     $subject_ids = array_map(static function ($row) {
@@ -810,6 +824,7 @@ function getCurriculumSubjectsForLevel($program_type, $program_id, $year_level_i
 function verifyStudentInRegistrarBranch($student_id, $branch_id) {
     global $conn;
 
+    $role_student = ROLE_STUDENT;
     $check = $conn->prepare("
         SELECT u.id
         FROM users u
@@ -817,7 +832,7 @@ function verifyStudentInRegistrarBranch($student_id, $branch_id) {
         INNER JOIN user_roles ur ON u.id = ur.user_id
         WHERE u.id = ? AND ur.role_id = ? AND up.branch_id = ?
     ");
-    $check->bind_param("iii", $student_id, ROLE_STUDENT, $branch_id);
+    $check->bind_param("iii", $student_id, $role_student, $branch_id);
     $check->execute();
     return $check->get_result()->num_rows > 0;
 }
@@ -1097,9 +1112,13 @@ function placeholders($count) {
 
 function logAuditSimple($conn, $action_text) {
     $log = $conn->prepare("
-        INSERT INTO audit_logs (user_id, action, ip_address, created_at)
-        VALUES (?, ?, ?, NOW())
+        INSERT INTO audit_logs (user_id, action, ip_address)
+        VALUES (?, ?, ?)
     ");
+    if (!$log) {
+        // Silently skip audit logging if table schema doesn't match
+        return;
+    }
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $uid = (int)$_SESSION['user_id'];
     $log->bind_param("iss", $uid, $action_text, $ip);
@@ -1126,11 +1145,12 @@ function generateStudentNumber($conn) {
 function ensureIrregularSupportSchema($conn) {
     // Keep idempotent and lightweight for compatibility in environments
     // where migrations haven't been applied yet.
-    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
-    $conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
-    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
+    // Suppress warnings/errors to prevent output corruption in JSON APIs
+    @$conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
+    @$conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
+    @$conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
-    $conn->query("
+    @$conn->query("
         CREATE TABLE IF NOT EXISTS student_completed_subjects (
             id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             student_id INT(10) UNSIGNED NOT NULL,
@@ -1148,10 +1168,10 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
-    $conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_subject_name VARCHAR(255) DEFAULT NULL AFTER completion_source");
-    $conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_grade VARCHAR(50) DEFAULT NULL AFTER previous_subject_name");
+    @$conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_subject_name VARCHAR(255) DEFAULT NULL AFTER completion_source");
+    @$conn->query("ALTER TABLE student_completed_subjects ADD COLUMN IF NOT EXISTS previous_grade VARCHAR(50) DEFAULT NULL AFTER previous_subject_name");
 
-    $conn->query("
+    @$conn->query("
         CREATE TABLE IF NOT EXISTS student_subject_enrollments (
             id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             student_id INT(10) UNSIGNED NOT NULL,
@@ -1172,9 +1192,9 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
-    $conn->query("ALTER TABLE student_subject_enrollments MODIFY COLUMN enrollment_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
+    @$conn->query("ALTER TABLE student_subject_enrollments MODIFY COLUMN enrollment_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
 
-    $conn->query("
+    @$conn->query("
         CREATE TABLE IF NOT EXISTS student_term_enrollments (
             id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             student_id INT(10) UNSIGNED NOT NULL,
@@ -1196,9 +1216,9 @@ function ensureIrregularSupportSchema($conn) {
             KEY idx_recorded_by (recorded_by)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
-    $conn->query("ALTER TABLE student_term_enrollments MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
+    @$conn->query("ALTER TABLE student_term_enrollments MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
 
     // Extend tuition fee table to support both college and SHS programs
-    $conn->query("ALTER TABLE program_tuition_fees ADD COLUMN IF NOT EXISTS program_type ENUM('college','shs') NOT NULL DEFAULT 'college' AFTER program_id");
+    @$conn->query("ALTER TABLE program_tuition_fees ADD COLUMN IF NOT EXISTS program_type ENUM('college','shs') NOT NULL DEFAULT 'college' AFTER program_id");
 }
 

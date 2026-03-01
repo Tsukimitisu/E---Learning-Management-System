@@ -6,8 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
     exit();
 }
 
-$is_transferee_mode = !empty($transferee_management_mode) || (($_GET['mode'] ?? '') === 'transferee');
-$page_title = $is_transferee_mode ? "Transferee Management" : "Program Enrollment";
+$page_title = "Program Enrollment";
 $registrar_id = $_SESSION['user_id'];
 
 // Compatibility guard for environments where migrations are not yet applied.
@@ -82,17 +81,15 @@ include '../../includes/header.php';
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h4 class="fw-bold mb-0" style="color: var(--blue);">
-                <i class="bi <?php echo $is_transferee_mode ? 'bi-person-vcard-fill' : 'bi-mortarboard-fill'; ?> me-2 text-maroon"></i>
-                <?php echo $is_transferee_mode ? 'Transferee Management' : 'Program Enrollment'; ?>
+                <i class="bi bi-mortarboard-fill me-2 text-maroon"></i>
+                Program Enrollment
             </h4>
             <p class="text-muted small mb-0"><?php echo htmlspecialchars($branch['name'] ?? 'Registrar'); ?> • AY <?php echo htmlspecialchars($current_ay['year_name'] ?? 'N/A'); ?></p>
         </div>
         <div class="d-flex gap-2">
-            <?php if (!$is_transferee_mode): ?>
             <button class="btn btn-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#bulkEnrollModal">
                 <i class="bi bi-people-fill"></i> Bulk Action
             </button>
-            <?php endif; ?>
             <a href="enroll.php" class="btn btn-outline-primary btn-sm rounded-pill px-3">Class Enrollment</a>
         </div>
     </div>
@@ -259,14 +256,10 @@ include '../../includes/header.php';
                             <div class="row g-3 mb-4">
                                 <div class="col-md-3 text-start">
                                     <label class="form-label small fw-bold text-uppercase text-muted">Enrollment Type</label>
-                                    <select class="form-select" id="enrollmentTypeSelect" onchange="onEnrollmentTypeChanged()" <?php echo $is_transferee_mode ? 'disabled' : ''; ?>>
-                                        <?php if ($is_transferee_mode): ?>
-                                        <option value="transferee" selected>Transferee</option>
-                                        <?php else: ?>
+                                    <select class="form-select" id="enrollmentTypeSelect" onchange="onEnrollmentTypeChanged()">
                                         <option value="regular">Regular</option>
                                         <option value="irregular">Irregular</option>
                                         <option value="transferee">Transferee</option>
-                                        <?php endif; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-3 text-start">
@@ -286,7 +279,7 @@ include '../../includes/header.php';
                                 <i class="bi bi-check-circle-fill me-2"></i> Confirm Enrollment
                             </button>
                             <button class="btn btn-lg btn-outline-warning shadow-lg px-5 py-3 ms-2" id="irregularEnrollBtn" style="display:none;" onclick="openIrregularEnrollModal()">
-                                <i class="bi bi-list-check me-2"></i> <?php echo $is_transferee_mode ? 'Save Transferee Enrollment' : 'Save Non-Regular Enrollment'; ?>
+                                <i class="bi bi-list-check me-2"></i> Save Non-Regular Enrollment
                             </button>
                         </div>
                     </div>
@@ -346,7 +339,7 @@ include '../../includes/header.php';
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header p-4 text-white" style="background: linear-gradient(135deg, #6f42c1, #17a2b8); border:none;">
-                <h5 class="modal-title fw-bold"><i class="bi bi-list-check me-2"></i><?php echo $is_transferee_mode ? 'Transferee Subject Validation' : 'Non-Regular Subject Validation'; ?></h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-list-check me-2"></i>Subject Validation</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 bg-light">
@@ -359,7 +352,7 @@ include '../../includes/header.php';
             </div>
             <div class="modal-footer border-0 p-4">
                 <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning px-4 fw-bold shadow-sm" onclick="submitIrregularEnrollment()"><?php echo $is_transferee_mode ? 'Save Transferee Enrollment' : 'Save Non-Regular Enrollment'; ?></button>
+                <button type="button" class="btn btn-warning px-4 fw-bold shadow-sm" onclick="submitIrregularEnrollment()">Save Enrollment</button>
             </div>
         </div>
     </div>
@@ -390,7 +383,6 @@ include '../../includes/header.php';
 
 <!-- --- JAVASCRIPT LOGIC - UNTOUCHED & RE-WIRED --- -->
 <script>
-const TRANSFEREE_MODE = <?php echo $is_transferee_mode ? 'true' : 'false'; ?>;
 const programsData = <?php $programs->data_seek(0); $p_arr = []; while ($p = $programs->fetch_assoc()) { $p_arr[] = $p; } echo json_encode($p_arr); ?>;
 const strandsData = <?php $strands->data_seek(0); $s_arr = []; while ($s = $strands->fetch_assoc()) { $s_arr[] = $s; } echo json_encode($s_arr); ?>;
 const programYearLevels = <?php echo json_encode($program_year_levels); ?>;
@@ -413,9 +405,6 @@ function isNonRegularType(type) {
 }
 
 function getSelectedEnrollmentType() {
-    if (TRANSFEREE_MODE) {
-        return 'transferee';
-    }
     const select = document.getElementById('enrollmentTypeSelect');
     return normalizeStudentType(select ? select.value : 'regular');
 }
@@ -467,14 +456,10 @@ document.querySelectorAll('.student-card').forEach(card => {
         this.classList.add('selected');
         selectedStudentId = this.dataset.studentId;
         document.getElementById('selectedStudentHeader').innerHTML = `<i class="bi bi-person-fill"></i> ${this.dataset.studentName} (${this.dataset.studentNo})`;
-        const normalizedType = TRANSFEREE_MODE ? 'transferee' : normalizeStudentType(this.dataset.studentType || 'regular');
+        const normalizedType = normalizeStudentType(this.dataset.studentType || 'regular');
         const enrollmentTypeSelect = document.getElementById('enrollmentTypeSelect');
         enrollmentTypeSelect.value = normalizedType;
-        if (TRANSFEREE_MODE) {
-            enrollmentTypeSelect.setAttribute('disabled', 'disabled');
-        } else {
-            enrollmentTypeSelect.removeAttribute('disabled');
-        }
+        enrollmentTypeSelect.removeAttribute('disabled');
         document.getElementById('previousSchoolInput').value = this.dataset.previousSchool || '';
         onEnrollmentTypeChanged();
         document.getElementById('enrollmentPanel').style.display = 'block';
@@ -545,10 +530,6 @@ function enrollStudent() {
 }
 
 function onEnrollmentTypeChanged() {
-    const select = document.getElementById('enrollmentTypeSelect');
-    if (TRANSFEREE_MODE && select) {
-        select.value = 'transferee';
-    }
     const type = getSelectedEnrollmentType();
     const nonRegularMode = isNonRegularType(type);
     document.getElementById('previousSchoolWrap').style.display = nonRegularMode ? 'block' : 'none';
@@ -578,11 +559,18 @@ function loadIrregularSubjects() {
         program_type: selectedProgramType,
         program_id: selectedProgramId,
         year_level_id: selectedYearLevelId,
-        semester: getSelectedSemester()
+        semester: getSelectedSemester(),
+        all_semesters: '1'
     });
 
     fetch(`process/program_enrollment_api.php?${params.toString()}`)
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text();
+        })
+        .then(text => {
+            try { return JSON.parse(text); } catch(e) { console.error('Invalid JSON from enrollment API:', text.substring(0, 500)); throw new Error('Invalid response from server'); }
+        })
         .then(data => {
             if (!data.success) {
                 container.innerHTML = `<div class="alert alert-danger small">${data.message || 'Failed to load subjects.'}</div>`;
@@ -630,8 +618,9 @@ function loadIrregularSubjects() {
                 });
             });
         })
-        .catch(() => {
-            container.innerHTML = '<div class="alert alert-danger small">Failed to load subjects.</div>';
+        .catch(err => {
+            console.error('loadIrregularSubjects error:', err);
+            container.innerHTML = '<div class="alert alert-danger small">Failed to load subjects. Check browser console for details.</div>';
         });
 }
 
