@@ -29,12 +29,52 @@ try {
     $program_type = clean_input($_POST['program_type'] ?? 'college');
     $course_id = (int)($_POST['course_id'] ?? 0);
     $shs_strand_id = (int)($_POST['shs_strand_id'] ?? 0);
+    // For college, year_level_id comes from 'year_level_id'; for SHS from 'shs_year_level_id'
     $year_level_id = (int)($_POST['year_level_id'] ?? 0);
+    if ($program_type === 'shs') {
+        $year_level_id = (int)($_POST['shs_year_level_id'] ?? 0);
+    }
     $password = $_POST['password'] ?? '';
+    $lrn = clean_input($_POST['lrn'] ?? '');
+    // Student type can come from either field depending on level type
+    $student_type = clean_input($_POST['student_type'] ?? $_POST['student_type_shs'] ?? 'regular');
 
     if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
         echo json_encode(['status' => 'error', 'message' => 'All required fields must be filled']);
         exit();
+    }
+
+    // Validate level type selection
+    if (!in_array($program_type, ['college', 'shs'])) {
+        echo json_encode(['status' => 'error', 'message' => 'Please select a Level Type (College or SHS) first']);
+        exit();
+    }
+
+    // Validate LRN format (must be exactly 12 digits if provided)
+    if (!empty($lrn)) {
+        if (!preg_match('/^\d{12}$/', $lrn)) {
+            echo json_encode(['status' => 'error', 'message' => 'LRN must be exactly 12 digits']);
+            exit();
+        }
+        // Check LRN uniqueness
+        $check_lrn = $conn->prepare("SELECT user_id FROM students WHERE lrn = ?");
+        $check_lrn->bind_param("s", $lrn);
+        $check_lrn->execute();
+        if ($check_lrn->get_result()->num_rows > 0) {
+            echo json_encode(['status' => 'error', 'message' => 'This LRN is already assigned to another student']);
+            exit();
+        }
+    }
+
+    // LRN is required for SHS students
+    if ($program_type === 'shs' && empty($lrn)) {
+        echo json_encode(['status' => 'error', 'message' => 'LRN (Learner Reference Number) is required for SHS students']);
+        exit();
+    }
+
+    // Validate student_type
+    if (!in_array($student_type, ['regular', 'irregular', 'transferee'])) {
+        $student_type = 'regular';
     }
 
     // Get the registrar's branch_id
@@ -107,9 +147,9 @@ try {
     // For SHS: use the strand id from shs_strands table
     $final_course_id = $program_type === 'college' ? $course_id : $shs_strand_id;
     
-    $student_type = 'regular';
-    $insert_student = $conn->prepare("INSERT INTO students (user_id, student_no, course_id, student_type) VALUES (?, ?, ?, ?)");
-    $insert_student->bind_param("isis", $user_id, $student_no, $final_course_id, $student_type);
+    $lrn_value = !empty($lrn) ? $lrn : null;
+    $insert_student = $conn->prepare("INSERT INTO students (user_id, student_no, course_id, student_type, lrn) VALUES (?, ?, ?, ?, ?)");
+    $insert_student->bind_param("isiss", $user_id, $student_no, $final_course_id, $student_type, $lrn_value);
 
     if (!$insert_student->execute()) {
         throw new Exception('Failed to create student record');

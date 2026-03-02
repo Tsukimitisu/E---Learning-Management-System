@@ -138,3 +138,519 @@ Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 30
 [01-Mar-2026 17:29:18 Asia/Manila] PHP Warning:  Cannot modify header information - headers already sent by (output started at C:\xampp\htdocs\elms_system\config\db.php:99) in C:\xampp\htdocs\elms_system\test_advance_balance.php on line 3
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[01-Mar-2026 17:51:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 20:06:49 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 20:07:05 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 20:07:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:12:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:12:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:28:11 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:28:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:29:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:29:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:35:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:35:02 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:18 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:23 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:45:45 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:56:20 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:56:47 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:56:55 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:57:46 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:13 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:26 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 21:58:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:01:28 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:01:30 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:27:48 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:28:10 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:29:14 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:31:35 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:33:21 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:35:39 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:38:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:38:44 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 102
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 146
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 597
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 606
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 653
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 684
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 901
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:38:50 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 910
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 659
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 659
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 690
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 690
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  Undefined variable $college_programs in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 907
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 907
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  Undefined variable $college_year_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 916
+[02-Mar-2026 22:45:00 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 916
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[02-Mar-2026 22:56:22 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[02-Mar-2026 23:13:42 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[02-Mar-2026 23:14:34 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[02-Mar-2026 23:41:38 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:33
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 33
+[02-Mar-2026 23:41:56 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:33
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 33
+[02-Mar-2026 23:41:58 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:33
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 33

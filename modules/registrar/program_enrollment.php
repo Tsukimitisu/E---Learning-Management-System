@@ -270,6 +270,15 @@ include '../../includes/header.php';
                                         <option value="summer">Summer</option>
                                     </select>
                                 </div>
+                                <div class="col-md-3 text-start" id="voucherStatusWrap" style="display:none;">
+                                    <label class="form-label small fw-bold text-uppercase text-muted">Voucher Status</label>
+                                    <select class="form-select" id="voucherStatusSelect">
+                                        <option value="pending">Pending</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="not_applicable">N/A</option>
+                                    </select>
+                                </div>
                                 <div class="col-md-6 text-start" id="previousSchoolWrap" style="display:none;">
                                     <label class="form-label small fw-bold text-uppercase text-muted">Previous School</label>
                                     <input type="text" class="form-control" id="previousSchoolInput" placeholder="Enter previous school name">
@@ -512,6 +521,8 @@ document.querySelectorAll('.year-level-pill').forEach(pill => {
         document.getElementById('selectedYearText').textContent = this.textContent;
         onSemesterChanged();
         document.getElementById('enrollActionContainer').style.display = 'block';
+        // Show voucher status for SHS
+        document.getElementById('voucherStatusWrap').style.display = selectedProgramType === 'shs' ? 'block' : 'none';
         onEnrollmentTypeChanged();
     });
 });
@@ -536,6 +547,7 @@ function enrollStudent() {
     fd.append('semester', getSelectedSemester());
     fd.append('student_type', studentType);
     fd.append('previous_school', document.getElementById('previousSchoolInput').value || '');
+    fd.append('voucher_status', document.getElementById('voucherStatusSelect').value || 'not_applicable');
     fd.append('completed_subject_ids', JSON.stringify([]));
     fetch('process/program_enrollment_api.php', { method: 'POST', body: fd }).then(r => r.json()).then(d => {
         if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Confirm Enrollment'; }

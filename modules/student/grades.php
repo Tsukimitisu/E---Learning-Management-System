@@ -9,6 +9,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_STUDENT) {
 $page_title = "My Grades";
 $student_id = (int)$_SESSION['user_id'];
 
+// Detect if student is SHS
+$student_info = $conn->query("SELECT s.course_id, s.lrn, s.student_type FROM students s WHERE s.user_id = $student_id")->fetch_assoc();
+$is_shs_student = false;
+if (!empty($student_info['course_id'])) {
+    $check_shs = $conn->query("SELECT id FROM shs_strands WHERE id = " . (int)$student_info['course_id']);
+    if ($check_shs && $check_shs->num_rows > 0) $is_shs_student = true;
+}
+
+// Also check student_term_enrollments for SHS type
+if (!$is_shs_student) {
+    $check_ste = $conn->query("SELECT id FROM student_term_enrollments WHERE student_id = $student_id AND program_type = 'shs' LIMIT 1");
+    if ($check_ste && $check_ste->num_rows > 0) $is_shs_student = true;
+}
+
 /**
  * Build the list of year-level + semester combos this student has grades for.
  * Joins grades -> sections -> program_year_levels to derive year level.
@@ -26,7 +40,20 @@ $filter_options_query = $conn->query("
     INNER JOIN program_year_levels pyl ON s.year_level_id = pyl.id
     INNER JOIN academic_years ay ON s.academic_year_id = ay.id
     WHERE g.student_id = $student_id
-    ORDER BY pyl.year_level ASC, s.semester ASC, ay.year_name ASC
+    UNION
+    SELECT DISTINCT
+        pyl.id as year_level_id,
+        pyl.year_level,
+        pyl.year_name,
+        s.semester,
+        ay.id as academic_year_id,
+        ay.year_name as ay_name
+    FROM shs_grades sg
+    INNER JOIN sections s ON sg.section_id = s.id
+    INNER JOIN program_year_levels pyl ON s.year_level_id = pyl.id
+    INNER JOIN academic_years ay ON s.academic_year_id = ay.id
+    WHERE sg.student_id = $student_id
+    ORDER BY year_level ASC, semester ASC, ay_name ASC
 ");
 $filter_options = [];
 if ($filter_options_query) {
@@ -116,6 +143,58 @@ if (isset($_GET['ajax'])) {
 
     $total = 0; $count = 0;
     $html = '';
+    
+    // Check for SHS grades (quarter-based)
+    $shs_list = [];
+    if (!empty($section_ids)) {
+        $ids_str2 = implode(',', $section_ids);
+        $shs_q = $conn->query("
+            SELECT sg.*, cs.subject_code, cs.subject_title
+            FROM shs_grades sg
+            INNER JOIN curriculum_subjects cs ON sg.subject_id = cs.id
+            WHERE sg.student_id = $student_id AND sg.section_id IN ($ids_str2)
+            ORDER BY cs.subject_code
+        ");
+        if ($shs_q) {
+            while ($r = $shs_q->fetch_assoc()) { $shs_list[] = $r; }
+        }
+    }
+    
+    // If SHS grades exist, render quarter-based view
+    if (!empty($shs_list)) {
+        foreach ($shs_list as $grade) {
+            $q1 = $grade['q1_grade']; $q2 = $grade['q2_grade'];
+            $q3 = $grade['q3_grade']; $q4 = $grade['q4_grade'];
+            $sem1 = $grade['sem1_final_grade']; $sem2 = $grade['sem2_final_grade'];
+            $final_g = $grade['final_grade'];
+            $val = $final_g ?? 0;
+            if ($val > 0) { $total += $val; $count++; }
+            
+            $rem_txt = 'PENDING'; $rem_clr = 'secondary';
+            $remarks = $grade['remarks'] ?? '';
+            if ($remarks === 'passed') { $rem_txt = 'PASSED'; $rem_clr = 'success'; }
+            elseif ($remarks === 'failed') { $rem_txt = 'FAILED'; $rem_clr = 'danger'; }
+            elseif ($remarks === 'with_remedial') { $rem_txt = 'WITH REMEDIAL'; $rem_clr = 'warning'; }
+            
+            $html .= '<tr><td class="ps-4"><div class="fw-bold">'.$grade['subject_code'].'</div><small class="text-muted">'.$grade['subject_title'].'</small></td>';
+            $html .= '<td class="text-center small">'.($q1 !== null ? (int)$q1 : '-').'</td>';
+            $html .= '<td class="text-center small">'.($q2 !== null ? (int)$q2 : '-').'</td>';
+            $html .= '<td class="text-center small fw-bold" style="color:#1565c0;">'.($sem1 !== null ? (int)$sem1 : '-').'</td>';
+            $html .= '<td class="text-center small">'.($q3 !== null ? (int)$q3 : '-').'</td>';
+            $html .= '<td class="text-center small">'.($q4 !== null ? (int)$q4 : '-').'</td>';
+            $html .= '<td class="text-center small fw-bold" style="color:#1565c0;">'.($sem2 !== null ? (int)$sem2 : '-').'</td>';
+            $html .= '<td class="text-center fw-bold text-maroon">'.($final_g !== null ? (int)$final_g : '-').'</td>';
+            $html .= '<td class="text-center pe-4"><span class="badge rounded-pill bg-'.$rem_clr.'">'.$rem_txt.'</span></td></tr>';
+        }
+        
+        if (empty($html)) {
+            $html = '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>No grades found.</td></tr>';
+        }
+        echo json_encode(['table' => $html, 'gpa' => ($count > 0 ? number_format($total / $count, 2, '.', '') : "0.00"), 'is_shs' => true]);
+        exit();
+    }
+    
+    // College grades (original logic)
     foreach ($list as $grade) {
         $val = ($selected_term == 'all') ? ($grade['final_grade'] ?? 0) : ($grade[$selected_term] ?? 0);
         if ($val > 0) { $total += $val; $count++; }
@@ -161,8 +240,19 @@ if (empty($grades_list)) {
     if ($old_grades) { while ($row = $old_grades->fetch_assoc()) { $grades_list[] = $row; } }
 }
 
+// Also check for SHS grades on initial load
+$shs_initial = [];
+if ($section_id) {
+    $shs_init_q = $conn->query("SELECT sg.final_grade FROM shs_grades sg WHERE sg.student_id = $student_id AND sg.section_id = $section_id");
+    if ($shs_init_q) { while ($r = $shs_init_q->fetch_assoc()) { $shs_initial[] = $r; } }
+}
+
 $total_grade = 0; $grade_count = 0;
-foreach ($grades_list as $g) { if (($g['final_grade'] ?? 0) > 0) { $total_grade += $g['final_grade']; $grade_count++; } }
+if (!empty($shs_initial)) {
+    foreach ($shs_initial as $g) { if (($g['final_grade'] ?? 0) > 0) { $total_grade += $g['final_grade']; $grade_count++; } }
+} else {
+    foreach ($grades_list as $g) { if (($g['final_grade'] ?? 0) > 0) { $total_grade += $g['final_grade']; $grade_count++; } }
+}
 $gpa = $grade_count > 0 ? round($total_grade / $grade_count, 2) : 0;
 
 include '../../includes/header.php';
@@ -245,8 +335,8 @@ include '../../includes/header.php';
         </div>
     </div>
 
-    <!-- GRADING SCALE LEGEND -->
-    <div class="card border-0 shadow-sm rounded-4 legend-card animate__animated animate__fadeInUp">
+    <!-- COLLEGE GRADING SCALE LEGEND -->
+    <div class="card border-0 shadow-sm rounded-4 legend-card animate__animated animate__fadeInUp" id="collegeLegend">
         <div class="card-body p-4">
             <h6 class="fw-bold mb-3 text-muted small text-uppercase">Institutional Grading Scale</h6>
             <div class="row g-4 small">
@@ -260,6 +350,28 @@ include '../../includes/header.php';
                     <div class="d-flex justify-content-between mb-1"><span>Below 75</span><strong class="text-danger">5.00 Failed</strong></div>
                     <div class="d-flex justify-content-between mb-1"><span>Incomplete</span><strong>INC</strong></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHS GRADING SCALE LEGEND -->
+    <div class="card border-0 shadow-sm rounded-4 legend-card animate__animated animate__fadeInUp" id="shsLegend" style="display:none;">
+        <div class="card-body p-4">
+            <h6 class="fw-bold mb-3 text-muted small text-uppercase"><i class="bi bi-mortarboard me-1"></i>SHS Grading Scale (DepEd K-12)</h6>
+            <div class="row g-4 small">
+                <div class="col-md-6 border-end">
+                    <div class="d-flex justify-content-between mb-1"><span>90 - 100</span><strong class="text-success">Outstanding</strong></div>
+                    <div class="d-flex justify-content-between mb-1"><span>85 - 89</span><strong style="color:#1565c0;">Very Satisfactory</strong></div>
+                    <div class="d-flex justify-content-between mb-1"><span>80 - 84</span><strong>Satisfactory</strong></div>
+                </div>
+                <div class="col-md-6 ps-md-4">
+                    <div class="d-flex justify-content-between mb-1"><span>75 - 79</span><strong class="text-warning">Fairly Satisfactory</strong></div>
+                    <div class="d-flex justify-content-between mb-1"><span>Below 75</span><strong class="text-danger">Did Not Meet Expectations</strong></div>
+                    <div class="d-flex justify-content-between mb-1"><span>Passing Grade</span><strong>75</strong></div>
+                </div>
+            </div>
+            <div class="mt-3 pt-2 border-top">
+                <small class="text-muted"><strong>Note:</strong> Semester Final = Average of two quarters. Subject Final = Average of Semester 1 &amp; Semester 2. Grades 70&ndash;74 may qualify for remedial classes.</small>
             </div>
         </div>
     </div>
@@ -300,13 +412,34 @@ async function fetchGrades(term, yearLevel, semester) {
         const response = await fetch(`?ajax=1&term=${term}&year_level=${yearLevel}&semester=${encodeURIComponent(semester)}`);
         const data = await response.json();
 
-        let head = '<tr><th class="ps-4">Subject & Code</th>';
-        if (term === 'all') {
-            head += '<th class="text-center">Prelim</th><th class="text-center">Midterm</th><th class="text-center">Pre-Final</th><th class="text-center">Final</th><th class="text-center">GWA</th>';
+        let head = '';
+        if (data.is_shs) {
+            // SHS quarter-based headers
+            head = '<tr><th class="ps-4">Subject & Code</th>'
+                + '<th class="text-center">Q1</th><th class="text-center">Q2</th>'
+                + '<th class="text-center" style="color:#1565c0;">Sem 1</th>'
+                + '<th class="text-center">Q3</th><th class="text-center">Q4</th>'
+                + '<th class="text-center" style="color:#1565c0;">Sem 2</th>'
+                + '<th class="text-center">Final</th>'
+                + '<th class="text-center pe-4">Remarks</th></tr>';
+            // Hide term filter for SHS (not applicable)
+            $('#termAjaxFilter').hide();
+            // Show SHS grading legend, hide college legend
+            $('#collegeLegend').hide();
+            $('#shsLegend').show();
         } else {
-            head += '<th class="text-center">Term Grade</th>';
+            // College term-based headers
+            head = '<tr><th class="ps-4">Subject & Code</th>';
+            if (term === 'all') {
+                head += '<th class="text-center">Prelim</th><th class="text-center">Midterm</th><th class="text-center">Pre-Final</th><th class="text-center">Final</th><th class="text-center">GWA</th>';
+            } else {
+                head += '<th class="text-center">Term Grade</th>';
+            }
+            head += '<th class="text-center">Rating</th><th class="text-center pe-4">Remarks</th></tr>';
+            $('#termAjaxFilter').show();
+            $('#collegeLegend').show();
+            $('#shsLegend').hide();
         }
-        head += '<th class="text-center">Rating</th><th class="text-center pe-4">Remarks</th></tr>';
 
         $('#dynamicHeader').html(head);
         $('#dynamicBody').html(data.table);

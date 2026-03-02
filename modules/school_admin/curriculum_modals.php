@@ -1,4 +1,10 @@
-﻿<!-- Add Track Modal -->
+﻿<?php
+// Default empty arrays for college-specific variables (not set when included from SHS page)
+if (!isset($college_programs))    { $college_programs = []; }
+if (!isset($college_year_levels)) { $college_year_levels = []; }
+if (!isset($college_subjects))    { $college_subjects = []; }
+?>
+<!-- Add Track Modal -->
 <div class="modal fade" id="addTrackModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -265,18 +271,19 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Units/Credits <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="units" value="3" min="0.5" max="6" step="0.5" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label class="form-label">Subject Type <span class="text-danger">*</span></label>
                             <select class="form-select" name="subject_type" id="subjectTypeSelect" required onchange="updateSubjectForm()">
                                 <option value="">-- Select Type --</option>
                                 <option value="shs_core">SHS Core</option>
                                 <option value="shs_applied">SHS Applied</option>
                                 <option value="shs_specialized">SHS Specialized</option>
-                                <option value="college">College</option>
                             </select>
+                            <div class="form-text text-muted" id="subjectTypeHelp" style="display:none;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hours per Week <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="hours_per_week" id="hoursPerWeek" value="4" min="1" max="10" step="1" required>
+                            <div class="form-text text-muted">Total contact hours per week (typically 4-8 for SHS)</div>
                         </div>
                     </div>
 
@@ -284,19 +291,21 @@
                     <div id="shsFields" style="display:none;">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Lecture Hours</label>
+                                <label class="form-label">Lecture Hours <small class="text-muted">(optional)</small></label>
                                 <input type="number" class="form-control" name="shs_lecture_hours" min="0" value="0">
+                                <div class="form-text text-muted">Required mainly for STEM/ICT/TVL subjects</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Lab Hours</label>
+                                <label class="form-label">Lab Hours <small class="text-muted">(optional)</small></label>
                                 <input type="number" class="form-control" name="shs_lab_hours" min="0" value="0">
+                                <div class="form-text text-muted">Set to 0 for non-technical subjects</div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Strand <span class="text-danger">*</span></label>
-                                <select class="form-select" name="shs_strand_id" id="shsStrandSelect" required>
-                                    <option value="">-- Select Strand --</option>
+                                <label class="form-label">Strand <span class="text-danger" id="strandRequiredStar">*</span></label>
+                                <select class="form-select" name="shs_strand_id" id="shsStrandSelect">
+                                    <option value="">-- None (Core/Applied) --</option>
                                     <?php 
                                     $strands_result = $conn->query("SELECT id, strand_name FROM shs_strands WHERE is_active = 1 ORDER BY strand_name");
                                     while ($strand = $strands_result->fetch_assoc()): 
@@ -421,34 +430,36 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Units/Credits <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="units" value="3" min="0.5" max="6" step="0.5" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label class="form-label">Subject Type <span class="text-danger">*</span></label>
-                            <select class="form-select" name="subject_type" required>
+                            <select class="form-select" name="subject_type" id="editSubjectTypeSelect" required onchange="updateEditSubjectType()">
                                 <option value="shs_core">SHS Core</option>
                                 <option value="shs_applied">SHS Applied</option>
                                 <option value="shs_specialized">SHS Specialized</option>
-                                <option value="college">College</option>
                             </select>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hours per Week <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="hours_per_week" id="editHoursPerWeek" value="4" min="1" max="10" step="1" required>
+                            <div class="form-text text-muted">Total contact hours per week (typically 4-8 for SHS)</div>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Lecture Hours</label>
+                            <label class="form-label">Lecture Hours <small class="text-muted">(optional)</small></label>
                             <input type="number" class="form-control" name="lecture_hours" min="0" value="0">
+                            <div class="form-text text-muted">For STEM/ICT/TVL subjects</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Lab Hours</label>
+                            <label class="form-label">Lab Hours <small class="text-muted">(optional)</small></label>
                             <input type="number" class="form-control" name="lab_hours" min="0" value="0">
+                            <div class="form-text text-muted">Set to 0 for non-technical subjects</div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Strand</label>
-                            <select class="form-select" name="shs_strand_id">
-                                <option value="">-- Select Strand --</option>
+                            <label class="form-label">Strand <span class="text-danger" id="editStrandRequiredStar">*</span></label>
+                            <select class="form-select" name="shs_strand_id" id="editShsStrandSelect">
+                                <option value="">-- None (Core/Applied) --</option>
                                 <?php 
                                 $edit_strands_result = $conn->query("SELECT id, strand_name FROM shs_strands WHERE is_active = 1 ORDER BY strand_name");
                                 if ($edit_strands_result && $edit_strands_result->num_rows > 0):
@@ -462,8 +473,8 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Grade Level</label>
-                            <select class="form-select" name="shs_grade_level_id">
+                            <label class="form-label">Grade Level <span class="text-danger">*</span></label>
+                            <select class="form-select" name="shs_grade_level_id" required>
                                 <option value="">-- Select Grade Level --</option>
                                 <?php 
                                 // Get unique grade levels (11 and 12) from shs_grade_levels table for edit modal
@@ -484,8 +495,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Semester</label>
-                            <select class="form-select" name="semester">
+                            <label class="form-label">Semester <span class="text-danger">*</span></label>
+                            <select class="form-select" name="semester" required>
                                 <option value="1">1st Semester</option>
                                 <option value="2">2nd Semester</option>
                             </select>

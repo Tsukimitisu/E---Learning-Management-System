@@ -69,7 +69,6 @@
             <li><a href="teachers.php" class="<?php echo ($current_page == 'teachers.php') ? 'active' : ''; ?>"><i class="bi bi-person-video3"></i> <span>Teachers</span></a></li>
             <li><a href="registrars.php" class="<?php echo ($current_page == 'registrars.php') ? 'active' : ''; ?>"><i class="bi bi-person-badge"></i> <span>Registrars</span></a></li>
             <li><a href="announcements.php" class="<?php echo ($current_page == 'announcements.php') ? 'active' : ''; ?>"><i class="bi bi-broadcast"></i> <span>Announcements</span></a></li>
-            <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-graph-up-arrow"></i> <span>Reports</span></a></li>
         <?php }
 
         // --- 4. REGISTRAR MENU ---
@@ -85,7 +84,7 @@
         // --- 5. TEACHER MENU ---
         if ($_SESSION['role_id'] == ROLE_TEACHER) { ?>
             <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>"><i class="bi bi-grid"></i> <span>Dashboard</span></a></li>
-            <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php', 'classroom.php', 'grading.php', 'grading_sections.php', 'gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-easel"></i> <span>My Classes</span></a></li>
+            <li><a href="subjects.php" class="<?php echo (in_array($current_page, ['subjects.php', 'subject_sections.php', 'section_students.php', 'classroom.php', 'grading.php', 'grading_sections.php', 'gradebook.php', 'shs_gradebook.php'])) ? 'active' : ''; ?>"><i class="bi bi-easel"></i> <span>My Classes</span></a></li>
             <li><a href="assessments.php" class="<?php echo ($current_page == 'assessments.php') ? 'active' : ''; ?>"><i class="bi bi-check2-square"></i> <span>Assessments</span></a></li>
             <li><a href="materials.php" class="<?php echo (in_array($current_page, ['materials.php','materials_sections.php', 'materials_list.php'])) ? 'active' : ''; ?>"><i class="bi bi-folder2-open"></i> <span>Materials</span></a></li>
             <li><a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'active' : ''; ?>"><i class="bi bi-file-earmark-text"></i> <span>Class Reports</span></a></li>

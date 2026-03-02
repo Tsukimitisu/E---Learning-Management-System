@@ -585,6 +585,7 @@ include '../../includes/header.php';
         <div class="alert alert-danger border-0 shadow-sm mb-4">
             <i class="bi bi-exclamation-triangle me-2"></i>
             <strong>Penalties</strong> are added on top of the tuition fee. Each penalty has a <strong>start date</strong> — it applies to all enrollments from that date onward.
+            <strong>Penalties apply to College students only</strong> (prelim, midterm, pre-finals, finals terms). SHS students are not affected.
         </div>
 
         <div class="main-card-modern animate__animated animate__fadeInUp">

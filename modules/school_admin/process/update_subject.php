@@ -15,10 +15,13 @@ try {
     $subject_id = (int)$_POST['subject_id'];
     $subject_code = clean_input($_POST['subject_code']);
     $subject_title = clean_input($_POST['subject_title']);
-    $units = (float)$_POST['units'];
+    
+    // SHS uses Hours per Week instead of college units - accept both field names
+    $units = (float)($_POST['hours_per_week'] ?? $_POST['units'] ?? 0);
+    
     $lecture_hours = (int)($_POST['hours'] ?? $_POST['lecture_hours'] ?? $_POST['college_lecture_hours'] ?? 0);
     $lab_hours = (int)($_POST['lab_hours'] ?? $_POST['college_lab_hours'] ?? 0);
-    $subject_type = clean_input($_POST['category'] ?? $_POST['subject_type'] ?? 'college');
+    $subject_type = clean_input($_POST['category'] ?? $_POST['subject_type'] ?? 'shs_core');
     $prerequisites = clean_input($_POST['prerequisites'] ?? '');
     $is_active = (int)$_POST['is_active'];
     $program_id = isset($_POST['program_id']) && $_POST['program_id'] !== '' ? (int)$_POST['program_id'] : null;
@@ -28,6 +31,30 @@ try {
     // SHS-specific fields
     $shs_strand_id = isset($_POST['shs_strand_id']) && $_POST['shs_strand_id'] !== '' ? (int)$_POST['shs_strand_id'] : null;
     $shs_grade_level_id = isset($_POST['shs_grade_level_id']) && $_POST['shs_grade_level_id'] !== '' ? (int)$_POST['shs_grade_level_id'] : null;
+
+    // Validate SHS-specific rules
+    if (in_array($subject_type, ['shs_core', 'shs_applied', 'shs_specialized'])) {
+        if ($units <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Hours per Week is required and must be greater than 0']);
+            exit();
+        }
+        if ($lecture_hours < 0 || $lab_hours < 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Lecture/Lab hours cannot be negative']);
+            exit();
+        }
+        if (!$shs_grade_level_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Grade Level is required (Grade 11 or 12)']);
+            exit();
+        }
+        if (!in_array($semester, [1, 2])) {
+            echo json_encode(['status' => 'error', 'message' => 'Semester is required (1st or 2nd)']);
+            exit();
+        }
+        if ($subject_type === 'shs_specialized' && !$shs_strand_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Strand is required for Specialized subjects']);
+            exit();
+        }
+    }
 
     // Check if subject code conflicts with another subject
     $check_code = $conn->prepare("SELECT id FROM curriculum_subjects WHERE subject_code = ? AND id != ?");

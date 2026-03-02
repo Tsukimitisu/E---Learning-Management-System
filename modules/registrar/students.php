@@ -52,12 +52,13 @@ $branch_condition = $branch_id > 0 ? "up.branch_id = $branch_id" : "1=1";
 // Student List with balance calculation
 $students_query = "
     SELECT 
-        s.user_id, s.student_no, s.course_id,
+        s.user_id, s.student_no, s.course_id, s.lrn,
         COALESCE(s.student_type, 'regular') as student_type,
         CONCAT(up.first_name, ' ', up.last_name) as full_name,
         u.email, u.status,
         COALESCE(p.program_code, ss.strand_code) as course_code, 
         COALESCE(p.program_name, ss.strand_name) as course_title,
+        CASE WHEN p.id IS NOT NULL THEN 'college' ELSE 'shs' END as program_type,
         COALESCE((SELECT SUM(amount) FROM payments WHERE student_id = s.user_id AND status = 'verified'), 0) as total_paid,
         COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) as total_fees,
         COALESCE((SELECT SUM(amount) FROM student_fees WHERE student_id = s.user_id), 0) - 
@@ -183,6 +184,7 @@ include '../../includes/header.php';
                     <tr>
                         <th class="ps-4">Student ID</th>
                         <th>Full Name</th>
+                        <th>LRN</th>
                         <th>Program/Course</th>
                         <th class="text-center">Status</th>
                         <th class="text-end">Verified Paid</th>
@@ -211,6 +213,7 @@ include '../../includes/header.php';
                             </div>
                             <small class="text-muted small"><?php echo htmlspecialchars($student['email']); ?></small>
                         </td>
+                        <td><small class="text-muted"><?php echo !empty($student['lrn']) ? htmlspecialchars($student['lrn']) : '<span class="text-secondary">-</span>'; ?></small></td>
                         <td><small class="text-muted fw-bold"><?php echo htmlspecialchars($student['course_code'] ? ($student['course_code'].' - '.$student['course_title']) : 'Unassigned'); ?></small></td>
                         <td class="text-center">
                             <span class="badge rounded-pill bg-<?php echo $student['status'] === 'active' ? 'success' : 'secondary'; ?> px-3">
@@ -226,10 +229,11 @@ include '../../includes/header.php';
                         <td class="text-center pe-4">
                             <div class="d-flex justify-content-center gap-1">
                                 <button class="action-btn-circle text-primary" onclick="viewPaymentHistory(<?php echo $student['user_id']; ?>, '<?php echo $student['student_no']; ?>', '<?php echo addslashes($student['full_name']); ?>')" title="History"><i class="bi bi-clock-history"></i></button>
-                                <button class="action-btn-circle text-success" onclick="openPaymentModal(<?php echo $student['user_id']; ?>, '<?php echo $student['student_no']; ?>', '<?php echo addslashes($student['full_name']); ?>', <?php echo $student['total_fees']; ?>, <?php echo $student['total_paid']; ?>)" title="Payment"><i class="bi bi-cash-coin"></i></button>
+                                <button class="action-btn-circle text-success" onclick="openPaymentModal(<?php echo $student['user_id']; ?>, '<?php echo $student['student_no']; ?>', '<?php echo addslashes($student['full_name']); ?>', <?php echo $student['total_fees']; ?>, <?php echo $student['total_paid']; ?>, '<?php echo $student['program_type']; ?>')" title="Payment"><i class="bi bi-cash-coin"></i></button>
                                 <button class="action-btn-circle text-warning" onclick="openEditStudent(this)" 
                                     data-student-id="<?php echo $student['user_id']; ?>" data-student-no="<?php echo $student['student_no']; ?>"
                                     data-full-name="<?php echo $student['full_name']; ?>" data-email="<?php echo $student['email']; ?>"
+                                    data-lrn="<?php echo htmlspecialchars($student['lrn'] ?? ''); ?>"
                                     data-status="<?php echo $student['status']; ?>"><i class="bi bi-pencil-square"></i></button>
                                 <button class="action-btn-circle <?php echo $student['status'] === 'active' ? 'text-secondary' : 'text-success'; ?>" onclick="toggleStudentStatus(<?php echo $student['user_id']; ?>, '<?php echo $student['status']; ?>')">
                                     <i class="bi bi-<?php echo $student['status'] === 'active' ? 'pause-circle' : 'play-circle'; ?>"></i>
@@ -268,19 +272,90 @@ include '../../includes/header.php';
                     </div>
 
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Academic Assignment</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4"><label class="form-label small fw-bold">Level Type *</label><select class="form-select border-light shadow-sm" name="program_type" id="program_type" required><option value="college">College</option><option value="shs">SHS</option></select></div>
-                        <div class="col-md-4" id="collegeProgramCol"><label class="form-label small fw-bold">Program *</label><select class="form-select border-light shadow-sm" name="course_id" id="course_id" onchange="loadYearLevels()">
-                            <option value="">-- Choose Program --</option>
-                            <?php $programs_result->data_seek(0); while ($p = $programs_result->fetch_assoc()): ?><option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option><?php endwhile; ?>
-                        </select></div>
-                        <div class="col-md-4" id="shsStrandCol" style="display:none;"><label class="form-label small fw-bold">SHS Strand *</label><select class="form-select border-light shadow-sm" name="shs_strand_id" id="shs_strand_id" onchange="loadYearLevels()">
-                            <option value="">-- Choose Strand --</option>
-                            <?php $strands_result->data_seek(0); while ($s = $strands_result->fetch_assoc()): ?><option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['strand_code'].' - '.$s['strand_name']); ?></option><?php endwhile; ?>
-                        </select></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold">Year Level</label><select class="form-select border-light shadow-sm" name="year_level_id" id="year_level_id">
-                            <option value="">-- Select Program First --</option>
-                        </select></div>
+
+                    <!-- Step 1: Level Type Selector (Primary Choice) -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Level Type *</label>
+                        <input type="hidden" name="program_type" id="program_type" value="">
+                        <div class="d-flex gap-3">
+                            <div class="level-type-card flex-fill text-center p-3 rounded-4 border border-2" id="levelTypeCollege" onclick="selectLevelType('college')" style="cursor:pointer; transition: all 0.2s;">
+                                <i class="bi bi-mortarboard-fill fs-2 d-block mb-1" style="color:var(--blue);"></i>
+                                <div class="fw-bold small">College</div>
+                                <small class="text-muted" style="font-size:0.7rem;">Bachelor's Degree Programs</small>
+                            </div>
+                            <div class="level-type-card flex-fill text-center p-3 rounded-4 border border-2" id="levelTypeSHS" onclick="selectLevelType('shs')" style="cursor:pointer; transition: all 0.2s;">
+                                <i class="bi bi-book-fill fs-2 d-block mb-1" style="color:var(--maroon);"></i>
+                                <div class="fw-bold small">Senior High School</div>
+                                <small class="text-muted" style="font-size:0.7rem;">K-12 Strands &bull; Grade 11 &amp; 12</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: College Fields (hidden by default) -->
+                    <div id="collegeFieldsContainer" style="display:none;">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Program *</label>
+                                <select class="form-select border-light shadow-sm" name="course_id" id="course_id" onchange="loadYearLevels()">
+                                    <option value="">-- Choose Program --</option>
+                                    <?php $programs_result->data_seek(0); while ($p = $programs_result->fetch_assoc()): ?>
+                                    <option value="<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['program_code'].' - '.$p['program_name']); ?></option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Year Level *</label>
+                                <select class="form-select border-light shadow-sm" name="year_level_id" id="year_level_id">
+                                    <option value="">-- Select Program First --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Student Type</label>
+                                <select class="form-select border-light shadow-sm" name="student_type" id="student_type">
+                                    <option value="regular">Regular</option>
+                                    <option value="irregular">Irregular</option>
+                                    <option value="transferee">Transferee</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: SHS Fields (hidden by default) -->
+                    <div id="shsFieldsContainer" style="display:none;">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">SHS Strand *</label>
+                                <select class="form-select border-light shadow-sm" name="shs_strand_id" id="shs_strand_id" onchange="loadYearLevels()">
+                                    <option value="">-- Choose Strand --</option>
+                                    <?php $strands_result->data_seek(0); while ($s = $strands_result->fetch_assoc()): ?>
+                                    <option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['strand_code'].' - '.$s['strand_name']); ?></option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Grade Level *</label>
+                                <select class="form-select border-light shadow-sm" name="shs_year_level_id" id="shs_year_level_id">
+                                    <option value="">-- Select Strand First --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">LRN (Learner Reference Number) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control border-light shadow-sm" name="lrn" id="add_lrn" maxlength="12" pattern="[0-9]{12}" placeholder="12-digit LRN" required>
+                                <small class="text-danger" style="font-size:0.7rem;">Required for SHS students (12 digits)</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Student Type</label>
+                                <select class="form-select border-light shadow-sm" name="student_type_shs" id="student_type_shs">
+                                    <option value="regular">Regular</option>
+                                    <option value="irregular">Irregular</option>
+                                    <option value="transferee">Transferee</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Account Setup</h6>
@@ -311,6 +386,7 @@ include '../../includes/header.php';
                 <div class="modal-body p-4 bg-light">
                     <div class="mb-3"><label class="form-label small fw-bold text-muted">FULL NAME</label><input type="text" class="form-control bg-white" id="edit_full_name" readonly></div>
                     <div class="mb-3"><label class="form-label small fw-bold">UPDATE EMAIL</label><input type="email" class="form-control border-light" name="email" id="edit_email" required></div>
+                    <div class="mb-3"><label class="form-label small fw-bold">LRN (Learner Reference Number)</label><input type="text" class="form-control border-light" name="lrn" id="edit_lrn" maxlength="12" pattern="[0-9]{12}" placeholder="12-digit LRN"></div>
                     <div class="row g-3">
                         <div class="col-6"><label class="form-label small fw-bold text-muted">STUDENT NO.</label><input type="text" class="form-control bg-white" id="edit_student_no" readonly></div>
                         <div class="col-6"><label class="form-label small fw-bold">ACCOUNT STATUS</label><select class="form-select border-light" name="status" id="edit_status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
@@ -338,6 +414,10 @@ include '../../includes/header.php';
                         <div class="col-4"><label class="info-label">Assessed</label><div class="fw-bold text-primary" id="payment_total_fees">₱0.00</div></div>
                         <div class="col-4"><label class="info-label">Paid</label><div class="fw-bold text-success" id="payment_total_paid">₱0.00</div></div>
                         <div class="col-4"><label class="info-label">Balance</label><div class="fw-bold text-danger" id="payment_balance">₱0.00</div></div>
+                    </div>
+                    <!-- Penalty/Discount Breakdown -->
+                    <div id="adjustments_breakdown" class="mb-3" style="display:none;">
+                        <div id="adjustments_list"></div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6"><label class="form-label small fw-bold">OR Number *</label><input type="text" class="form-control" name="or_number" required></div>
@@ -409,6 +489,12 @@ include '../../includes/header.php';
 /** 1. CREATE STUDENT */
 document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    // Validate level type is selected
+    const programType = document.getElementById('program_type').value;
+    if (!programType) {
+        showAlert('Please select a Level Type (College or SHS) first.', 'warning');
+        return;
+    }
     const btn = this.querySelector('button[type="submit"]');
     const original = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
@@ -469,12 +555,61 @@ function applyFilters() {
 ['searchInput', 'programFilter', 'statusFilter'].forEach(id => document.getElementById(id).addEventListener('input', applyFilters));
 
 /** 6. UI HELPERS */
-function openPaymentModal(sid, sno, name, fees, paid) {
+function openPaymentModal(sid, sno, name, fees, paid, programType) {
     document.getElementById('payment_student_id').value = sid;
     document.getElementById('payment_student_info').textContent = sno + ' - ' + name;
     document.getElementById('payment_total_fees').textContent = '₱' + fees.toLocaleString('en-US', {minimumFractionDigits: 2});
     document.getElementById('payment_total_paid').textContent = '₱' + paid.toLocaleString('en-US', {minimumFractionDigits: 2});
     document.getElementById('payment_balance').textContent = '₱' + (fees - paid).toLocaleString('en-US', {minimumFractionDigits: 2});
+    // Show/hide payment terms based on program type (penalties only apply to college)
+    const termSelect = document.getElementById('payment_term');
+    const collegeTerms = termSelect.querySelectorAll('option[value="prelim"], option[value="midterm"], option[value="prefinals"], option[value="finals"]');
+    collegeTerms.forEach(opt => opt.style.display = programType === 'shs' ? 'none' : '');
+    // Reset to downpayment if an SHS student had a college-only term selected
+    if (programType === 'shs' && ['prelim', 'midterm', 'prefinals', 'finals'].includes(termSelect.value)) {
+        termSelect.value = 'downpayment';
+    }
+
+    // Fetch penalty/discount breakdown for this student
+    const adjContainer = document.getElementById('adjustments_breakdown');
+    const adjList = document.getElementById('adjustments_list');
+    adjContainer.style.display = 'none';
+    adjList.innerHTML = '';
+
+    fetch(`process/get_payment_history.php?student_id=${sid}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.fees) {
+                const penalties = data.fees.filter(f => f.fee_type === 'Penalty');
+                const discounts = data.fees.filter(f => f.fee_type === 'Discount');
+                let html = '';
+
+                if (penalties.length > 0) {
+                    html += '<div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 py-2 px-3 mb-2 small">';
+                    html += '<div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Penalties Applied</div>';
+                    penalties.forEach(p => {
+                        html += '<div class="d-flex justify-content-between"><span>' + (p.description || p.fee_type) + '</span><span class="fw-bold text-danger">+₱' + parseFloat(p.amount).toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
+                    });
+                    html += '</div>';
+                }
+
+                if (discounts.length > 0) {
+                    html += '<div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 py-2 px-3 mb-2 small">';
+                    html += '<div class="fw-bold mb-1"><i class="bi bi-tag me-1"></i>Discounts Applied</div>';
+                    discounts.forEach(d => {
+                        html += '<div class="d-flex justify-content-between"><span>' + (d.description || d.fee_type) + '</span><span class="fw-bold text-success">-₱' + Math.abs(parseFloat(d.amount)).toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
+                    });
+                    html += '</div>';
+                }
+
+                if (html) {
+                    adjList.innerHTML = html;
+                    adjContainer.style.display = 'block';
+                }
+            }
+        })
+        .catch(() => {}); // silently fail — breakdown is supplementary
+
     new bootstrap.Modal(document.getElementById('addPaymentModal')).show();
 }
 
@@ -483,6 +618,7 @@ function openEditStudent(button) {
     document.getElementById('edit_full_name').value = button.dataset.fullName;
     document.getElementById('edit_email').value = button.dataset.email;
     document.getElementById('edit_student_no').value = button.dataset.studentNo;
+    document.getElementById('edit_lrn').value = button.dataset.lrn || '';
     document.getElementById('edit_status').value = button.dataset.status;
     new bootstrap.Modal(document.getElementById('editStudentModal')).show();
 }
@@ -501,50 +637,74 @@ function showAlert(m, t) {
 const programYearLevels = <?php echo json_encode($program_year_levels); ?>;
 const shsGradeLevels = <?php echo json_encode($shs_grade_levels); ?>;
 
-document.getElementById('program_type').addEventListener('change', function() {
-    const isCol = this.value === 'college';
-    document.getElementById('collegeProgramCol').style.display = isCol ? 'block' : 'none';
-    document.getElementById('shsStrandCol').style.display = isCol ? 'none' : 'block';
-    
-    // Reset selections
+// Level Type card selector
+function selectLevelType(type) {
+    const collegeCard = document.getElementById('levelTypeCollege');
+    const shsCard = document.getElementById('levelTypeSHS');
+    const collegeFields = document.getElementById('collegeFieldsContainer');
+    const shsFields = document.getElementById('shsFieldsContainer');
+    const programTypeInput = document.getElementById('program_type');
+
+    // Reset both cards
+    collegeCard.style.borderColor = '#dee2e6';
+    collegeCard.style.background = '';
+    shsCard.style.borderColor = '#dee2e6';
+    shsCard.style.background = '';
+
+    // Reset all selections
     document.getElementById('course_id').value = '';
     document.getElementById('shs_strand_id').value = '';
-    document.getElementById('year_level_id').innerHTML = '<option value="">-- Select ' + (isCol ? 'Program' : 'Strand') + ' First --</option>';
-    
-});
+    document.getElementById('year_level_id').innerHTML = '<option value="">-- Select Program First --</option>';
+    document.getElementById('shs_year_level_id').innerHTML = '<option value="">-- Select Strand First --</option>';
+
+    if (type === 'college') {
+        programTypeInput.value = 'college';
+        collegeCard.style.borderColor = 'var(--blue)';
+        collegeCard.style.background = 'rgba(0, 64, 128, 0.05)';
+        collegeFields.style.display = 'block';
+        shsFields.style.display = 'none';
+        // Disable SHS required fields
+        document.getElementById('add_lrn').required = false;
+    } else {
+        programTypeInput.value = 'shs';
+        shsCard.style.borderColor = 'var(--maroon)';
+        shsCard.style.background = 'rgba(128, 0, 0, 0.05)';
+        collegeFields.style.display = 'none';
+        shsFields.style.display = 'block';
+        // Enable SHS required fields
+        document.getElementById('add_lrn').required = true;
+    }
+}
 
 // Load year levels based on selected program/strand
 function loadYearLevels() {
     const programType = document.getElementById('program_type').value;
-    const yearLevelSelect = document.getElementById('year_level_id');
-    
-    // Clear current options
-    yearLevelSelect.innerHTML = '<option value="">-- Select Level --</option>';
-    
+
     if (programType === 'college') {
+        const yearLevelSelect = document.getElementById('year_level_id');
+        yearLevelSelect.innerHTML = '<option value="">-- Select Level --</option>';
         const programId = document.getElementById('course_id').value;
         if (programId && programYearLevels[programId]) {
             programYearLevels[programId].forEach(level => {
                 const option = document.createElement('option');
                 option.value = level.id;
                 option.textContent = level.year_name;
-                option.dataset.programId = programId;
                 yearLevelSelect.appendChild(option);
             });
         }
     } else {
+        const shsYearLevelSelect = document.getElementById('shs_year_level_id');
+        shsYearLevelSelect.innerHTML = '<option value="">-- Select Grade Level --</option>';
         const strandId = document.getElementById('shs_strand_id').value;
         if (strandId && shsGradeLevels[strandId]) {
             shsGradeLevels[strandId].forEach(level => {
                 const option = document.createElement('option');
                 option.value = level.id;
                 option.textContent = level.grade_name;
-                option.dataset.strandId = strandId;
-                yearLevelSelect.appendChild(option);
+                shsYearLevelSelect.appendChild(option);
             });
         }
     }
-
 }
 
 // Toggle other type description field

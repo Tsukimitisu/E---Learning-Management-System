@@ -74,6 +74,9 @@ switch ($action) {
     case 'record_downpayment':
         recordDownPayment();
         break;
+    case 'check_graduation_eligibility':
+        checkGraduationEligibility();
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
@@ -524,7 +527,7 @@ function enrollNextYear() {
     // Look up tuition fee and apply discounts/penalties to validate minimum downpayment (25%)
     $tuition_lookup = lookupTuitionFee($program_type, $program_id, $new_year_level_id, $semester, $current_ay_id);
     if ($tuition_lookup > 0) {
-        $adj = previewActiveAdjustments($tuition_lookup, $current_ay_id);
+        $adj = previewActiveAdjustments($tuition_lookup, $current_ay_id, $program_type);
         $adjusted_tuition = max(0, $tuition_lookup - $adj['total_discount'] + $adj['total_penalty']);
         $effective_fee = $adjusted_tuition > 0 ? $adjusted_tuition : $tuition_lookup;
         $min_downpayment = ceil($effective_fee * 0.25);
@@ -660,7 +663,7 @@ function previewAdvance() {
     }
 
     $tuition_fee = lookupTuitionFee($program_type, $program_id, (int)$next_yl['id'], $semester, $current_ay_id);
-    $adjustments = previewActiveAdjustments($tuition_fee, $current_ay_id);
+    $adjustments = previewActiveAdjustments($tuition_fee, $current_ay_id, $program_type);
     $adjusted_fee = max(0, $tuition_fee - $adjustments['total_discount'] + $adjustments['total_penalty']);
     $min_downpayment = $adjusted_fee > 0 ? ceil($adjusted_fee * 0.25) : 0;
 
@@ -685,7 +688,7 @@ function previewAdvance() {
  * Preview what discounts/penalties would apply to a tuition fee without inserting anything.
  * Used by previewAdvance and enrollNextYear validation.
  */
-function previewActiveAdjustments($base_tuition_fee, $academic_year_id) {
+function previewActiveAdjustments($base_tuition_fee, $academic_year_id, $program_type = 'college') {
     global $conn;
 
     $today = date('Y-m-d');
@@ -719,27 +722,29 @@ function previewActiveAdjustments($base_tuition_fee, $academic_year_id) {
         }
     }
 
-    // Active penalties
-    $pen_stmt = $conn->prepare("
-        SELECT id, name, penalty_type, value FROM tuition_penalties
-        WHERE is_active = 1 AND start_date <= ?
-          AND (academic_year_id = ? OR academic_year_id IS NULL)
-        ORDER BY id ASC
-    ");
-    $pen_stmt->bind_param("si", $today, $academic_year_id);
-    $pen_stmt->execute();
-    $pen_result = $pen_stmt->get_result();
-    while ($row = $pen_result->fetch_assoc()) {
-        $amt = 0;
-        if ($row['penalty_type'] === 'percentage') {
-            $amt = round($base_tuition_fee * ($row['value'] / 100), 2);
-        } else {
-            $amt = round((float)$row['value'], 2);
-        }
-        if ($amt > 0) {
-            $desc = $row['name'] . ' (' . ($row['penalty_type'] === 'percentage' ? $row['value'] . '%' : '₱' . number_format($row['value'], 2)) . ')';
-            $penalties[] = ['description' => $desc, 'amount' => $amt];
-            $total_penalty += $amt;
+    // Active penalties (college only — SHS does not have prelim/midterm/prefinals/finals penalty terms)
+    if ($program_type !== 'shs') {
+        $pen_stmt = $conn->prepare("
+            SELECT id, name, penalty_type, value FROM tuition_penalties
+            WHERE is_active = 1 AND start_date <= ?
+              AND (academic_year_id = ? OR academic_year_id IS NULL)
+            ORDER BY id ASC
+        ");
+        $pen_stmt->bind_param("si", $today, $academic_year_id);
+        $pen_stmt->execute();
+        $pen_result = $pen_stmt->get_result();
+        while ($row = $pen_result->fetch_assoc()) {
+            $amt = 0;
+            if ($row['penalty_type'] === 'percentage') {
+                $amt = round($base_tuition_fee * ($row['value'] / 100), 2);
+            } else {
+                $amt = round((float)$row['value'], 2);
+            }
+            if ($amt > 0) {
+                $desc = $row['name'] . ' (' . ($row['penalty_type'] === 'percentage' ? $row['value'] . '%' : '₱' . number_format($row['value'], 2)) . ')';
+                $penalties[] = ['description' => $desc, 'amount' => $amt];
+                $total_penalty += $amt;
+            }
         }
     }
 
@@ -1552,32 +1557,34 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
         }
     }
 
-    // Apply active penalties (today >= start_date)
-    $penalty_stmt = $conn->prepare("
-        SELECT id, name, penalty_type, value FROM tuition_penalties
-        WHERE is_active = 1 AND start_date <= ?
-          AND (academic_year_id = ? OR academic_year_id IS NULL)
-        ORDER BY id ASC
-    ");
-    $penalty_stmt->bind_param("si", $today, $academic_year_id);
-    $penalty_stmt->execute();
-    $penalties = $penalty_stmt->get_result();
+    // Apply active penalties (college only — SHS does not use prelim/midterm/prefinals/finals payment terms)
+    if ($program_type !== 'shs') {
+        $penalty_stmt = $conn->prepare("
+            SELECT id, name, penalty_type, value FROM tuition_penalties
+            WHERE is_active = 1 AND start_date <= ?
+              AND (academic_year_id = ? OR academic_year_id IS NULL)
+            ORDER BY id ASC
+        ");
+        $penalty_stmt->bind_param("si", $today, $academic_year_id);
+        $penalty_stmt->execute();
+        $penalties = $penalty_stmt->get_result();
 
-    while ($pen = $penalties->fetch_assoc()) {
-        $penalty_amount = 0;
-        if ($pen['penalty_type'] === 'percentage') {
-            $penalty_amount = round($tuition_fee * ($pen['value'] / 100), 2);
-        } else {
-            $penalty_amount = round((float)$pen['value'], 2);
-        }
-        if ($penalty_amount > 0) {
-            $pen_desc = "Penalty: " . $pen['name'] . " (" . ($pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2)) . ")";
-            $pen_insert = $conn->prepare("
-                INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, year_level_id, description, created_by, created_at)
-                VALUES (?, 'Penalty', ?, ?, ?, ?, ?, ?, NOW())
-            ");
-            $pen_insert->bind_param("idisisi", $student_id, $penalty_amount, $academic_year_id, $semester, $year_level_id, $pen_desc, $recorded_by);
-            $pen_insert->execute();
+        while ($pen = $penalties->fetch_assoc()) {
+            $penalty_amount = 0;
+            if ($pen['penalty_type'] === 'percentage') {
+                $penalty_amount = round($tuition_fee * ($pen['value'] / 100), 2);
+            } else {
+                $penalty_amount = round((float)$pen['value'], 2);
+            }
+            if ($penalty_amount > 0) {
+                $pen_desc = "Penalty: " . $pen['name'] . " (" . ($pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2)) . ")";
+                $pen_insert = $conn->prepare("
+                    INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, year_level_id, description, created_by, created_at)
+                    VALUES (?, 'Penalty', ?, ?, ?, ?, ?, ?, NOW())
+                ");
+                $pen_insert->bind_param("idisisi", $student_id, $penalty_amount, $academic_year_id, $semester, $year_level_id, $pen_desc, $recorded_by);
+                $pen_insert->execute();
+            }
         }
     }
 
@@ -1600,10 +1607,17 @@ function upsertStudentTermEnrollment($student_id, $program_type, $program_id, $y
         $previous_school = '';
     }
 
+    // Determine voucher and enrollment status for SHS
+    $voucher_status = 'not_applicable';
+    $enrollment_status = 'enrolled';
+    if ($program_type === 'shs') {
+        $voucher_status = 'pending'; // SHS students start with pending voucher
+    }
+
     $stmt = $conn->prepare("
         INSERT INTO student_term_enrollments
-            (student_id, program_type, program_id, year_level_id, academic_year_id, semester, student_type, previous_school, status, recorded_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'enrolled', ?)
+            (student_id, program_type, program_id, year_level_id, academic_year_id, semester, student_type, previous_school, status, voucher_status, enrollment_status, recorded_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'enrolled', ?, ?, ?)
         ON DUPLICATE KEY UPDATE
             program_type = VALUES(program_type),
             program_id = VALUES(program_id),
@@ -1611,11 +1625,165 @@ function upsertStudentTermEnrollment($student_id, $program_type, $program_id, $y
             student_type = VALUES(student_type),
             previous_school = VALUES(previous_school),
             status = 'enrolled',
+            voucher_status = IF(VALUES(voucher_status) != 'not_applicable', VALUES(voucher_status), voucher_status),
+            enrollment_status = VALUES(enrollment_status),
             recorded_by = VALUES(recorded_by),
             updated_at = NOW()
     ");
-    $stmt->bind_param("isiiisssi", $student_id, $program_type, $program_id, $year_level_id, $academic_year_id, $semester, $student_type, $previous_school, $recorded_by);
+    $stmt->bind_param("isiiisssssi", $student_id, $program_type, $program_id, $year_level_id, $academic_year_id, $semester, $student_type, $previous_school, $voucher_status, $enrollment_status, $recorded_by);
     $stmt->execute();
+}
+
+/**
+ * Check SHS graduation eligibility for a student.
+ * Verifies all required curriculum subjects are completed with passing grades.
+ */
+function checkGraduationEligibility() {
+    global $conn, $branch_id;
+
+    $student_id = (int)($_GET['student_id'] ?? 0);
+    if (!$student_id) {
+        echo json_encode(['success' => false, 'message' => 'Student ID required']);
+        return;
+    }
+
+    if (!verifyStudentInRegistrarBranch($student_id, $branch_id)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid student']);
+        return;
+    }
+
+    // Get student's strand
+    $student = $conn->query("SELECT s.course_id, s.lrn, s.student_type, 
+        CONCAT(up.first_name, ' ', up.last_name) as full_name
+        FROM students s 
+        INNER JOIN user_profiles up ON s.user_id = up.user_id
+        WHERE s.user_id = $student_id")->fetch_assoc();
+    
+    if (!$student) {
+        echo json_encode(['success' => false, 'message' => 'Student not found']);
+        return;
+    }
+
+    // Check if it's SHS
+    $strand = $conn->query("SELECT id, strand_code, strand_name FROM shs_strands WHERE id = " . (int)$student['course_id'])->fetch_assoc();
+    if (!$strand) {
+        echo json_encode(['success' => false, 'message' => 'Student is not enrolled in an SHS strand']);
+        return;
+    }
+
+    // LRN check
+    $has_lrn = !empty($student['lrn']);
+
+    // Get all curriculum subjects for this strand (all grade levels)
+    $grade_levels = $conn->query("SELECT id, grade_level, grade_name FROM shs_grade_levels WHERE strand_id = {$strand['id']} AND is_active = 1 ORDER BY grade_level");
+    $all_grade_level_ids = [];
+    while ($gl = $grade_levels->fetch_assoc()) {
+        $all_grade_level_ids[] = (int)$gl['id'];
+    }
+
+    if (empty($all_grade_level_ids)) {
+        echo json_encode(['success' => false, 'message' => 'No grade levels found for this strand']);
+        return;
+    }
+
+    $gl_ids = implode(',', $all_grade_level_ids);
+    
+    // Get all required subjects
+    $required_subjects = $conn->query("
+        SELECT cs.id, cs.subject_code, cs.subject_title, cs.subject_type, cs.semester,
+               sgl.grade_name
+        FROM curriculum_subjects cs
+        INNER JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
+        WHERE cs.shs_strand_id = {$strand['id']}
+        AND cs.shs_grade_level_id IN ($gl_ids)
+        AND cs.is_active = 1
+        ORDER BY sgl.grade_level, cs.semester, cs.subject_code
+    ");
+
+    $subjects = [];
+    $total_required = 0;
+    $completed_count = 0;
+    $failed_subjects = [];
+    $missing_subjects = [];
+    $with_remedial = [];
+
+    while ($sub = $required_subjects->fetch_assoc()) {
+        $sid = (int)$sub['id'];
+        $total_required++;
+
+        // Check if student has a passing SHS grade
+        $grade = $conn->query("
+            SELECT final_grade, remarks FROM shs_grades 
+            WHERE student_id = $student_id AND subject_id = $sid
+            ORDER BY id DESC LIMIT 1
+        ")->fetch_assoc();
+
+        // Also check student_completed_subjects (credited from previous school)
+        $credited = $conn->query("
+            SELECT id FROM student_completed_subjects 
+            WHERE student_id = $student_id AND subject_id = $sid
+        ")->fetch_assoc();
+
+        $status = 'missing';
+        $final_grade = null;
+        $remarks = null;
+
+        if ($grade && $grade['final_grade'] !== null) {
+            $final_grade = (int)$grade['final_grade'];
+            $remarks = $grade['remarks'];
+            if ($remarks === 'passed') {
+                $status = 'passed';
+                $completed_count++;
+            } elseif ($remarks === 'with_remedial') {
+                $status = 'with_remedial';
+                $with_remedial[] = $sub['subject_code'] . ' - ' . $sub['subject_title'];
+            } elseif ($remarks === 'failed') {
+                $status = 'failed';
+                $failed_subjects[] = $sub['subject_code'] . ' - ' . $sub['subject_title'];
+            }
+        } elseif ($credited) {
+            $status = 'credited';
+            $completed_count++;
+        } else {
+            $missing_subjects[] = $sub['subject_code'] . ' - ' . $sub['subject_title'];
+        }
+
+        $subjects[] = [
+            'id' => $sid,
+            'subject_code' => $sub['subject_code'],
+            'subject_title' => $sub['subject_title'],
+            'subject_type' => $sub['subject_type'],
+            'grade_name' => $sub['grade_name'],
+            'status' => $status,
+            'final_grade' => $final_grade,
+            'remarks' => $remarks
+        ];
+    }
+
+    $eligible = ($completed_count >= $total_required) && empty($failed_subjects) && empty($with_remedial) && $has_lrn;
+
+    $blockers = [];
+    if (!$has_lrn) $blockers[] = 'Missing LRN (Learner Reference Number)';
+    if (!empty($missing_subjects)) $blockers[] = count($missing_subjects) . ' subject(s) not yet graded';
+    if (!empty($failed_subjects)) $blockers[] = count($failed_subjects) . ' subject(s) with FAILED status';
+    if (!empty($with_remedial)) $blockers[] = count($with_remedial) . ' subject(s) requiring remedial';
+
+    echo json_encode([
+        'success' => true,
+        'eligible' => $eligible,
+        'student_name' => $student['full_name'],
+        'strand' => $strand['strand_code'] . ' - ' . $strand['strand_name'],
+        'lrn' => $student['lrn'] ?? '',
+        'has_lrn' => $has_lrn,
+        'total_required' => $total_required,
+        'completed' => $completed_count,
+        'completion_percentage' => $total_required > 0 ? round(($completed_count / $total_required) * 100, 1) : 0,
+        'subjects' => $subjects,
+        'blockers' => $blockers,
+        'missing_subjects' => $missing_subjects,
+        'failed_subjects' => $failed_subjects,
+        'with_remedial' => $with_remedial
+    ]);
 }
 
 function normalizeStudentType($student_type) {

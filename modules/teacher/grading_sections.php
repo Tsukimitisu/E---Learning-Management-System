@@ -239,8 +239,14 @@ include '../../includes/header.php';
 <?php include '../../includes/footer.php'; ?>
 
 <script>
+const IS_SHS = <?php echo (!empty($subject['shs_strand_id']) || !empty($subject['shs_grade_level_id'])) ? 'true' : 'false'; ?>;
+
 function openGradebook(sectionId, subjectId) {
-    window.location.href = 'gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+    if (IS_SHS) {
+        window.location.href = 'shs_gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+    } else {
+        window.location.href = 'gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+    }
 }
 </script>
 </body>

@@ -20,11 +20,11 @@ $college_subject_count = $conn->query("SELECT COUNT(*) as count FROM curriculum_
 
 // Fetch actual data arrays for display and JavaScript
 $tracks = [];
-$tracks_result = $conn->query("SELECT id, track_name AS name, track_code, description, is_active FROM shs_tracks ORDER BY track_name");
+$tracks_result = $conn->query("SELECT id, track_name AS name, track_code, description, is_active FROM shs_tracks WHERE is_active = 1 ORDER BY track_name");
 if ($tracks_result) { while ($row = $tracks_result->fetch_assoc()) { $tracks[] = $row; } }
 
 $strands = [];
-$strands_result = $conn->query("SELECT st.id, st.strand_name AS name, st.strand_code, st.description, st.is_active, st.track_id, t.track_name AS track_name FROM shs_strands st LEFT JOIN shs_tracks t ON st.track_id = t.id ORDER BY st.strand_name");
+$strands_result = $conn->query("SELECT st.id, st.strand_name AS name, st.strand_code, st.description, st.is_active, st.track_id, t.track_name AS track_name FROM shs_strands st INNER JOIN shs_tracks t ON st.track_id = t.id AND t.is_active = 1 ORDER BY st.strand_name");
 if ($strands_result) { while ($row = $strands_result->fetch_assoc()) { $strands[] = $row; } }
 
 $grade_levels = [];

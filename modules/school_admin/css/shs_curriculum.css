@@ -19,6 +19,7 @@
         box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 25px;
     }
 
+    /* --- STRAND CARDS (Tab 1 - same as prog-card) --- */
     .strand-card {
         border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         transition: 0.3s; background: white; overflow: hidden; height: 100%;
@@ -32,16 +33,70 @@
     }
     .table-modern tbody td { padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
 
-    .btn-maroon-pill { background-color: var(--maroon); color: white !important; border: none; border-radius: 50px; font-weight: 700; padding: 8px 25px; transition: 0.3s; font-size: 0.8rem; }
+    .btn-maroon-pill { background-color: var(--maroon); color: white !important; border: none; border-radius: 50px; font-weight: 700; padding: 8px 20px; transition: 0.3s; font-size: 0.8rem; }
     .btn-maroon-pill:hover { background-color: #600000; transform: translateY(-2px); }
-
-    .action-btn-circle { 
-        width: 34px; height: 34px; border-radius: 50%; display: inline-flex; 
-        align-items: center; justify-content: center; transition: 0.2s; border: 1px solid #eee; background: white;
-    }
-    .action-btn-circle:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
     .breadcrumb-item { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
     .breadcrumb-item a { color: var(--maroon); text-decoration: none; }
 
     @media (max-width: 768px) { .header-fixed-part { flex-direction: column; gap: 10px; text-align: center; } .nav-pills-modern { flex-direction: column; } .nav-pills-modern .nav-link { margin-right: 0; margin-bottom: 5px; } }
+
+    /* --- SUBJECT STRAND CARDS (same as subject-prog-card) --- */
+    .subject-strand-card {
+        border-radius: 15px; border: 2px solid #e8eef3; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        transition: all 0.3s ease; background: white; overflow: hidden; height: 100%; cursor: pointer;
+    }
+    .subject-strand-card:hover {
+        transform: translateY(-6px); box-shadow: 0 10px 30px rgba(0,51,102,0.12);
+        border-color: var(--blue);
+    }
+    .subject-strand-header {
+        background: linear-gradient(135deg, var(--blue) 0%, #004080 100%); color: white; padding: 15px 20px;
+    }
+
+    /* --- GRADE LEVEL ACCORDION (same as year-level accordion) --- */
+    .grade-level-section { margin-bottom: 16px; }
+    .grade-level-header-card {
+        background: white; border-radius: 14px; padding: 18px 22px; cursor: pointer;
+        border: 1.5px solid #e8eef3; transition: all 0.25s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .grade-level-header-card:hover {
+        border-color: var(--blue); box-shadow: 0 4px 16px rgba(0,51,102,0.08);
+    }
+    .grade-icon-box {
+        width: 42px; height: 42px; border-radius: 12px;
+        background: linear-gradient(135deg, var(--blue) 0%, #004080 100%);
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .toggle-icon {
+        transition: transform 0.3s ease; font-size: 1.1rem; color: #999;
+    }
+    .toggle-icon.rotated { transform: rotate(180deg); color: var(--blue); }
+
+    .grade-level-body {
+        padding: 0 10px 10px 10px; margin-top: -5px;
+    }
+
+    /* --- SEMESTER SECTIONS --- */
+    .semester-section {
+        background: white; border-radius: 12px; margin-top: 16px;
+        border: 1px solid #eef1f5; overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .semester-header {
+        background: linear-gradient(135deg, #f8f9fb 0%, #eef1f6 100%);
+        padding: 14px 20px; border-bottom: 1px solid #e8ecf1;
+        font-size: 0.82rem; color: var(--blue);
+    }
+    .semester-section .table-modern thead th {
+        background: #f0f4f8; color: #555; font-size: 0.65rem;
+        text-transform: uppercase; letter-spacing: 1px; padding: 10px 20px;
+        border-bottom: 2px solid #e0e5eb;
+    }
+    .semester-section .table-modern tbody td {
+        padding: 12px 20px; font-size: 0.84rem; border-bottom: 1px solid #f3f5f7;
+    }
+
+    .text-maroon { color: var(--maroon) !important; }

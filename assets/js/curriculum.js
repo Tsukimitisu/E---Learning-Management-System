@@ -104,17 +104,22 @@ function updateSubjectForm() {
     const shsFields = document.getElementById('shsFields');
     const collegeFields = document.getElementById('collegeFields');
     
-    if (!shsFields || !collegeFields) return;
+    if (!shsFields) return;
     
     if (subjectType && subjectType.startsWith('shs_')) {
         shsFields.style.display = 'block';
-        collegeFields.style.display = 'none';
+        if (collegeFields) collegeFields.style.display = 'none';
     } else if (subjectType === 'college') {
         shsFields.style.display = 'none';
-        collegeFields.style.display = 'block';
+        if (collegeFields) collegeFields.style.display = 'block';
     } else {
         shsFields.style.display = 'none';
-        collegeFields.style.display = 'none';
+        if (collegeFields) collegeFields.style.display = 'none';
+    }
+    
+    // Update strand required indicator if available (SHS page)
+    if (typeof window.updateAddSubjectType === 'function') {
+        window.updateAddSubjectType();
     }
 }
 

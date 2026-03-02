@@ -163,6 +163,7 @@ try {
                 SELECT t.*, COUNT(s.id) as strand_count
                 FROM shs_tracks t
                 LEFT JOIN shs_strands s ON t.id = s.track_id
+                WHERE t.is_active = 1
                 GROUP BY t.id
                 ORDER BY t.track_name
             ");
@@ -573,7 +574,7 @@ try {
                 FROM shs_tracks t
                 LEFT JOIN shs_strands s ON t.id = s.track_id AND s.is_active = 1
                 LEFT JOIN shs_grade_levels gl ON s.id = gl.strand_id AND gl.is_active = 1
-                WHERE t.id IS NOT NULL
+                WHERE t.is_active = 1
                 ORDER BY t.track_name, s.strand_name, gl.grade_level
             ");
             $stmt->execute();
