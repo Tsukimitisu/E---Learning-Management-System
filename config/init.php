@@ -59,7 +59,7 @@ if (!function_exists('elms_env_bool')) {
 
 // Define System Constants
 define('SITE_NAME', 'ELMS - Datamex');
-$base_url = rtrim((string)elms_env('ELMS_BASE_URL', 'http://localhost/elms_system/'), '/') . '/';
+$base_url = rtrim((string)elms_env('ELMS_BASE_URL', 'https://dcsaelms.online'), '/') . '/';
 define('BASE_URL', $base_url);
 define('UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/elms_system/uploads/');
 
