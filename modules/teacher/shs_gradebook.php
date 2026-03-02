@@ -384,9 +384,55 @@ function changeSemester(sem) {
 }
 
 function changeQuarter(q) {
+    // AJAX-based quarter switching (no page reload)
     const url = new URL(window.location.href);
     url.searchParams.set('quarter', q);
-    window.location.href = url.toString();
+    
+    // Update active tab immediately
+    document.querySelectorAll('.quarter-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.closest('.quarter-tab').classList.add('active');
+    
+    // Fetch new page content and swap the table body
+    fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Swap the table
+            const newTable = doc.querySelector('.ledger-card');
+            const currentTable = document.querySelector('.ledger-card');
+            if (newTable && currentTable) {
+                currentTable.innerHTML = newTable.innerHTML;
+            }
+            
+            // Swap the info banner
+            const newBanner = doc.querySelector('.shs-info-banner');
+            const currentBanner = document.querySelector('.shs-info-banner');
+            if (newBanner && currentBanner) {
+                currentBanner.innerHTML = newBanner.innerHTML;
+            }
+            
+            // Update URL without reload
+            window.history.replaceState({}, '', url.toString());
+            
+            // Update the JS quarter constant
+            window.SELECTED_QUARTER_DYNAMIC = q;
+        })
+        .catch(() => {
+            // Fallback to full reload on error
+            window.location.href = url.toString();
+        });
+}
+
+// Override SELECTED_QUARTER getter for dynamic switching
+Object.defineProperty(window, '_SELECTED_QUARTER', {
+    get: function() { return window.SELECTED_QUARTER_DYNAMIC || SELECTED_QUARTER; }
+});
+
+// Helper to get current quarter (supports dynamic switching)
+function getCurrentQuarter() {
+    return window.SELECTED_QUARTER_DYNAMIC || SELECTED_QUARTER;
 }
 
 function validateWholeNumber(input) {
@@ -418,7 +464,7 @@ function recalcSHSRow(row) {
     let q4 = row.dataset.q4 !== '' ? parseInt(row.dataset.q4) : null;
     
     // Update current quarter
-    switch(SELECTED_QUARTER) {
+    switch(getCurrentQuarter()) {
         case 'q1': q1 = currentGrade; break;
         case 'q2': q2 = currentGrade; break;
         case 'q3': q3 = currentGrade; break;
@@ -521,7 +567,7 @@ async function saveSHSGrade(row, btn) {
     let q4 = row.dataset.q4 !== '' ? parseInt(row.dataset.q4) : null;
     
     // Update current quarter
-    switch(SELECTED_QUARTER) {
+    switch(getCurrentQuarter()) {
         case 'q1': q1 = gradeVal; break;
         case 'q2': q2 = gradeVal; break;
         case 'q3': q3 = gradeVal; break;
@@ -541,7 +587,7 @@ async function saveSHSGrade(row, btn) {
     fd.append('grade_id', gradeId);
     fd.append('version', version);
     fd.append('semester', SELECTED_SEMESTER);
-    fd.append('quarter', SELECTED_QUARTER);
+    fd.append('quarter', getCurrentQuarter());
     fd.append('q1_grade', q1 !== null ? q1 : '');
     fd.append('q2_grade', q2 !== null ? q2 : '');
     fd.append('q3_grade', q3 !== null ? q3 : '');
@@ -599,7 +645,7 @@ async function saveAllSHSGrades() {
         if (success) saved++; else failed++;
     }
     
-    let message = `Saved ${saved} student grades for ${SELECTED_QUARTER.toUpperCase()}.`;
+    let message = `Saved ${saved} student grades for ${getCurrentQuarter().toUpperCase()}.`;
     if (failed > 0) message += ` ${failed} failed.`;
     showAlert(message, failed > 0 ? 'warning' : 'success');
     

@@ -254,7 +254,7 @@ include '../../includes/header.php';
 
 <!-- Modal: Add Student -->
 <div class="modal fade" id="addStudentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header p-4 text-white" style="background-color: var(--maroon); border: none;">
                 <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>New Student Enrollment</h5>
@@ -264,11 +264,24 @@ include '../../includes/header.php';
                 <div class="modal-body p-4 bg-light">
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Personal Information</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6"><label class="form-label small fw-bold">First Name *</label><input type="text" class="form-control border-light shadow-sm" name="first_name" required></div>
-                        <div class="col-md-6"><label class="form-label small fw-bold">Last Name *</label><input type="text" class="form-control border-light shadow-sm" name="last_name" required></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">First Name *</label><input type="text" class="form-control border-light shadow-sm" name="first_name" required></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Middle Name</label><input type="text" class="form-control border-light shadow-sm" name="middle_name" placeholder="Optional"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Last Name *</label><input type="text" class="form-control border-light shadow-sm" name="last_name" required></div>
                         <div class="col-md-6"><label class="form-label small fw-bold">Email Address *</label><input type="email" class="form-control border-light shadow-sm" name="email" required></div>
                         <div class="col-md-6"><label class="form-label small fw-bold">Contact Number</label><input type="text" class="form-control border-light shadow-sm" name="contact_no"></div>
-                        <div class="col-12"><label class="form-label small fw-bold">Current Address</label><textarea class="form-control border-light shadow-sm" name="address" rows="2"></textarea></div>
+                    </div>
+
+                    <h6 class="text-blue fw-bold mb-3 text-uppercase small">Address Details</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4"><label class="form-label small fw-bold">Unit/House No.</label><input type="text" class="form-control border-light shadow-sm" name="addr_unit" placeholder="e.g. Blk 5 Lot 3"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Building Name</label><input type="text" class="form-control border-light shadow-sm" name="addr_building" placeholder="e.g. Tower A"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Street Name</label><input type="text" class="form-control border-light shadow-sm" name="addr_street" placeholder="e.g. Rizal St."></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Subdivision/Village/Purok</label><input type="text" class="form-control border-light shadow-sm" name="addr_subdivision" placeholder="e.g. Green Meadows"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold">Barangay *</label><input type="text" class="form-control border-light shadow-sm" name="addr_barangay" required placeholder="e.g. Brgy. San Isidro"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">City/Municipality *</label><input type="text" class="form-control border-light shadow-sm" name="addr_city" required placeholder="e.g. Quezon City"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold">Province *</label><input type="text" class="form-control border-light shadow-sm" name="addr_province" required placeholder="e.g. Metro Manila"></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold">Zip Code</label><input type="text" class="form-control border-light shadow-sm" name="addr_zip" placeholder="e.g. 1100"></div>
+                        <div class="col-md-2"><label class="form-label small fw-bold">Country</label><input type="text" class="form-control border-light shadow-sm" name="addr_country" value="Philippines"></div>
                     </div>
 
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Academic Assignment</h6>
@@ -779,6 +792,14 @@ function toggleOtherTypeField() {
         otherInput.value = '';
     }
 }
+
+// Listen for realtime updates - auto-refresh student list when a new student is created
+window.addEventListener('elms-realtime-update', function(e) {
+    if (e.detail && e.detail.event === 'data_updated' && e.detail.data && e.detail.data.type === 'student_created') {
+        // Reload the page to show the new student
+        location.reload();
+    }
+});
 
 </script>
 </body>

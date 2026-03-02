@@ -22,10 +22,28 @@ try {
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
 
     $first_name = clean_input($_POST['first_name'] ?? '');
+    $middle_name = clean_input($_POST['middle_name'] ?? '');
     $last_name = clean_input($_POST['last_name'] ?? '');
     $email = clean_input($_POST['email'] ?? '');
     $contact_no = clean_input($_POST['contact_no'] ?? '');
-    $address = clean_input($_POST['address'] ?? '');
+    
+    // Build structured address from individual fields
+    $addr_parts = array_filter([
+        clean_input($_POST['addr_unit'] ?? ''),
+        clean_input($_POST['addr_building'] ?? ''),
+        clean_input($_POST['addr_street'] ?? ''),
+        clean_input($_POST['addr_subdivision'] ?? ''),
+        clean_input($_POST['addr_barangay'] ?? ''),
+        clean_input($_POST['addr_city'] ?? ''),
+        clean_input($_POST['addr_province'] ?? ''),
+        clean_input($_POST['addr_zip'] ?? ''),
+        clean_input($_POST['addr_country'] ?? '')
+    ]);
+    $address = implode(', ', $addr_parts);
+    // Fallback: if old single address field is sent instead
+    if (empty($address) && !empty($_POST['address'])) {
+        $address = clean_input($_POST['address']);
+    }
     $program_type = clean_input($_POST['program_type'] ?? 'college');
     $course_id = (int)($_POST['course_id'] ?? 0);
     $shs_strand_id = (int)($_POST['shs_strand_id'] ?? 0);
@@ -134,9 +152,12 @@ try {
 
     $user_id = $conn->insert_id;
 
+    // Add middle_name column if it doesn't exist yet
+    $conn->query("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS middle_name VARCHAR(100) DEFAULT NULL AFTER first_name");
+
     // Insert user profile with the registrar's branch_id
-    $insert_profile = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, contact_no, address, branch_id) VALUES (?, ?, ?, ?, ?, ?)");
-    $insert_profile->bind_param("issssi", $user_id, $first_name, $last_name, $contact_no, $address, $registrar_branch_id);
+    $insert_profile = $conn->prepare("INSERT INTO user_profiles (user_id, first_name, middle_name, last_name, contact_no, address, branch_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $insert_profile->bind_param("isssssi", $user_id, $first_name, $middle_name, $last_name, $contact_no, $address, $registrar_branch_id);
 
     if (!$insert_profile->execute()) {
         throw new Exception('Failed to create user profile');
@@ -180,6 +201,19 @@ try {
         }
     } catch (Exception $e) {
         $email_error = 'Email service error: ' . $e->getMessage();
+    }
+
+    // Broadcast realtime update so other registrars and admins see the new student
+    if (function_exists('send_realtime_update')) {
+        $student_data = [
+            'type' => 'student_created',
+            'student_id' => $user_id,
+            'student_no' => $student_no,
+            'name' => $first_name . ' ' . $last_name,
+            'timestamp' => date('c')
+        ];
+        @send_realtime_update('data_updated', $student_data, 'registrar');
+        @send_realtime_update('data_updated', $student_data, 'branch_admin');
     }
 
     $response = [

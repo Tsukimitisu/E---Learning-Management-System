@@ -220,6 +220,20 @@ try {
     $version_stmt->execute();
     $version_result = $version_stmt->get_result()->fetch_assoc();
 
+    // Broadcast realtime update to registrar and admin roles
+    if (function_exists('send_realtime_update')) {
+        $grade_update_data = [
+            'type' => 'grade_updated',
+            'student_id' => $student_id,
+            'section_id' => $section_id,
+            'subject_id' => $subject_id,
+            'teacher_id' => $teacher_id,
+            'timestamp' => date('c')
+        ];
+        @send_realtime_update('data_updated', $grade_update_data, 'registrar');
+        @send_realtime_update('data_updated', $grade_update_data, 'branch_admin');
+    }
+
     echo json_encode([
         'status' => 'success',
         'message' => 'Grade saved successfully',

@@ -1,10 +1,13 @@
 <?php
 require_once __DIR__.'/../config/db.php';
 
-// curriculum_subjects columns
 $r = $conn->query("DESCRIBE curriculum_subjects");
-echo "curriculum_subjects columns:\n";
-while ($row = $r->fetch_assoc()) echo "  " . $row['Field'] . " " . $row['Type'] . "\n";
+echo "curriculum_subjects:\n";
+while ($row = $r->fetch_assoc()) echo $row['Field'] . " " . $row['Type'] . "\n";
+echo "\nuser_profiles:\n";
+$r2 = $conn->query("DESCRIBE user_profiles");
+while ($row = $r2->fetch_assoc()) echo $row['Field'] . " " . $row['Type'] . "\n";
+exit;
 
 // Check a sample grade with joins
 $r = $conn->query("

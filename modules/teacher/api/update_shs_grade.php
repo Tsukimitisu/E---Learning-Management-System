@@ -190,6 +190,21 @@ try {
     // Notification
     create_notification($student_id, 'Grade Updated', 'A new SHS grade has been posted for one of your subjects.', 'grade', null, $teacher_id);
 
+    // Broadcast realtime update to registrar and admin roles
+    if (function_exists('send_realtime_update')) {
+        $grade_update_data = [
+            'type' => 'grade_updated',
+            'student_id' => $student_id,
+            'section_id' => $section_id,
+            'subject_id' => $subject_id,
+            'quarter' => $quarter,
+            'teacher_id' => $teacher_id,
+            'timestamp' => date('c')
+        ];
+        @send_realtime_update('data_updated', $grade_update_data, 'registrar');
+        @send_realtime_update('data_updated', $grade_update_data, 'branch_admin');
+    }
+
     echo json_encode([
         'status' => 'success',
         'message' => 'SHS grade saved successfully',

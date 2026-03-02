@@ -298,7 +298,7 @@ include '../../includes/header.php';
                 <?php else: ?>
                 <div class="section-chips">
                     <?php foreach ($class['sections'] as $section): ?>
-                    <div class="section-chip" onclick="openGradebook(<?php echo $section['id']; ?>, <?php echo $class['subject_id']; ?>)">
+                    <div class="section-chip" onclick="openGradebook(<?php echo $section['id']; ?>, <?php echo $class['subject_id']; ?>, <?php echo $is_college ? 'false' : 'true'; ?>)">
                         <div>
                             <div class="section-name"><?php echo htmlspecialchars($section['section_name']); ?></div>
                             <div class="section-info">
@@ -347,8 +347,12 @@ function viewSubjectSections(subjectId) {
     window.location.href = 'subject_sections.php?subject_id=' + subjectId;
 }
 
-function openGradebook(sectionId, subjectId) {
-    window.location.href = 'gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+function openGradebook(sectionId, subjectId, isSHS) {
+    if (isSHS) {
+        window.location.href = 'shs_gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+    } else {
+        window.location.href = 'gradebook.php?section_id=' + sectionId + '&subject_id=' + subjectId;
+    }
 }
 </script>
 </body>

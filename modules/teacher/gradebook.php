@@ -80,6 +80,12 @@ $subject_info = $subject_query->get_result()->fetch_assoc();
 $is_college = !empty($subject_info['program_id']);
 $is_shs = !empty($subject_info['shs_strand_id']) || !empty($subject_info['shs_grade_level_id']);
 
+// Redirect SHS subjects to the dedicated SHS gradebook
+if ($is_shs) {
+    header('Location: shs_gradebook.php?section_id=' . $section_id . '&subject_id=' . $subject_id);
+    exit();
+}
+
 // Combine for compatibility with old template
 $class_info = [
     'section_name' => $section_info['section_name'],
@@ -450,13 +456,56 @@ const TERM_NAMES = {
     'final': 'Finals'
 };
 
-// Term change function - called from inline onchange
+// Term change function - AJAX-based (no page reload)
 function changeTerm(term) {
     console.log('changeTerm called with:', term);
     const url = new URL(window.location.href);
     url.searchParams.set('term', term);
-    console.log('Redirecting to:', url.toString());
-    window.location.href = url.toString();
+    
+    // Fetch new content via AJAX and swap the table + header
+    fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Swap ledger card (grades table)
+            const newTable = doc.querySelector('.ledger-card');
+            const currentTable = document.querySelector('.ledger-card');
+            if (newTable && currentTable) {
+                currentTable.innerHTML = newTable.innerHTML;
+                // Re-attach input and button event listeners
+                document.querySelectorAll('.term-grade-input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        const row = this.closest('tr');
+                        const grade = parseFloat(this.value) || 0;
+                        updateRatingAndRemarks(row, grade);
+                    });
+                });
+                document.querySelectorAll('.save-grade-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const row = this.closest('tr');
+                        saveGrade(row, this);
+                    });
+                });
+            }
+            
+            // Update URL without reload
+            window.history.replaceState({}, '', url.toString());
+            
+            // Update the JS term constant dynamically
+            window.SELECTED_TERM_DYNAMIC = term;
+        })
+        .catch(err => {
+            console.error('AJAX term switch failed:', err);
+            // Fallback to full reload
+            window.location.href = url.toString();
+        });
+}
+
+// Helper to get current term (supports dynamic switching)
+function getSelectedTerm() {
+    return window.SELECTED_TERM_DYNAMIC || SELECTED_TERM;
 }
 
 // Wait for DOM to be ready
@@ -547,7 +596,7 @@ async function saveGrade(row, btn) {
     let finalGrade = parseFloat(gradeInput.dataset.final) || 0;
     
     // Update the appropriate term based on selected dropdown
-    switch(SELECTED_TERM) {
+    switch(getSelectedTerm()) {
         case 'prelim': prelim = currentGrade; break;
         case 'midterm': midterm = currentGrade; break;
         case 'prefinal': prefinal = currentGrade; break;
@@ -583,7 +632,7 @@ async function saveGrade(row, btn) {
     formData.append('subject_id', SUBJECT_ID);
     formData.append('grade_id', gradeId);
     formData.append('version', gradeVersion);
-    formData.append('term', SELECTED_TERM);
+    formData.append('term', getSelectedTerm());
     formData.append('term_grade', currentGrade.toFixed(2));
     formData.append('prelim', prelim.toFixed(2));
     formData.append('midterm', midterm.toFixed(2));

@@ -208,6 +208,13 @@ include '../../includes/header.php';
             })
             .catch(err => showAlert('Error: ' + err.message, 'error'));
     };
+
+    // Listen for realtime updates and auto-refresh dashboard stats
+    window.addEventListener('elms-realtime-update', function(e) {
+        if (e.detail && e.detail.event === 'data_updated') {
+            loadDashboardStats();
+        }
+    });
 </script>
 </body>
 </html>
