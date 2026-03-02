@@ -167,18 +167,28 @@ include '../../includes/header.php';
 
 <script>
 async function toggleMaintenanceMode(enable) {
-    const action = enable ? 'enable' : 'disable';
-    if (!confirm(`Confirm: ${action} maintenance mode?`)) return;
+    const action = enable ? 'enable maintenance mode' : 'disable maintenance mode';
+    const result = await Swal.fire({
+        title: 'Confirm',
+        text: enable 
+            ? 'This will notify ALL users and force logout everyone except super admins. Continue?' 
+            : 'This will bring the system back online. Continue?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: enable ? '#dc3545' : '#28a745',
+        confirmButtonText: enable ? 'Yes, Enter Maintenance' : 'Yes, Go Live'
+    });
+    if (!result.isConfirmed) return;
     try {
         const response = await fetch('process/toggle_maintenance.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `enable=${enable}`
+            body: `enable=${enable}&csrf_token=${window.CSRF_TOKEN}`
         });
         const data = await response.json();
         if (data.status === 'success') {
             showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
+            setTimeout(() => location.reload(), 2000);
         } else { showAlert(data.message, 'danger'); }
     } catch (error) { showAlert('Failed to update mode', 'danger'); }
 }

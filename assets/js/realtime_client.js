@@ -101,7 +101,7 @@
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 2000,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: Infinity,
         reconnectionDelayMax: 30000,
         randomizationFactor: 0.5,
         timeout: 10000
@@ -154,6 +154,42 @@
           reason: reason || 'unknown',
           disconnected_at: Date.now()
         });
+      });
+
+      // Handle maintenance mode force-logout
+      socket.on('maintenance_mode', function(data) {
+        if (data && data.enabled) {
+          // Show notification and force logout non-super-admin users
+          const roleId = window.USER_ROLE_ID || 0;
+          if (roleId != 1) { // Not super admin
+            // Show prominent alert
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'warning',
+                title: 'System Maintenance',
+                text: data.message || 'The system is entering maintenance mode. You will be logged out.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+              }).then(() => {
+                window.location.href = window.ELMS_BASE_URL ? window.ELMS_BASE_URL + 'logout.php' : '/elms_system/logout.php';
+              });
+            } else {
+              alert('System is entering maintenance mode. You will be logged out.');
+              window.location.href = '/elms_system/logout.php';
+            }
+          } else {
+            // Super admin just gets notified
+            dispatchRealtimeEvent('maintenance_mode', data);
+          }
+        }
+      });
+
+      // Handle data updates - dispatch events for page refresh
+      socket.on('data_updated', function(data) {
+        dispatchRealtimeEvent('data_updated', data);
       });
     } catch (e) {
       console.error('Socket client initialization error:', e);

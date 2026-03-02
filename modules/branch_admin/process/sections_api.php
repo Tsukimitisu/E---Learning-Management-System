@@ -116,6 +116,11 @@ function getSubjects() {
     $year_level_id = (int)($_GET['year_level_id'] ?? 0);
     $semester = $_GET['semester'] ?? '1st';
     
+    // Convert semester string to number for curriculum_subjects table
+    $semester_num = 1;
+    if ($semester === '2nd') $semester_num = 2;
+    elseif ($semester === 'summer') $semester_num = 3;
+    
     if ($program_type === 'college') {
         $query = "
             SELECT cs.id, cs.subject_code, cs.subject_title, cs.units,
@@ -129,22 +134,30 @@ function getSubjects() {
             ORDER BY cs.subject_code
         ";
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("iiiis", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester);
+        $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
     } else {
-        // SHS - get by strand and grade level
+        // SHS - get by strand and grade level (match by grade_level number, not ID)
+        // Resolve grade level number from shs_grade_level_id
+        $gl_stmt = $conn->prepare("SELECT grade_level FROM shs_grade_levels WHERE id = ?");
+        $gl_stmt->bind_param("i", $year_level_id);
+        $gl_stmt->execute();
+        $gl_row = $gl_stmt->get_result()->fetch_assoc();
+        $grade_level_num = $gl_row['grade_level'] ?? 0;
+        
         $query = "
             SELECT cs.id, cs.subject_code, cs.subject_title, cs.units,
                    CONCAT(up.first_name, ' ', up.last_name) as teacher_name
             FROM curriculum_subjects cs
+            INNER JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
             LEFT JOIN teacher_subject_assignments tsa ON cs.id = tsa.curriculum_subject_id 
                 AND tsa.branch_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1
             LEFT JOIN users u ON tsa.teacher_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
-            WHERE cs.shs_strand_id = ? AND cs.shs_grade_level_id = ? AND cs.semester = ? AND cs.is_active = 1
+            WHERE cs.shs_strand_id = ? AND sgl.grade_level = ? AND cs.semester = ? AND cs.is_active = 1
             ORDER BY cs.subject_code
         ";
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("iiiis", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester);
+        $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $grade_level_num, $semester_num);
     }
     
     $stmt->execute();
@@ -344,18 +357,20 @@ function getAvailableStudents() {
     $program_id = (int)($_GET['program_id'] ?? 0);
     $search = trim($_GET['search'] ?? '');
     
-    // Get students enrolled in this branch who are not in this section
+    // Get students in this branch who are not in this section
     $query = "
         SELECT DISTINCT u.id, CONCAT(up.first_name, ' ', up.last_name) as name,
-               COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no
+               COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
+               COALESCE(p.program_code, shs.strand_code) as program_code
         FROM users u
         INNER JOIN user_profiles up ON u.id = up.user_id
         INNER JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN students st ON u.id = st.user_id
-        INNER JOIN enrollments e ON u.id = e.student_id
+        LEFT JOIN programs p ON st.course_id = p.id
+        LEFT JOIN shs_strands shs ON st.course_id = shs.id
         WHERE ur.role_id = " . ROLE_STUDENT . "
         AND u.status = 'active'
-        AND e.branch_id = ?
+        AND up.branch_id = ?
         AND u.id NOT IN (
             SELECT student_id FROM section_students WHERE section_id = ? AND status = 'active'
         )
@@ -443,9 +458,79 @@ function addStudentToSection() {
     }
     
     if ($stmt->execute()) {
+        // Auto-create subject enrollment records for the student based on section's curriculum
+        syncStudentSubjectsForSection($student_id, $section_id, $current_ay_id);
         echo json_encode(['success' => true, 'message' => 'Student added to section']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error adding student']);
+    }
+}
+
+/**
+ * Create student_subject_enrollments records for all curriculum subjects in a section.
+ */
+function syncStudentSubjectsForSection($student_id, $section_id, $academic_year_id) {
+    global $conn;
+
+    $section_stmt = $conn->prepare("
+        SELECT program_id, year_level_id, shs_strand_id, shs_grade_level_id, semester
+        FROM sections WHERE id = ? LIMIT 1
+    ");
+    $section_stmt->bind_param("i", $section_id);
+    $section_stmt->execute();
+    $section = $section_stmt->get_result()->fetch_assoc();
+    if (!$section) return;
+
+    $semester = $section['semester'] ?? '1st';
+    $semester_num = ($semester === '2nd') ? 2 : (($semester === 'summer') ? 3 : 1);
+
+    if (!empty($section['program_id'])) {
+        $sub_stmt = $conn->prepare("SELECT id FROM curriculum_subjects WHERE program_id = ? AND year_level_id = ? AND is_active = 1 AND (semester = ? OR ? = 3)");
+        $sub_stmt->bind_param("iiii", $section['program_id'], $section['year_level_id'], $semester_num, $semester_num);
+    } else {
+        // Resolve grade level number for SHS matching
+        $gl_stmt2 = $conn->prepare("SELECT grade_level FROM shs_grade_levels WHERE id = ?");
+        $gl_stmt2->bind_param("i", $section['shs_grade_level_id']);
+        $gl_stmt2->execute();
+        $gl_row2 = $gl_stmt2->get_result()->fetch_assoc();
+        $grade_level_num2 = $gl_row2['grade_level'] ?? 0;
+        $sub_stmt = $conn->prepare("SELECT cs.id FROM curriculum_subjects cs INNER JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id WHERE cs.shs_strand_id = ? AND sgl.grade_level = ? AND cs.is_active = 1 AND (cs.semester = ? OR ? = 3)");
+        $sub_stmt->bind_param("iiii", $section['shs_strand_id'], $grade_level_num2, $semester_num, $semester_num);
+    }
+    $sub_stmt->execute();
+    $sub_result = $sub_stmt->get_result();
+
+    $subject_ids = [];
+    while ($row = $sub_result->fetch_assoc()) {
+        $subject_ids[] = (int)$row['id'];
+    }
+    if (empty($subject_ids)) return;
+
+    // Get student type
+    $type_stmt = $conn->prepare("SELECT COALESCE(student_type, 'regular') as student_type FROM students WHERE user_id = ?");
+    $type_stmt->bind_param("i", $student_id);
+    $type_stmt->execute();
+    $type_row = $type_stmt->get_result()->fetch_assoc();
+    $student_type = $type_row['student_type'] ?? 'regular';
+    if (!in_array($student_type, ['regular', 'irregular', 'transferee'])) $student_type = 'regular';
+
+    $recorded_by = $_SESSION['user_id'] ?? 0;
+
+    $upsert = $conn->prepare("
+        INSERT INTO student_subject_enrollments
+            (student_id, subject_id, section_id, academic_year_id, status, enrollment_type, recorded_by)
+        VALUES (?, ?, ?, ?, 'enrolled', ?, ?)
+        ON DUPLICATE KEY UPDATE
+            section_id = VALUES(section_id),
+            status = 'enrolled',
+            enrollment_type = VALUES(enrollment_type),
+            recorded_by = VALUES(recorded_by),
+            updated_at = NOW()
+    ");
+
+    foreach ($subject_ids as $subject_id) {
+        $upsert->bind_param("iiiisi", $student_id, $subject_id, $section_id, $academic_year_id, $student_type, $recorded_by);
+        $upsert->execute();
     }
 }
 

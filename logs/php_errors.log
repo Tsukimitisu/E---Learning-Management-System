@@ -654,3 +654,83 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 33
+[03-Mar-2026 00:35:07 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:83
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 83
+[03-Mar-2026 00:37:41 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in C:\xampp\htdocs\elms_system\tools\debug_cert.php:30
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\tools\debug_cert.php on line 30
+[03-Mar-2026 00:37:48 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in C:\xampp\htdocs\elms_system\tools\debug_cert.php:30
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\tools\debug_cert.php on line 30
+[03-Mar-2026 00:44:48 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:88
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 88
+[03-Mar-2026 00:44:51 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in C:\xampp\htdocs\elms_system\tools\test_cert.php:11
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\tools\test_cert.php on line 11
+[03-Mar-2026 00:45:11 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:45:11 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php:13
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\tools\test_cert.php(27): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:45:36 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:45:36 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php:13
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\tools\test_cert.php(27): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:46:00 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:46:00 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php:13
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\tools\test_cert.php(27): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:46:40 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:46:40 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php:13
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\tools\test_cert.php(29): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:46:47 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:46:47 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php:13
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\tools\test_cert.php(29): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\search_students.php on line 13
+[03-Mar-2026 00:47:14 Asia/Manila] PHP Warning:  require_once(../../../config/init.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\elms_system\modules\registrar\process\get_filter_options.php on line 6
+[03-Mar-2026 00:47:14 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../../../config/init.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\elms_system\modules\registrar\process\get_filter_options.php:6
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\tools\test_cert.php(73): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\get_filter_options.php on line 6
+[03-Mar-2026 00:49:16 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:88
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 88
+[03-Mar-2026 00:49:36 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:88
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 88
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 108
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  Undefined variable $tracks in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 152
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  Undefined variable $strands in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 608
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  Undefined variable $grade_levels in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[03-Mar-2026 00:57:15 Asia/Manila] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\elms_system\modules\school_admin\curriculum_modals.php on line 617
+[03-Mar-2026 02:20:25 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:84
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 84
+[03-Mar-2026 02:20:37 Asia/Manila] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php:84
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 84

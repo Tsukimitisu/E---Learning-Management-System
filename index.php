@@ -32,6 +32,11 @@ if (isset($_GET['error'])) {
     }
 }
 
+// Check for maintenance mode redirect
+if (isset($_GET['maintenance']) && $_GET['maintenance'] == '1') {
+    $error_message = 'The system is currently under maintenance. Please try again later.';
+}
+
 // Get Google OAuth settings
 $google_enabled = get_security_setting('enable_google_login', '0') === '1';
 $google_url = $google_enabled ? get_google_oauth_url() : null;

@@ -725,7 +725,7 @@ function previewActiveAdjustments($base_tuition_fee, $academic_year_id, $program
     // Active penalties (college only — SHS does not have prelim/midterm/prefinals/finals penalty terms)
     if ($program_type !== 'shs') {
         $pen_stmt = $conn->prepare("
-            SELECT id, name, penalty_type, value FROM tuition_penalties
+            SELECT id, name, penalty_type, value, applicable_term FROM tuition_penalties
             WHERE is_active = 1 AND start_date <= ?
               AND (academic_year_id = ? OR academic_year_id IS NULL)
             ORDER BY id ASC
@@ -741,8 +741,9 @@ function previewActiveAdjustments($base_tuition_fee, $academic_year_id, $program
                 $amt = round((float)$row['value'], 2);
             }
             if ($amt > 0) {
-                $desc = $row['name'] . ' (' . ($row['penalty_type'] === 'percentage' ? $row['value'] . '%' : '₱' . number_format($row['value'], 2)) . ')';
-                $penalties[] = ['description' => $desc, 'amount' => $amt];
+                $term_label = ($row['applicable_term'] && $row['applicable_term'] !== 'all') ? ' [' . ucfirst($row['applicable_term']) . ']' : '';
+                $desc = $row['name'] . ' (' . ($row['penalty_type'] === 'percentage' ? $row['value'] . '%' : '₱' . number_format($row['value'], 2)) . ')' . $term_label;
+                $penalties[] = ['description' => $desc, 'amount' => $amt, 'applicable_term' => $row['applicable_term'] ?? 'all'];
                 $total_penalty += $amt;
             }
         }
@@ -1560,7 +1561,7 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
     // Apply active penalties (college only — SHS does not use prelim/midterm/prefinals/finals payment terms)
     if ($program_type !== 'shs') {
         $penalty_stmt = $conn->prepare("
-            SELECT id, name, penalty_type, value FROM tuition_penalties
+            SELECT id, name, penalty_type, value, applicable_term FROM tuition_penalties
             WHERE is_active = 1 AND start_date <= ?
               AND (academic_year_id = ? OR academic_year_id IS NULL)
             ORDER BY id ASC
@@ -1577,7 +1578,8 @@ function ensureTermTuitionFee($student_id, $program_type, $program_id, $year_lev
                 $penalty_amount = round((float)$pen['value'], 2);
             }
             if ($penalty_amount > 0) {
-                $pen_desc = "Penalty: " . $pen['name'] . " (" . ($pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2)) . ")";
+                $term_label = ($pen['applicable_term'] && $pen['applicable_term'] !== 'all') ? ' [' . ucfirst($pen['applicable_term']) . ']' : '';
+                $pen_desc = "Penalty: " . $pen['name'] . " (" . ($pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2)) . ")" . $term_label;
                 $pen_insert = $conn->prepare("
                     INSERT INTO student_fees (student_id, fee_type, amount, academic_year_id, semester, year_level_id, description, created_by, created_at)
                     VALUES (?, 'Penalty', ?, ?, ?, ?, ?, ?, NOW())

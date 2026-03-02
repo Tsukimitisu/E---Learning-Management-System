@@ -116,20 +116,19 @@ function getSubjects() {
         $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
     } else {
         // For SHS, get subjects that match the grade level
-        // The shs_grade_level_id could be stored as actual ID or grade level value (11/12)
-        // Include subjects where shs_strand_id matches OR is NULL (core subjects for all strands)
+        // curriculum_subjects.shs_grade_level_id stores MIN(id) (always STEM's ids 1/2),
+        // so we must JOIN shs_grade_levels and match by grade_level NUMBER (11/12), not by ID
         $query = "
             SELECT cs.id, cs.subject_code, cs.subject_title, cs.units,
                    tsa.teacher_id, CONCAT(up.first_name, ' ', up.last_name) as teacher_name
             FROM curriculum_subjects cs
+            INNER JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
             LEFT JOIN teacher_subject_assignments tsa ON cs.id = tsa.curriculum_subject_id 
                 AND tsa.branch_id = ? AND tsa.academic_year_id = ? AND tsa.is_active = 1
             LEFT JOIN users u ON tsa.teacher_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
             WHERE (cs.shs_strand_id = ? OR cs.shs_strand_id IS NULL) 
-                AND (cs.shs_grade_level_id = ? OR cs.shs_grade_level_id IN (
-                    SELECT id FROM shs_grade_levels WHERE grade_level = ? AND strand_id = ?
-                ))
+                AND sgl.grade_level = ?
                 AND cs.semester = ? 
                 AND cs.is_active = 1
                 AND cs.subject_type IN ('shs_core', 'shs_applied', 'shs_specialized')
@@ -140,7 +139,7 @@ function getSubjects() {
             echo json_encode(['success' => false, 'message' => 'Query prepare error: ' . $conn->error, 'debug' => $debug]);
             return;
         }
-        $stmt->bind_param("iiiiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $year_level_id, $program_id, $semester_num);
+        $stmt->bind_param("iiiii", $branch_id, $current_ay_id, $program_id, $year_level_id, $semester_num);
     }
     
     if (!$stmt->execute()) {

@@ -205,6 +205,8 @@ function addPenalty() {
     $penalty_type = ($_POST['penalty_type'] ?? 'fixed') === 'percentage' ? 'percentage' : 'fixed';
     $value = (float)($_POST['value'] ?? 0);
     $start_date = $_POST['start_date'] ?? '';
+    $applicable_term = $_POST['applicable_term'] ?? 'all';
+    if (!in_array($applicable_term, ['all','prelim','midterm','prefinals','finals'])) $applicable_term = 'all';
     $description = trim($_POST['description'] ?? '');
     $created_by = (int)$_SESSION['user_id'];
 
@@ -226,10 +228,10 @@ function addPenalty() {
     }
 
     $stmt = $conn->prepare("
-        INSERT INTO tuition_penalties (name, penalty_type, value, start_date, academic_year_id, description, is_active, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+        INSERT INTO tuition_penalties (name, penalty_type, value, start_date, applicable_term, academic_year_id, description, is_active, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
     ");
-    $stmt->bind_param("ssdsssi", $name, $penalty_type, $value, $start_date, $academic_year_id, $description, $created_by);
+    $stmt->bind_param("ssdssisi", $name, $penalty_type, $value, $start_date, $applicable_term, $academic_year_id, $description, $created_by);
 
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Penalty added successfully']);
@@ -245,6 +247,8 @@ function updatePenalty() {
     $penalty_type = ($_POST['penalty_type'] ?? 'fixed') === 'percentage' ? 'percentage' : 'fixed';
     $value = (float)($_POST['value'] ?? 0);
     $start_date = $_POST['start_date'] ?? '';
+    $applicable_term = $_POST['applicable_term'] ?? 'all';
+    if (!in_array($applicable_term, ['all','prelim','midterm','prefinals','finals'])) $applicable_term = 'all';
     $description = trim($_POST['description'] ?? '');
 
     if (empty($name)) {
@@ -261,10 +265,10 @@ function updatePenalty() {
     }
 
     $stmt = $conn->prepare("
-        UPDATE tuition_penalties SET name = ?, penalty_type = ?, value = ?, start_date = ?, description = ?
+        UPDATE tuition_penalties SET name = ?, penalty_type = ?, value = ?, start_date = ?, applicable_term = ?, description = ?
         WHERE id = ? AND is_active = 1
     ");
-    $stmt->bind_param("ssdssi", $name, $penalty_type, $value, $start_date, $description, $id);
+    $stmt->bind_param("ssdsssi", $name, $penalty_type, $value, $start_date, $applicable_term, $description, $id);
 
     if ($stmt->execute() && $stmt->affected_rows >= 0) {
         echo json_encode(['success' => true, 'message' => 'Penalty updated successfully']);

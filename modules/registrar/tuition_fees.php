@@ -599,6 +599,7 @@ include '../../includes/header.php';
                             <th class="ps-4">Penalty Name</th>
                             <th>Type</th>
                             <th class="text-end">Value</th>
+                            <th>Term</th>
                             <th>Effective From</th>
                             <th>Status</th>
                             <th class="text-center pe-4">Actions</th>
@@ -621,6 +622,7 @@ include '../../includes/header.php';
                                 <td class="text-end fw-bold text-danger">
                                     <?php echo $pen['penalty_type'] === 'percentage' ? $pen['value'] . '%' : '₱' . number_format($pen['value'], 2); ?>
                                 </td>
+                                <td><span class="badge bg-<?php echo ($pen['applicable_term'] ?? 'all') === 'all' ? 'secondary' : 'primary'; ?>"><?php echo ucfirst($pen['applicable_term'] ?? 'all'); ?></span></td>
                                 <td><?php echo date('M d, Y', strtotime($pen['start_date'])); ?></td>
                                 <td>
                                     <?php if ($pen_status === 'active'): ?>
@@ -641,7 +643,7 @@ include '../../includes/header.php';
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="bi bi-exclamation-triangle fs-1 d-block mb-2 opacity-25"></i>
                                     No penalties configured. Click "Add Penalty" to create one.
                                 </td>
@@ -945,10 +947,23 @@ include '../../includes/header.php';
                             <input type="number" class="form-control" name="value" step="0.01" min="0.01" required placeholder="Enter value">
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Effective From (Start Date) <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="start_date" required>
-                        <small class="text-muted">Penalty applies to all enrollments from this date onward</small>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Effective From (Start Date) <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="start_date" required>
+                            <small class="text-muted">Applies from this date onward</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Applicable Term <span class="text-danger">*</span></label>
+                            <select class="form-select" name="applicable_term" required>
+                                <option value="all">All Terms</option>
+                                <option value="prelim">Prelim</option>
+                                <option value="midterm">Midterm</option>
+                                <option value="prefinals">Pre-Finals</option>
+                                <option value="finals">Finals</option>
+                            </select>
+                            <small class="text-muted">Which term triggers this penalty</small>
+                        </div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label small fw-bold">Description</label>
@@ -992,9 +1007,21 @@ include '../../includes/header.php';
                             <input type="number" class="form-control" name="value" id="edit_penalty_value" step="0.01" min="0.01" required>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Effective From (Start Date) <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="start_date" id="edit_penalty_start" required>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Effective From (Start Date) <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="start_date" id="edit_penalty_start" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Applicable Term <span class="text-danger">*</span></label>
+                            <select class="form-select" name="applicable_term" id="edit_penalty_term" required>
+                                <option value="all">All Terms</option>
+                                <option value="prelim">Prelim</option>
+                                <option value="midterm">Midterm</option>
+                                <option value="prefinals">Pre-Finals</option>
+                                <option value="finals">Finals</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label small fw-bold">Description</label>
@@ -1401,6 +1428,7 @@ async function editPenalty(id) {
             document.getElementById('edit_penalty_type').value = p.penalty_type;
             document.getElementById('edit_penalty_value').value = p.value;
             document.getElementById('edit_penalty_start').value = p.start_date;
+            document.getElementById('edit_penalty_term').value = p.applicable_term || 'all';
             document.getElementById('edit_penalty_desc').value = p.description || '';
             updatePenaltyValueLabel('edit');
             new bootstrap.Modal(document.getElementById('editPenaltyModal')).show();

@@ -17,10 +17,13 @@ if ($student_id <= 0) {
 
 $student = $conn->query("
     SELECT s.student_no, CONCAT(up.first_name, ' ', up.last_name) as student_name,
-           c.course_code, c.title as course_title
+           COALESCE(p.program_code, ss.strand_code) as course_code,
+           COALESCE(p.program_name, ss.strand_name) as course_title,
+           CASE WHEN p.id IS NOT NULL THEN 'college' WHEN ss.id IS NOT NULL THEN 'shs' ELSE 'unknown' END as program_type
     FROM students s
     INNER JOIN user_profiles up ON s.user_id = up.user_id
-    LEFT JOIN courses c ON s.course_id = c.id
+    LEFT JOIN programs p ON s.course_id = p.id
+    LEFT JOIN shs_strands ss ON s.course_id = ss.id AND p.id IS NULL
     WHERE s.user_id = $student_id
 ")->fetch_assoc();
 
@@ -80,7 +83,7 @@ $reference_no = 'CLR-' . date('Ymd') . '-' . str_pad($student_id, 4, '0', STR_PA
         <section class="student-info">
             <p><strong>Student Name:</strong> <?php echo htmlspecialchars($student['student_name'] ?? 'N/A'); ?></p>
             <p><strong>Student Number:</strong> <?php echo htmlspecialchars($student['student_no'] ?? 'N/A'); ?></p>
-            <p><strong>Program:</strong> <?php echo htmlspecialchars($student['course_code'] ?? 'SHS'); ?> - <?php echo htmlspecialchars($student['course_title'] ?? 'N/A'); ?></p>
+            <p><strong>Program:</strong> <?php echo htmlspecialchars(($student['course_code'] ?? '') . ($student['course_code'] && $student['course_title'] ? ' - ' : '') . ($student['course_title'] ?? 'N/A')); ?></p>
             <?php if ($semester): ?><p><strong>Semester:</strong> <?php echo htmlspecialchars($semester); ?></p><?php endif; ?>
             <?php if ($academic_year): ?><p><strong>Academic Year:</strong> <?php echo htmlspecialchars($academic_year); ?></p><?php endif; ?>
         </section>

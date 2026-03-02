@@ -192,4 +192,47 @@ if (!empty($_SESSION['user_id']) && isset($conn) && $conn && !$conn->connect_err
     // Clean old sessions (inactive for more than 2 hours)
     $conn->query("DELETE FROM active_sessions WHERE last_activity < DATE_SUB(NOW(), INTERVAL 2 HOUR)");
 }
+
+// ============================
+//  MAINTENANCE MODE ENFORCEMENT
+// ============================
+// Block all non-super-admin users when maintenance mode is active
+if (!empty($_SESSION['user_id']) && isset($conn) && $conn && !$conn->connect_error) {
+    $role_id = (int)($_SESSION['role_id'] ?? 0);
+    if ($role_id !== ROLE_SUPER_ADMIN) {
+        // Check maintenance mode
+        $maint_check = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'maintenance_mode' LIMIT 1");
+        $maint_active = false;
+        if ($maint_check && $row = $maint_check->fetch_assoc()) {
+            $maint_active = ($row['setting_value'] === '1');
+        }
+        if ($maint_active) {
+            // Allow logout to proceed
+            $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+            $is_logout = (strpos($request_uri, 'logout.php') !== false);
+            $is_api = (strpos($request_uri, '/api/') !== false);
+            $is_realtime = (strpos($request_uri, 'realtime') !== false);
+            
+            if (!$is_logout && !$is_api && !$is_realtime) {
+                // Destroy the session and redirect to login with maintenance message
+                session_unset();
+                session_destroy();
+                
+                // Check if this is an AJAX/JSON request
+                $accepts_json = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+                $is_xhr = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+                
+                if ($accepts_json || $is_xhr) {
+                    header('Content-Type: application/json');
+                    http_response_code(503);
+                    echo json_encode(['success' => false, 'status' => 'maintenance', 'message' => 'System is under maintenance. Please try again later.']);
+                    exit();
+                }
+                
+                header('Location: ' . BASE_URL . 'index.php?maintenance=1');
+                exit();
+            }
+        }
+    }
+}
 ?>

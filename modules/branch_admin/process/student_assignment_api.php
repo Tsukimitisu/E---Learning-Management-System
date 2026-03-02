@@ -91,15 +91,15 @@ function getAvailableSections() {
             (SELECT COUNT(*) FROM section_students WHERE section_id = s.id AND student_id = ? AND status = 'active') as is_enrolled,
             (
                 SELECT COUNT(*)
-                FROM student_subject_enrollments sse
-                INNER JOIN curriculum_subjects cs ON sse.subject_id = cs.id
-                WHERE sse.student_id = ? 
-                  AND sse.academic_year_id = ?
-                  AND sse.status = 'enrolled'
+                FROM curriculum_subjects cs
+                INNER JOIN students student ON student.user_id = ?
+                LEFT JOIN shs_grade_levels sgl_cs ON cs.shs_grade_level_id = sgl_cs.id
+                LEFT JOIN shs_grade_levels sgl_sec ON sgl_sec.id = s.shs_grade_level_id
+                WHERE cs.is_active = 1
                   AND (
-                      (s.program_id IS NOT NULL AND cs.program_id = s.program_id AND cs.year_level_id = s.year_level_id)
+                      (s.program_id IS NOT NULL AND cs.program_id = s.program_id AND cs.year_level_id = s.year_level_id AND student.course_id = s.program_id)
                       OR
-                      (s.shs_strand_id IS NOT NULL AND cs.shs_strand_id = s.shs_strand_id AND cs.shs_grade_level_id = s.shs_grade_level_id)
+                      (s.shs_strand_id IS NOT NULL AND cs.shs_strand_id = s.shs_strand_id AND sgl_cs.grade_level = sgl_sec.grade_level AND student.course_id = s.shs_strand_id)
                   )
                   AND (
                       s.semester = 'summer'
@@ -119,7 +119,7 @@ function getAvailableSections() {
     ";
     
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("iiiii", $student_id, $student_id, $current_ay_id, $branch_id, $current_ay_id);
+    $stmt->bind_param("iiii", $student_id, $student_id, $branch_id, $current_ay_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -702,42 +702,39 @@ function getStudentsByProgram() {
     
     $students = [];
 
+    // Check if curriculum subjects exist for the given program/strand + year level
     if ($program_type === 'college') {
-        $eligibility_clause = "
+        $curriculum_check = "
             AND EXISTS (
                 SELECT 1
-                FROM student_subject_enrollments sse
-                INNER JOIN curriculum_subjects cs ON cs.id = sse.subject_id
-                WHERE sse.student_id = u.id
-                  AND sse.academic_year_id = ?
-                  AND sse.status IN ('enrolled','credited')
-                  AND cs.program_id = ?
+                FROM curriculum_subjects cs
+                WHERE cs.program_id = ?
+                  AND cs.is_active = 1
                   " . ($year_level_id ? "AND cs.year_level_id = ?" : "") . "
             )
         ";
     } else {
-        $eligibility_clause = "
+        $curriculum_check = "
             AND EXISTS (
                 SELECT 1
-                FROM student_subject_enrollments sse
-                INNER JOIN curriculum_subjects cs ON cs.id = sse.subject_id
-                WHERE sse.student_id = u.id
-                  AND sse.academic_year_id = ?
-                  AND sse.status IN ('enrolled','credited')
-                  AND cs.shs_strand_id = ?
+                FROM curriculum_subjects cs
+                WHERE cs.shs_strand_id = ?
+                  AND cs.is_active = 1
                   " . ($year_level_id ? "AND cs.shs_grade_level_id = ?" : "") . "
             )
         ";
     }
 
-    // Get students enrolled in the specified program/strand and with at least one pending subject.
+    // Get students enrolled in the specified program/strand
     $query = "
         SELECT 
             u.id,
             up.first_name,
             up.last_name,
             COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
-            COALESCE(p.program_code, ss.strand_code) as program_code
+            CASE WHEN st.program_type = 'shs' THEN ss.strand_code
+                 WHEN st.program_type = 'college' THEN p.program_code
+                 ELSE COALESCE(p.program_code, ss.strand_code) END as program_code
         FROM users u
         INNER JOIN user_profiles up ON u.id = up.user_id
         INNER JOIN user_roles ur ON u.id = ur.user_id
@@ -748,15 +745,20 @@ function getStudentsByProgram() {
         AND u.status = 'active'
         AND up.branch_id = ?
         AND st.course_id = ?
-        $eligibility_clause
+        $curriculum_check
+        AND u.id NOT IN (
+            SELECT ss2.student_id FROM section_students ss2
+            INNER JOIN sections sec ON ss2.section_id = sec.id
+            WHERE ss2.status = 'active' AND sec.academic_year_id = ?
+        )
         ORDER BY up.last_name, up.first_name
     ";
 
     $stmt = $conn->prepare($query);
     if ($year_level_id) {
-        $stmt->bind_param("iiiii", $branch_id, $program_id, $current_ay_id, $program_id, $year_level_id);
+        $stmt->bind_param("iiiii", $branch_id, $program_id, $program_id, $year_level_id, $current_ay_id);
     } else {
-        $stmt->bind_param("iiii", $branch_id, $program_id, $current_ay_id, $program_id);
+        $stmt->bind_param("iiii", $branch_id, $program_id, $program_id, $current_ay_id);
     }
     $stmt->execute();
     $result = $stmt->get_result();
@@ -801,13 +803,20 @@ function syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $curr
         ");
         $subjects_stmt->bind_param("iiii", $section['program_id'], $section['year_level_id'], $semester_num, $semester_num);
     } else {
+        // Resolve grade level number from section's shs_grade_level_id
+        $gl_stmt = $conn->prepare("SELECT grade_level FROM shs_grade_levels WHERE id = ?");
+        $gl_stmt->bind_param("i", $section['shs_grade_level_id']);
+        $gl_stmt->execute();
+        $gl_row = $gl_stmt->get_result()->fetch_assoc();
+        $grade_level_num = $gl_row['grade_level'] ?? 0;
         $subjects_stmt = $conn->prepare("
-            SELECT id
-            FROM curriculum_subjects
-            WHERE shs_strand_id = ? AND shs_grade_level_id = ? AND is_active = 1
-              AND (semester = ? OR ? = 3)
+            SELECT cs.id
+            FROM curriculum_subjects cs
+            INNER JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
+            WHERE cs.shs_strand_id = ? AND sgl.grade_level = ? AND cs.is_active = 1
+              AND (cs.semester = ? OR ? = 3)
         ");
-        $subjects_stmt->bind_param("iiii", $section['shs_strand_id'], $section['shs_grade_level_id'], $semester_num, $semester_num);
+        $subjects_stmt->bind_param("iiii", $section['shs_strand_id'], $grade_level_num, $semester_num, $semester_num);
     }
     $subjects_stmt->execute();
     $subjects_result = $subjects_stmt->get_result();
@@ -884,6 +893,7 @@ function syncStudentSubjectEnrollmentsForSection($student_id, $section_id, $curr
 function hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_id) {
     global $conn;
 
+    // Get section info
     $section_stmt = $conn->prepare("
         SELECT id, program_id, year_level_id, shs_strand_id, shs_grade_level_id, semester
         FROM sections
@@ -897,6 +907,15 @@ function hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_i
         return false;
     }
 
+    // Get student info to verify program/strand match
+    $student_stmt = $conn->prepare("SELECT course_id FROM students WHERE user_id = ?");
+    $student_stmt->bind_param("i", $student_id);
+    $student_stmt->execute();
+    $student = $student_stmt->get_result()->fetch_assoc();
+    if (!$student || empty($student['course_id'])) {
+        return false;
+    }
+
     $semester = $section['semester'] ?? '1st';
     $semester_num = 1;
     if ($semester === '2nd') {
@@ -906,53 +925,77 @@ function hasAssignableSubjectsForSection($student_id, $section_id, $current_ay_i
     }
 
     if (!empty($section['program_id'])) {
+        // College section - student's course_id must match program_id
+        if ((int)$student['course_id'] !== (int)$section['program_id']) {
+            return false;
+        }
+        // Check if curriculum subjects exist for this section
         $subjects_stmt = $conn->prepare("
-            SELECT id
+            SELECT COUNT(*) as cnt
             FROM curriculum_subjects
             WHERE program_id = ? AND year_level_id = ? AND is_active = 1
               AND (semester = ? OR ? = 3)
         ");
         $subjects_stmt->bind_param("iiii", $section['program_id'], $section['year_level_id'], $semester_num, $semester_num);
     } else {
+        // SHS section - student's course_id must match shs_strand_id
+        if ((int)$student['course_id'] !== (int)$section['shs_strand_id']) {
+            return false;
+        }
+        // Resolve grade level number from section's shs_grade_level_id
+        $gl_stmt = $conn->prepare("SELECT grade_level FROM shs_grade_levels WHERE id = ?");
+        $gl_stmt->bind_param("i", $section['shs_grade_level_id']);
+        $gl_stmt->execute();
+        $gl_row = $gl_stmt->get_result()->fetch_assoc();
+        $grade_level_num = $gl_row['grade_level'] ?? 0;
+        // Check if curriculum subjects exist (match by grade_level number, not ID)
         $subjects_stmt = $conn->prepare("
-            SELECT id
-            FROM curriculum_subjects
-            WHERE shs_strand_id = ? AND shs_grade_level_id = ? AND is_active = 1
-              AND (semester = ? OR ? = 3)
+            SELECT COUNT(*) as cnt
+            FROM curriculum_subjects cs
+            INNER JOIN shs_grade_levels sgl ON cs.shs_grade_level_id = sgl.id
+            WHERE cs.shs_strand_id = ? AND sgl.grade_level = ? AND cs.is_active = 1
+              AND (cs.semester = ? OR ? = 3)
         ");
-        $subjects_stmt->bind_param("iiii", $section['shs_strand_id'], $section['shs_grade_level_id'], $semester_num, $semester_num);
+        $subjects_stmt->bind_param("iiii", $section['shs_strand_id'], $grade_level_num, $semester_num, $semester_num);
     }
     $subjects_stmt->execute();
-    $subjects_result = $subjects_stmt->get_result();
+    $result = $subjects_stmt->get_result()->fetch_assoc();
 
-    $subject_ids = [];
-    while ($row = $subjects_result->fetch_assoc()) {
-        $subject_ids[] = (int)$row['id'];
-    }
-    if (empty($subject_ids)) {
-        return false;
-    }
-
-    $eligibility_sql = "
-        SELECT COUNT(*) as cnt
-        FROM student_subject_enrollments
-        WHERE student_id = ? AND academic_year_id = ? AND status IN ('enrolled','credited')
-          AND subject_id IN (" . implode(',', array_fill(0, count($subject_ids), '?')) . ")
-    ";
-    $eligibility_stmt = $conn->prepare($eligibility_sql);
-    $eligibility_types = 'ii' . str_repeat('i', count($subject_ids));
-    $eligibility_params = array_merge([$student_id, $current_ay_id], $subject_ids);
-    $eligibility_stmt->bind_param($eligibility_types, ...$eligibility_params);
-    $eligibility_stmt->execute();
-    $eligibility_row = $eligibility_stmt->get_result()->fetch_assoc();
-
-    return ((int)($eligibility_row['cnt'] ?? 0)) > 0;
+    return ((int)($result['cnt'] ?? 0)) > 0;
 }
 
 function ensureIrregularSupportSchema($conn) {
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular' AFTER course_id");
     $conn->query("ALTER TABLE students MODIFY COLUMN student_type ENUM('regular','irregular','transferee') NOT NULL DEFAULT 'regular'");
     $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS previous_school VARCHAR(255) DEFAULT NULL AFTER student_type");
+
+    // Add program_type column to disambiguate college vs SHS
+    $conn->query("ALTER TABLE students ADD COLUMN IF NOT EXISTS program_type ENUM('college','shs') DEFAULT NULL AFTER course_id");
+
+    // Auto-populate program_type for existing students from student_term_enrollments
+    $conn->query("
+        UPDATE students s
+        INNER JOIN student_term_enrollments ste ON s.user_id = ste.student_id
+        SET s.program_type = ste.program_type
+        WHERE s.program_type IS NULL AND ste.program_type IS NOT NULL
+    ");
+    // For remaining NULL program_type, infer from course_id:
+    // If course_id exists only in shs_strands (not in programs), set 'shs'
+    $conn->query("
+        UPDATE students s
+        SET s.program_type = 'shs'
+        WHERE s.program_type IS NULL AND s.course_id IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM programs WHERE id = s.course_id)
+          AND EXISTS (SELECT 1 FROM shs_strands WHERE id = s.course_id)
+    ");
+    // If course_id exists only in programs (not in shs_strands), set 'college'
+    $conn->query("
+        UPDATE students s
+        SET s.program_type = 'college'
+        WHERE s.program_type IS NULL AND s.course_id IS NOT NULL
+          AND EXISTS (SELECT 1 FROM programs WHERE id = s.course_id)
+          AND NOT EXISTS (SELECT 1 FROM shs_strands WHERE id = s.course_id)
+    ");
 
     $conn->query("
         CREATE TABLE IF NOT EXISTS student_completed_subjects (

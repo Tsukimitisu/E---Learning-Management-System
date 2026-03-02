@@ -29,9 +29,22 @@ $students = $conn->query("
         COALESCE(st.student_no, CONCAT('STU-', u.id)) as student_no,
         st.course_id,
         COALESCE(st.student_type, 'regular') as student_type,
-        COALESCE(p.program_code, ss.strand_code) as program_code,
-        COALESCE(p.program_name, ss.strand_name) as program_name,
         CASE 
+            WHEN st.program_type = 'shs' THEN ss.strand_code
+            WHEN st.program_type = 'college' THEN p.program_code
+            ELSE COALESCE(p.program_code, ss.strand_code) 
+        END as program_code,
+        CASE 
+            WHEN st.program_type = 'shs' THEN ss.strand_name
+            WHEN st.program_type = 'college' THEN p.program_name
+            ELSE COALESCE(p.program_name, ss.strand_name) 
+        END as program_name,
+        CASE 
+            WHEN st.program_type IS NOT NULL THEN st.program_type
+            WHEN st.course_id IS NOT NULL AND EXISTS (SELECT 1 FROM shs_strands WHERE id = st.course_id) 
+                 AND NOT EXISTS (SELECT 1 FROM programs WHERE id = st.course_id) THEN 'shs'
+            WHEN st.course_id IS NOT NULL AND EXISTS (SELECT 1 FROM programs WHERE id = st.course_id) 
+                 AND NOT EXISTS (SELECT 1 FROM shs_strands WHERE id = st.course_id) THEN 'college'
             WHEN st.course_id IS NOT NULL AND EXISTS (SELECT 1 FROM programs WHERE id = st.course_id) THEN 'college'
             WHEN st.course_id IS NOT NULL AND EXISTS (SELECT 1 FROM shs_strands WHERE id = st.course_id) THEN 'shs'
             ELSE NULL 

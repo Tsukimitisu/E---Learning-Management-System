@@ -721,66 +721,61 @@ function exportToExcel(editable = true) {
     const data = getGradeData();
     console.log('Export data:', data);
     
-    // Build formal academic header
+    // Build clean, professional grade sheet
     const sheetData = [
-        ['STUDENT GRADE SHEET - ' + data.term.toUpperCase() + ' TERM'],
+        ['GRADE SHEET'],
         [''],
-        ['Institution:', 'E-LEARNING MANAGEMENT SYSTEM'],
-        ['Academic Year:', data.academicYear],
-        ['Term:', data.term],
-        ['Subject Code:', data.subjectCode],
-        ['Subject Title:', data.subjectTitle],
-        ['Program:', data.programName],
-        ['Year Level:', data.yearLevel],
-        ['Section:', data.sectionName],
-        ['Export Date:', data.exportDate],
+        ['Subject:', data.subjectCode + ' - ' + data.subjectTitle],
+        ['Program:', data.programName, '', 'Section:', data.sectionName],
+        ['Year Level:', data.yearLevel, '', 'A.Y.:', data.academicYear],
+        ['Term:', data.term, '', 'Date:', data.exportDate],
         [''],
-        ['═══════════════════════════════════════════════════════════════════════════════════════════════════════'],
-        [''],
-        ['NO.', 'STUDENT NUMBER', 'STUDENT NAME', 'AVERAGE', 'RATING', 'REMARKS', 'STATUS', 'NOTES'],
+        ['No.', 'Student No.', 'Student Name', 'Grade', 'Remarks'],
     ];
     
     // Add student data
     data.students.forEach(student => {
-        sheetData.push([student.no, student.studentNo, student.studentName, student.grade, student.rating, student.remarks, student.isCredited ? 'CREDITED' : 'Regular', student.notes]);
+        sheetData.push([student.no, student.studentNo, student.studentName, student.grade, student.remarks]);
     });
     
-    // Add footer
+    // Add summary footer
     sheetData.push(['']);
-    sheetData.push(['═══════════════════════════════════════════════════════════════════════════════════════════════════════']);
+    sheetData.push(['', 'Total Students:', data.totalStudents]);
     sheetData.push(['']);
-    sheetData.push(['Total Students:', data.totalStudents]);
+    sheetData.push(['Prepared by:', '____________________________', '', 'Date:', '____________________']);
     sheetData.push(['']);
-    sheetData.push(['Prepared by: _______________________________', '', '', 'Date: _______________________']);
-    sheetData.push(['']);
-    sheetData.push(['Verified by: _______________________________', '', '', 'Date: _______________________']);
-    
-    if (!editable) {
-        sheetData.push(['']);
-        sheetData.push(['*** This document is password protected ***']);
-        sheetData.push(['*** Password for editing: ' + EXPORT_PASSWORD + ' ***']);
-    }
+    sheetData.push(['Verified by:', '____________________________', '', 'Date:', '____________________']);
     
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(sheetData);
     
-    // Set column widths for formal look
+    // Set column widths
     ws['!cols'] = [
         { wch: 6 },   // No.
         { wch: 18 },  // Student No
         { wch: 35 },  // Names
-        { wch: 12 },  // Average
-        { wch: 15 },  // Rating
-        { wch: 12 },  // Remarks
-        { wch: 14 },  // Status
-        { wch: 30 }   // Notes
+        { wch: 10 },  // Grade
+        { wch: 14 },  // Remarks
     ];
     
     // Merge cells for header title
     ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
     ];
+
+    // Style the header row (bold) - SheetJS community doesn't support styles natively
+    // but we set the title row font via cell format
+    const headerRow = 7; // 0-indexed row for column headers (No., Student No., etc.)
+    const dataStartRow = headerRow + 1;
+
+    // Make header cells bold by adding cell type hints
+    for (let c = 0; c < 5; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r: headerRow, c: c });
+        if (ws[cellRef]) {
+            ws[cellRef].s = { font: { bold: true } };
+        }
+    }
     
     // Add sheet protection only if not editable
     if (!editable) {
@@ -817,7 +812,7 @@ function exportToExcel(editable = true) {
     if (editable) {
         showAlert('<i class="bi bi-file-earmark-excel me-2"></i>Grade sheet exported as <strong>Editable Excel</strong> file for ' + data.term + ' term!', 'success');
     } else {
-        showAlert('<i class="bi bi-file-earmark-excel me-2"></i>Grade sheet exported as <strong>Protected Excel</strong>! Password: <strong>' + EXPORT_PASSWORD + '</strong>', 'success');
+        showAlert('<i class="bi bi-file-earmark-excel me-2"></i>Grade sheet exported as <strong>Protected Excel</strong> file for ' + data.term + ' term!', 'success');
     }
 }
 

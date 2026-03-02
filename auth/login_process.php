@@ -113,6 +113,18 @@ try {
     record_login_attempt($email, true);
     clear_login_attempts($email);
     
+    // Check maintenance mode - block non-super-admin logins
+    if ((int)$user['role_id'] !== ROLE_SUPER_ADMIN) {
+        $maint_check = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'maintenance_mode' LIMIT 1");
+        if ($maint_check && $mrow = $maint_check->fetch_assoc()) {
+            if ($mrow['setting_value'] === '1') {
+                $conn->commit();
+                echo json_encode(['success' => false, 'message' => 'The system is currently under maintenance. Please try again later.']);
+                exit();
+            }
+        }
+    }
+    
     // Update last login
     $updateStmt = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
     $updateStmt->bind_param("i", $user['id']);

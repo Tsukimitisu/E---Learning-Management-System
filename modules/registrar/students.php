@@ -555,12 +555,21 @@ function applyFilters() {
 ['searchInput', 'programFilter', 'statusFilter'].forEach(id => document.getElementById(id).addEventListener('input', applyFilters));
 
 /** 6. UI HELPERS */
+// Stores active penalties data for term-based filtering
+let currentActivePenalties = [];
+let currentAssessedFees = [];
+let currentProgramType = 'college';
+let currentBaseTuition = 0;
+
 function openPaymentModal(sid, sno, name, fees, paid, programType) {
     document.getElementById('payment_student_id').value = sid;
     document.getElementById('payment_student_info').textContent = sno + ' - ' + name;
     document.getElementById('payment_total_fees').textContent = '₱' + fees.toLocaleString('en-US', {minimumFractionDigits: 2});
     document.getElementById('payment_total_paid').textContent = '₱' + paid.toLocaleString('en-US', {minimumFractionDigits: 2});
     document.getElementById('payment_balance').textContent = '₱' + (fees - paid).toLocaleString('en-US', {minimumFractionDigits: 2});
+    currentProgramType = programType;
+    currentBaseTuition = fees;
+
     // Show/hide payment terms based on program type (penalties only apply to college)
     const termSelect = document.getElementById('payment_term');
     const collegeTerms = termSelect.querySelectorAll('option[value="prelim"], option[value="midterm"], option[value="prefinals"], option[value="finals"]');
@@ -570,48 +579,96 @@ function openPaymentModal(sid, sno, name, fees, paid, programType) {
         termSelect.value = 'downpayment';
     }
 
-    // Fetch penalty/discount breakdown for this student
+    // Fetch penalty/discount data
     const adjContainer = document.getElementById('adjustments_breakdown');
     const adjList = document.getElementById('adjustments_list');
     adjContainer.style.display = 'none';
     adjList.innerHTML = '';
+    currentActivePenalties = [];
+    currentAssessedFees = [];
 
     fetch(`process/get_payment_history.php?student_id=${sid}`)
         .then(r => r.json())
         .then(data => {
-            if (data.success && data.fees) {
-                const penalties = data.fees.filter(f => f.fee_type === 'Penalty');
-                const discounts = data.fees.filter(f => f.fee_type === 'Discount');
-                let html = '';
-
-                if (penalties.length > 0) {
-                    html += '<div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 py-2 px-3 mb-2 small">';
-                    html += '<div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Penalties Applied</div>';
-                    penalties.forEach(p => {
-                        html += '<div class="d-flex justify-content-between"><span>' + (p.description || p.fee_type) + '</span><span class="fw-bold text-danger">+₱' + parseFloat(p.amount).toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
-                    });
-                    html += '</div>';
-                }
-
-                if (discounts.length > 0) {
-                    html += '<div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 py-2 px-3 mb-2 small">';
-                    html += '<div class="fw-bold mb-1"><i class="bi bi-tag me-1"></i>Discounts Applied</div>';
-                    discounts.forEach(d => {
-                        html += '<div class="d-flex justify-content-between"><span>' + (d.description || d.fee_type) + '</span><span class="fw-bold text-success">-₱' + Math.abs(parseFloat(d.amount)).toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
-                    });
-                    html += '</div>';
-                }
-
-                if (html) {
-                    adjList.innerHTML = html;
-                    adjContainer.style.display = 'block';
-                }
+            if (data.success) {
+                currentAssessedFees = data.fees || [];
+                currentActivePenalties = data.active_penalties || [];
+                // Render adjustments for the currently selected term
+                renderPenaltiesForTerm(termSelect.value);
             }
         })
-        .catch(() => {}); // silently fail — breakdown is supplementary
+        .catch(() => {});
 
     new bootstrap.Modal(document.getElementById('addPaymentModal')).show();
 }
+
+// Render penalties/discounts filtered by selected payment term
+function renderPenaltiesForTerm(selectedTerm) {
+    const adjContainer = document.getElementById('adjustments_breakdown');
+    const adjList = document.getElementById('adjustments_list');
+    let html = '';
+
+    // Show discounts from assessed fees (always visible)
+    const discounts = currentAssessedFees.filter(f => f.fee_type === 'Discount');
+    if (discounts.length > 0) {
+        html += '<div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 py-2 px-3 mb-2 small">';
+        html += '<div class="fw-bold mb-1"><i class="bi bi-tag me-1"></i>Discounts Applied</div>';
+        discounts.forEach(d => {
+            html += '<div class="d-flex justify-content-between"><span>' + (d.description || d.fee_type) + '</span><span class="fw-bold text-success">-₱' + Math.abs(parseFloat(d.amount)).toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
+        });
+        html += '</div>';
+    }
+
+    // Show active penalties filtered by selected term (only for college)
+    if (currentProgramType !== 'shs' && currentActivePenalties.length > 0) {
+        const termPenalties = currentActivePenalties.filter(p => {
+            return p.applicable_term === 'all' || p.applicable_term === selectedTerm;
+        });
+
+        if (termPenalties.length > 0) {
+            html += '<div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 py-2 px-3 mb-2 small">';
+            html += '<div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Penalties for ' + ucFirst(selectedTerm) + '</div>';
+            termPenalties.forEach(p => {
+                let amt = 0;
+                if (p.penalty_type === 'percentage') {
+                    amt = currentBaseTuition * (parseFloat(p.value) / 100);
+                } else {
+                    amt = parseFloat(p.value);
+                }
+                const valLabel = p.penalty_type === 'percentage' ? p.value + '%' : '₱' + parseFloat(p.value).toLocaleString('en-US', {minimumFractionDigits: 2});
+                const termBadge = p.applicable_term !== 'all' ? ' <span class="badge bg-secondary bg-opacity-50 ms-1" style="font-size:.65rem">' + ucFirst(p.applicable_term) + '</span>' : ' <span class="badge bg-secondary bg-opacity-25 ms-1" style="font-size:.65rem">All Terms</span>';
+                html += '<div class="d-flex justify-content-between align-items-center"><span>' + p.name + ' (' + valLabel + ')' + termBadge + '</span><span class="fw-bold text-danger">+₱' + amt.toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
+            });
+            html += '</div>';
+        }
+    }
+
+    // Show assessed penalties already recorded in student_fees
+    const assessedPenalties = currentAssessedFees.filter(f => f.fee_type === 'Penalty');
+    if (assessedPenalties.length > 0) {
+        html += '<div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-25 py-2 px-3 mb-2 small">';
+        html += '<div class="fw-bold mb-1"><i class="bi bi-receipt me-1"></i>Assessed Penalties (in Fees)</div>';
+        assessedPenalties.forEach(p => {
+            html += '<div class="d-flex justify-content-between"><span>' + (p.description || p.fee_type) + '</span><span class="fw-bold text-danger">+₱' + parseFloat(p.amount).toLocaleString('en-US', {minimumFractionDigits: 2}) + '</span></div>';
+        });
+        html += '</div>';
+    }
+
+    if (html) {
+        adjList.innerHTML = html;
+        adjContainer.style.display = 'block';
+    } else {
+        adjContainer.style.display = 'none';
+        adjList.innerHTML = '';
+    }
+}
+
+function ucFirst(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
+
+// Listen for term dropdown changes to update penalty display
+document.getElementById('payment_term').addEventListener('change', function() {
+    renderPenaltiesForTerm(this.value);
+});
 
 function openEditStudent(button) {
     document.getElementById('edit_student_id').value = button.dataset.studentId;

@@ -144,7 +144,7 @@ if ($session_role_key === '') {
         .notification-wrapper { position: relative; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
         .notification-wrapper:hover { background: #f0f2f5; }
         /* Notification Dropdown */
-        .notification-dropdown { position: absolute; top: calc(100% + 10px); right: -60px; width: 380px; max-height: 480px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); z-index: 1050; display: none; overflow: hidden; animation: fadeInDropdown 0.2s ease-out; }
+        .notification-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 380px; max-height: 480px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); z-index: 1050; display: none; overflow: hidden; animation: fadeInDropdown 0.2s ease-out; }
         .notification-dropdown.show { display: block; }
         .notification-dropdown-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
         .notification-dropdown-header h6 { margin: 0; font-size: 1rem; font-weight: 700; color: #2c3e50; }
@@ -186,6 +186,10 @@ if ($session_role_key === '') {
         .profile-dropdown-menu .dropdown-item.text-danger:hover { background-color: #fff1f1; color: #dc3545; }
         .main-content-body { flex: 1; overflow-y: auto; padding: 30px; }
 
+        /* Ensure modals always appear above sidebar (1000) and navbar (900) */
+        .modal { z-index: 1100 !important; }
+        .modal-backdrop { z-index: 1090 !important; }
+
         /* ============================
            OVERLAY & MOBILE BEHAVIOR
            ============================ */
@@ -200,7 +204,6 @@ if ($session_role_key === '') {
             #sidebar {
                 position: fixed; /* Fixed only on mobile */
                 left: calc(var(--sidebar-width) * -1);
-                top: 0;
                 height: 100%;
                 margin-left: 0 !important; /* Reset desktop logic */
                 transition: left var(--transition-speed);
@@ -255,8 +258,11 @@ if ($session_role_key === '') {
                     <button type="button" id="sidebarCollapse" class="burger-btn me-3">
                         <i class="bi bi-list"></i>
                     </button>
-                    
-                    <div class="notification-wrapper ms-2" id="notificationBell">
+                </div>
+                
+                <!-- RIGHT SIDE: Notification Bell + User Profile -->
+                <div class="d-flex align-items-center gap-3">
+                    <div class="notification-wrapper" id="notificationBell">
                         <i class="bi bi-bell"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" id="notificationBadge" style="display:none; font-size: 0.6rem; padding: 0.35em 0.65em;">
                             <span id="notificationCount">0</span>
@@ -277,10 +283,9 @@ if ($session_role_key === '') {
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- DROPDOWN FOR ACCOUNT & LOGOUT -->
-                <div class="dropdown">
+
+                    <!-- DROPDOWN FOR ACCOUNT & LOGOUT -->
+                    <div class="dropdown">
                     <div class="user-profile" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="user-info-text d-none d-sm-block">
                             <span class="role"><?php echo strtoupper(htmlspecialchars($_SESSION['role'])); ?></span>
@@ -297,6 +302,7 @@ if ($session_role_key === '') {
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger logout-trigger" href="javascript:void(0);"><i class="bi bi-box-arrow-right"></i> Sign Out</a></li>
                     </ul>
+                    </div>
                 </div>
             </nav>
             

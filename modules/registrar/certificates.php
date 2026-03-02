@@ -8,7 +8,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {
 
 $page_title = "Certificates";
 
-$students = $conn->query("SELECT s.user_id, s.student_no, CONCAT(up.first_name, ' ', up.last_name) as full_name FROM students s INNER JOIN user_profiles up ON s.user_id = up.user_id ORDER BY up.last_name, up.first_name");
 $academic_years = $conn->query("SELECT id, year_name FROM academic_years ORDER BY year_name DESC");
 
 include '../../includes/header.php';
@@ -103,16 +102,330 @@ include '../../includes/header.php';
 
 <?php include '../../includes/footer.php'; ?>
 
-<!-- --- JAVASCRIPT LOGIC - UNTOUCHED & RE-WIRED --- -->
+<style>
+/* Student list items */
+.cert-student-list .student-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.cert-student-list .student-item:hover {
+    background: #e8f4fd;
+}
+.cert-student-list .student-item:last-child {
+    border-bottom: none;
+}
+.cert-student-list .student-item .student-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.cert-student-list .student-item .student-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+    flex-shrink: 0;
+}
+.cert-student-list .student-item .student-info .name {
+    font-weight: 600; font-size: 0.9rem; color: #333;
+}
+.cert-student-list .student-item .student-info .meta {
+    font-size: 0.75rem; color: #888;
+}
+.cert-student-list .no-results {
+    padding: 20px; text-align: center; color: #999; font-size: 0.85rem;
+}
+.cert-student-selected {
+    border-color: #28a745 !important;
+    background: #f0fff4 !important;
+}
+</style>
+
 <script>
-/** 
- * EVENT LISTENER FOR CERTIFICATE FORMS 
- * Logic remains identical to original, just ensuring modern selector compatibility.
- */
 document.addEventListener('DOMContentLoaded', function() {
+    // ---- State for each form ----
+    const formStates = {};
+    let filterOptions = null; // shared across all forms
+
+    // Load filter options once
+    fetch('process/get_filter_options.php')
+        .then(r => r.json())
+        .then(data => {
+            filterOptions = data;
+            // Populate filter dropdowns on all forms
+            document.querySelectorAll('.cert-filter-program').forEach(sel => {
+                const progGroup = sel.querySelector('.filter-programs-group');
+                const strandGroup = sel.querySelector('.filter-strands-group');
+                if (progGroup) {
+                    (data.programs || []).forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = 'p_' + p.id;
+                        opt.textContent = p.program_code + ' - ' + p.program_name;
+                        opt.dataset.type = 'college';
+                        progGroup.appendChild(opt);
+                    });
+                }
+                if (strandGroup) {
+                    (data.strands || []).forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = 's_' + s.id;
+                        opt.textContent = s.strand_code + ' - ' + s.strand_name;
+                        opt.dataset.type = 'shs';
+                        strandGroup.appendChild(opt);
+                    });
+                }
+            });
+
+            // Initial load for each form
+            document.querySelectorAll('.certificate-form').forEach(form => {
+                const formId = form.id;
+                formStates[formId] = { selectedStudent: null, debounceTimer: null };
+                updateYearLevelOptions(formId);
+                loadStudents(formId);
+            });
+        })
+        .catch(err => console.error('Failed to load filter options:', err));
+
+    // Update year level dropdown based on education type
+    function updateYearLevelOptions(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        const typeFilter = form.querySelector('.cert-filter-type');
+        const yearFilter = form.querySelector('.cert-filter-year');
+        const programFilter = form.querySelector('.cert-filter-program');
+        if (!yearFilter || !filterOptions) return;
+
+        const eduType = typeFilter ? typeFilter.value : '';
+        const programVal = programFilter ? programFilter.value : '';
+
+        yearFilter.innerHTML = '<option value="">All Year/Grade</option>';
+
+        if (eduType === 'shs' || programVal.startsWith('s_')) {
+            (filterOptions.shs_grade_levels || []).forEach(yl => {
+                const opt = document.createElement('option');
+                opt.value = yl.id;
+                opt.textContent = yl.level_name;
+                yearFilter.appendChild(opt);
+            });
+        } else if (eduType === 'college' || programVal.startsWith('p_')) {
+            // If specific program selected, show that program's year levels
+            const progId = programVal.startsWith('p_') ? parseInt(programVal.substring(2)) : 0;
+            if (progId > 0) {
+                (filterOptions.program_year_levels || []).filter(yl => yl.program_id == progId).forEach(yl => {
+                    const opt = document.createElement('option');
+                    opt.value = yl.id;
+                    opt.textContent = yl.year_name;
+                    yearFilter.appendChild(opt);
+                });
+            } else {
+                (filterOptions.college_year_levels || []).forEach(yl => {
+                    const opt = document.createElement('option');
+                    opt.value = yl.id;
+                    opt.textContent = yl.level_name;
+                    yearFilter.appendChild(opt);
+                });
+            }
+        } else {
+            // Show all
+            (filterOptions.college_year_levels || []).forEach(yl => {
+                const opt = document.createElement('option');
+                opt.value = yl.id;
+                opt.textContent = yl.level_name;
+                yearFilter.appendChild(opt);
+            });
+            (filterOptions.shs_grade_levels || []).forEach(yl => {
+                const opt = document.createElement('option');
+                opt.value = yl.id;
+                opt.textContent = yl.level_name;
+                yearFilter.appendChild(opt);
+            });
+        }
+    }
+
+    // ---- Search Students ----
+    function loadStudents(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const searchInput = form.querySelector('.cert-search-input');
+        const programFilter = form.querySelector('.cert-filter-program');
+        const yearFilter = form.querySelector('.cert-filter-year');
+        const typeFilter = form.querySelector('.cert-filter-type');
+        const semesterFilter = form.querySelector('.cert-filter-semester');
+        const listContainer = form.querySelector('.cert-student-list');
+
+        const q = searchInput ? searchInput.value.trim() : '';
+        const programVal = programFilter ? programFilter.value : '';
+        const yearVal = yearFilter ? yearFilter.value : '';
+        const eduType = typeFilter ? typeFilter.value : '';
+        const semesterVal = semesterFilter ? semesterFilter.value : '';
+
+        // Build query string
+        const params = new URLSearchParams();
+        if (q) params.append('q', q);
+        if (yearVal) params.append('year_level', yearVal);
+        if (programVal.startsWith('p_')) params.append('program_id', programVal.substring(2));
+        if (programVal.startsWith('s_')) params.append('strand_id', programVal.substring(2));
+        if (eduType) params.append('education_type', eduType);
+        if (semesterVal) params.append('semester', semesterVal);
+        params.append('limit', '30');
+
+        listContainer.innerHTML = '<div class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm me-2" role="status"></div>Searching...</div>';
+
+        fetch('process/search_students.php?' + params.toString())
+            .then(r => r.json())
+            .then(data => {
+                const students = data.students || [];
+                if (students.length === 0) {
+                    listContainer.innerHTML = '<div class="no-results"><i class="bi bi-search me-1"></i>No students found matching your criteria</div>';
+                    return;
+                }
+
+                let html = '';
+                students.forEach(s => {
+                    const initials = (s.full_name || '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                    const typeBadge = s.program_type === 'shs' 
+                        ? '<span class="badge bg-success" style="font-size:0.65rem">SHS</span>' 
+                        : '<span class="badge bg-primary" style="font-size:0.65rem">College</span>';
+                    const ylBadge = s.year_level_name 
+                        ? `<span class="badge bg-secondary" style="font-size:0.65rem">${escHtml(s.year_level_name)}</span>` 
+                        : '';
+
+                    html += `
+                        <div class="student-item" data-student='${JSON.stringify(s).replace(/'/g, "&#39;")}'>
+                            <div class="student-main">
+                                <div class="student-avatar">${initials}</div>
+                                <div class="student-info">
+                                    <div class="name">${escHtml(s.full_name)}</div>
+                                    <div class="meta">${escHtml(s.student_no)} &middot; ${escHtml(s.program_code || 'N/A')}</div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1 align-items-center">
+                                ${ylBadge} ${typeBadge}
+                            </div>
+                        </div>`;
+                });
+                listContainer.innerHTML = html;
+
+                // Click handlers
+                listContainer.querySelectorAll('.student-item').forEach(item => {
+                    item.addEventListener('click', () => selectStudent(formId, JSON.parse(item.dataset.student)));
+                });
+            })
+            .catch(() => {
+                listContainer.innerHTML = '<div class="no-results text-danger">Error loading students</div>';
+            });
+    }
+
+    function selectStudent(formId, student) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        formStates[formId].selectedStudent = student;
+        form.querySelector('.cert-student-id').value = student.user_id;
+
+        // Show selected card
+        const selectedCard = form.querySelector('.cert-student-selected');
+        selectedCard.classList.remove('d-none');
+        selectedCard.querySelector('.selected-student-name').textContent = student.full_name;
+        selectedCard.querySelector('.selected-student-no').textContent = student.student_no;
+        selectedCard.querySelector('.selected-student-program').textContent = student.program_code || student.program_type.toUpperCase();
+
+        // Hide list
+        form.querySelector('.cert-student-list').classList.add('d-none');
+
+        // Enable submit
+        form.querySelector('button[type="submit"]').disabled = false;
+    }
+
+    function clearStudent(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        formStates[formId].selectedStudent = null;
+        form.querySelector('.cert-student-id').value = '';
+
+        form.querySelector('.cert-student-selected').classList.add('d-none');
+        form.querySelector('.cert-student-list').classList.remove('d-none');
+        form.querySelector('button[type="submit"]').disabled = true;
+
+        loadStudents(formId);
+    }
+
+    // ---- Event Bindings ----
+    // Search inputs with debounce
+    document.querySelectorAll('.cert-search-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const formId = this.dataset.form;
+            clearTimeout(formStates[formId]?.debounceTimer);
+            formStates[formId].debounceTimer = setTimeout(() => loadStudents(formId), 300);
+        });
+    });
+
+    // Filter changes
+    document.querySelectorAll('.cert-filter-program, .cert-filter-year, .cert-filter-semester').forEach(sel => {
+        sel.addEventListener('change', function() {
+            loadStudents(this.dataset.form);
+        });
+    });
+
+    // Education type filter - also updates program/year options
+    document.querySelectorAll('.cert-filter-type').forEach(sel => {
+        sel.addEventListener('change', function() {
+            const formId = this.dataset.form;
+            const form = document.getElementById(formId);
+            if (!form) return;
+            const eduType = this.value;
+            const programFilter = form.querySelector('.cert-filter-program');
+
+            // Show/hide program groups based on education type
+            if (programFilter) {
+                programFilter.value = '';
+                const progGroup = programFilter.querySelector('.filter-programs-group');
+                const strandGroup = programFilter.querySelector('.filter-strands-group');
+                if (progGroup) progGroup.style.display = (eduType === 'shs') ? 'none' : '';
+                if (strandGroup) strandGroup.style.display = (eduType === 'college') ? 'none' : '';
+            }
+
+            updateYearLevelOptions(formId);
+            loadStudents(formId);
+        });
+    });
+
+    // Program filter also updates year levels
+    document.querySelectorAll('.cert-filter-program').forEach(sel => {
+        sel.addEventListener('change', function() {
+            const formId = this.dataset.form;
+            updateYearLevelOptions(formId);
+            loadStudents(formId);
+        });
+    });
+
+    // Clear student
+    document.querySelectorAll('.cert-clear-student').forEach(btn => {
+        btn.addEventListener('click', function() {
+            clearStudent(this.dataset.form);
+        });
+    });
+
+    // Form submissions
     document.querySelectorAll('.certificate-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            const studentId = form.querySelector('.cert-student-id').value;
+            if (!studentId) {
+                Swal.fire({ icon: 'warning', title: 'Oops', text: 'Please select a student first.' });
+                return;
+            }
+
             const formData = new FormData(form);
             const type = form.getAttribute('data-type');
 
@@ -122,10 +435,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             params.append('certificate_type', type);
 
-            // Opens the backend generation script in a new window
-            window.open(`process/generate_certificate.php?${params.toString()}`, '_blank');
+            window.open('process/generate_certificate.php?' + params.toString(), '_blank');
         });
     });
+
+    function escHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
 });
 </script>
 </body>

@@ -60,7 +60,7 @@ $sections_query = "
 
 $sections = $conn->query($sections_query);
 
-// Get unassigned students (enrolled in branch but not in any classes)
+// Get unassigned students (in branch but not in any classes)
 $unassigned_students = $conn->query("
     SELECT
         u.id,
@@ -69,10 +69,9 @@ $unassigned_students = $conn->query("
     FROM users u
     INNER JOIN user_profiles up ON u.id = up.user_id
     INNER JOIN user_roles ur ON u.id = ur.user_id
-    INNER JOIN students st ON u.id = st.user_id
-    INNER JOIN courses c ON st.course_id = c.id
+    LEFT JOIN students st ON u.id = st.user_id
     WHERE ur.role_id = " . ROLE_STUDENT . "
-    AND c.branch_id = $branch_id
+    AND up.branch_id = $branch_id
     AND u.status = 'active'
     AND u.id NOT IN (
         SELECT DISTINCT e.student_id

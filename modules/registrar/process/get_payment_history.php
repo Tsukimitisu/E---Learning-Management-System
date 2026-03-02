@@ -51,11 +51,26 @@ while ($row = $fees_result->fetch_assoc()) {
     $fees[] = $row;
 }
 
+// Get active penalties from tuition_penalties table (for payment modal term filtering)
+$active_penalties = [];
+$pen_result = $conn->query("
+    SELECT tp.id, tp.name, tp.penalty_type, tp.value, tp.applicable_term, tp.start_date
+    FROM tuition_penalties tp
+    WHERE tp.is_active = 1 AND tp.start_date <= CURDATE()
+    ORDER BY tp.id ASC
+");
+if ($pen_result) {
+    while ($row = $pen_result->fetch_assoc()) {
+        $active_penalties[] = $row;
+    }
+}
+
 echo json_encode([
     'success' => true,
     'total_fees' => (float)$fees_total['total'],
     'total_paid' => (float)$paid_total['total'],
     'payments' => $payments,
-    'fees' => $fees
+    'fees' => $fees,
+    'active_penalties' => $active_penalties
 ]);
 ?>

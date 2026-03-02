@@ -319,12 +319,12 @@ if (!isset($college_subjects))    { $college_subjects = []; }
                                 <select class="form-select" name="shs_grade_level_id" id="shsGradeLevelSelect" required>
                                     <option value="">-- Select Grade Level --</option>
                                     <?php 
-                                    // Get unique grade levels (11 and 12) from shs_grade_levels table
-                                    $shs_grade_query = $conn->query("SELECT MIN(id) as id, grade_level, grade_name FROM shs_grade_levels WHERE is_active = 1 AND grade_level IN (11,12) GROUP BY grade_level, grade_name ORDER BY grade_level");
+                                    // Get all grade levels per strand
+                                    $shs_grade_query = $conn->query("SELECT id, strand_id, grade_level, grade_name FROM shs_grade_levels WHERE is_active = 1 ORDER BY strand_id, grade_level");
                                     if ($shs_grade_query && $shs_grade_query->num_rows > 0):
                                         while ($shs_gl = $shs_grade_query->fetch_assoc()): 
                                     ?>
-                                    <option value="<?php echo $shs_gl['id']; ?>"><?php echo htmlspecialchars($shs_gl['grade_name']); ?></option>
+                                    <option value="<?php echo $shs_gl['id']; ?>" data-strand-id="<?php echo $shs_gl['strand_id']; ?>"><?php echo htmlspecialchars($shs_gl['grade_name']); ?></option>
                                     <?php 
                                         endwhile;
                                     else:
@@ -477,12 +477,12 @@ if (!isset($college_subjects))    { $college_subjects = []; }
                             <select class="form-select" name="shs_grade_level_id" required>
                                 <option value="">-- Select Grade Level --</option>
                                 <?php 
-                                // Get unique grade levels (11 and 12) from shs_grade_levels table for edit modal
-                                $edit_grade_query = $conn->query("SELECT MIN(id) as id, grade_level, grade_name FROM shs_grade_levels WHERE is_active = 1 AND grade_level IN (11,12) GROUP BY grade_level, grade_name ORDER BY grade_level");
+                                // Get all grade levels per strand for edit modal
+                                $edit_grade_query = $conn->query("SELECT id, strand_id, grade_level, grade_name FROM shs_grade_levels WHERE is_active = 1 ORDER BY strand_id, grade_level");
                                 if ($edit_grade_query && $edit_grade_query->num_rows > 0):
                                     while ($edit_gl = $edit_grade_query->fetch_assoc()): 
                                 ?>
-                                <option value="<?php echo $edit_gl['id']; ?>"><?php echo htmlspecialchars($edit_gl['grade_name']); ?></option>
+                                <option value="<?php echo $edit_gl['id']; ?>" data-strand-id="<?php echo $edit_gl['strand_id']; ?>"><?php echo htmlspecialchars($edit_gl['grade_name']); ?></option>
                                 <?php 
                                     endwhile;
                                 else:
@@ -1202,3 +1202,40 @@ if (!isset($college_subjects))    { $college_subjects = []; }
         </div>
     </div>
 </div>
+
+<script>
+// Filter SHS grade level dropdowns based on selected strand
+function filterGradeLevelsByStrand(strandSelect, gradeLevelSelect) {
+    const strandId = strandSelect.value;
+    const options = gradeLevelSelect.querySelectorAll('option[data-strand-id]');
+    options.forEach(option => {
+        if (!strandId || option.dataset.strandId === strandId) {
+            option.hidden = false;
+            option.disabled = false;
+        } else {
+            option.hidden = true;
+            option.disabled = true;
+        }
+    });
+    if (gradeLevelSelect.selectedOptions[0]?.hidden) {
+        gradeLevelSelect.value = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const addStrandSelect = document.getElementById('shsStrandSelect');
+    const addGradeLevelSelect = document.getElementById('shsGradeLevelSelect');
+    if (addStrandSelect && addGradeLevelSelect) {
+        addStrandSelect.addEventListener('change', () => filterGradeLevelsByStrand(addStrandSelect, addGradeLevelSelect));
+        filterGradeLevelsByStrand(addStrandSelect, addGradeLevelSelect);
+    }
+
+    const editStrandSelect = document.getElementById('editShsStrandSelect');
+    if (editStrandSelect) {
+        const editGradeLevelSelect = editStrandSelect.closest('form')?.querySelector('select[name="shs_grade_level_id"]');
+        if (editGradeLevelSelect) {
+            editStrandSelect.addEventListener('change', () => filterGradeLevelsByStrand(editStrandSelect, editGradeLevelSelect));
+        }
+    }
+});
+</script>
