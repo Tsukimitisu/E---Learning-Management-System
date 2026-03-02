@@ -189,6 +189,8 @@ if ($session_role_key === '') {
         /* Ensure modals always appear above sidebar (1000) and navbar (900) */
         .modal { z-index: 1100 !important; }
         .modal-backdrop { z-index: 1090 !important; }
+        .header-fixed-part { z-index: 50 !important; }
+        .swal2-container { z-index: 1200 !important; }
 
         /* ============================
            OVERLAY & MOBILE BEHAVIOR

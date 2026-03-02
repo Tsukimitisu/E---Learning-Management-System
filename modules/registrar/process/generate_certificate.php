@@ -2,6 +2,7 @@
 ob_start();
 require_once '../../../config/init.php';
 require_once '../../../vendor/autoload.php';
+require_once '../../../vendor/tcpdf/tcpdf.php';
 require_once '../../../config/tcpdf_config.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_REGISTRAR) {

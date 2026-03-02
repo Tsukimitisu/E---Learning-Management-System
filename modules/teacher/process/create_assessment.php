@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_TEACHER) {
     exit();
 }
 
-$class_id = (int)($_POST['class_id'] ?? 0);
+$class_id_raw = clean_input($_POST['class_id'] ?? '');
 $title = clean_input($_POST['title'] ?? '');
 $assessment_type = clean_input($_POST['assessment_type'] ?? '');
 $max_score = floatval($_POST['max_score'] ?? 100);
@@ -16,17 +16,26 @@ $scheduled_date = !empty($_POST['scheduled_date']) ? clean_input($_POST['schedul
 $duration_minutes = !empty($_POST['duration_minutes']) ? (int)$_POST['duration_minutes'] : NULL;
 $instructions = clean_input($_POST['instructions'] ?? '');
 
-if ($class_id == 0 || empty($title) || empty($assessment_type)) {
+// Parse section_id and curriculum_subject_id from the combined value
+$section_id = 0;
+$curriculum_subject_id = 0;
+if (strpos($class_id_raw, '_') !== false) {
+    $parts = explode('_', $class_id_raw);
+    $section_id = (int)$parts[0];
+    $curriculum_subject_id = (int)$parts[1];
+}
+
+if (($section_id == 0 || $curriculum_subject_id == 0) || empty($title) || empty($assessment_type)) {
     echo json_encode(['status' => 'error', 'message' => 'All required fields must be filled']);
     exit();
 }
 
 try {
     $stmt = $conn->prepare("
-        INSERT INTO assessments (class_id, title, assessment_type, max_score, scheduled_date, duration_minutes, instructions, created_by) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO assessments (section_id, curriculum_subject_id, title, assessment_type, max_score, scheduled_date, duration_minutes, instructions, created_by) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param("issdissi", $class_id, $title, $assessment_type, $max_score, $scheduled_date, $duration_minutes, $instructions, $_SESSION['user_id']);
+    $stmt->bind_param("iissdissi", $section_id, $curriculum_subject_id, $title, $assessment_type, $max_score, $scheduled_date, $duration_minutes, $instructions, $_SESSION['user_id']);
     $stmt->execute();
     
     $ip = get_client_ip();

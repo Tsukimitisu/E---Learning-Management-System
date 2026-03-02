@@ -433,8 +433,8 @@ include '../../includes/header.php';
     </div>
 </div>
 
-<!-- SheetJS Library for Excel Import/Export -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js" onerror="console.error('Failed to load XLSX library')"></script>
+<!-- SheetJS Style Library for Excel Import/Export with formatting -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="console.error('Failed to load XLSX library')"></script>
 
 <!-- --- JAVASCRIPT LOGIC - Updated for term-based grading with dropdown --- -->
 <script>
@@ -721,30 +721,90 @@ function exportToExcel(editable = true) {
     const data = getGradeData();
     console.log('Export data:', data);
     
-    // Build clean, professional grade sheet
-    const sheetData = [
-        ['GRADE SHEET'],
-        [''],
-        ['Subject:', data.subjectCode + ' - ' + data.subjectTitle],
-        ['Program:', data.programName, '', 'Section:', data.sectionName],
-        ['Year Level:', data.yearLevel, '', 'A.Y.:', data.academicYear],
-        ['Term:', data.term, '', 'Date:', data.exportDate],
-        [''],
-        ['No.', 'Student No.', 'Student Name', 'Grade', 'Remarks'],
-    ];
+    // Style definitions
+    const titleStyle = { font: { bold: true, sz: 16, color: { rgb: "800000" } }, alignment: { horizontal: "center", vertical: "center" } };
+    const subtitleStyle = { font: { bold: true, sz: 11, color: { rgb: "003366" } }, alignment: { horizontal: "center" } };
+    const labelStyle = { font: { bold: true, sz: 10 }, alignment: { horizontal: "left" } };
+    const valueStyle = { font: { sz: 10 }, alignment: { horizontal: "left" } };
+    const headerStyle = { 
+        font: { bold: true, sz: 10, color: { rgb: "FFFFFF" } }, 
+        fill: { fgColor: { rgb: "003366" } },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+    };
+    const dataBorder = { 
+        border: { top: {style:"thin", color:{rgb:"CCCCCC"}}, bottom: {style:"thin", color:{rgb:"CCCCCC"}}, left: {style:"thin", color:{rgb:"CCCCCC"}}, right: {style:"thin", color:{rgb:"CCCCCC"}} },
+        font: { sz: 10 },
+        alignment: { vertical: "center" }
+    };
+    const dataCenter = { ...dataBorder, alignment: { horizontal: "center", vertical: "center" } };
+    const passedStyle = { ...dataCenter, font: { sz: 10, bold: true, color: { rgb: "155724" } } };
+    const failedStyle = { ...dataCenter, font: { sz: 10, bold: true, color: { rgb: "DC3545" } } };
+    const signatureStyle = { font: { sz: 10 }, alignment: { horizontal: "center" } };
+    const signatureLineStyle = { font: { sz: 10, bold: true }, alignment: { horizontal: "center" }, border: { top: {style:"thin"} } };
     
-    // Add student data
+    // Build sheet data
+    const sheetData = [];
+    
+    // Row 0: Title
+    sheetData.push([{v: 'STUDENT GRADE SHEET', s: titleStyle}, '', '', '', '', '']);
+    // Row 1: Subtitle
+    sheetData.push([{v: 'E-Learning Management System', s: subtitleStyle}, '', '', '', '', '']);
+    // Row 2: blank
+    sheetData.push(['']);
+    // Row 3-6: Info
+    sheetData.push([{v: 'Subject:', s: labelStyle}, {v: data.subjectCode + ' - ' + data.subjectTitle, s: valueStyle}, '', {v: 'Section:', s: labelStyle}, {v: data.sectionName, s: valueStyle}, '']);
+    sheetData.push([{v: 'Program:', s: labelStyle}, {v: data.programName, s: valueStyle}, '', {v: 'Year Level:', s: labelStyle}, {v: data.yearLevel, s: valueStyle}, '']);
+    sheetData.push([{v: 'Term:', s: labelStyle}, {v: data.term, s: valueStyle}, '', {v: 'A.Y.:', s: labelStyle}, {v: data.academicYear, s: valueStyle}, '']);
+    sheetData.push([{v: 'Date:', s: labelStyle}, {v: data.exportDate, s: valueStyle}, '', '', '', '']);
+    // Row 7: blank
+    sheetData.push(['']);
+    // Row 8: Column Headers
+    sheetData.push([
+        {v: 'No.', s: headerStyle},
+        {v: 'Student No.', s: headerStyle},
+        {v: 'Student Name', s: headerStyle},
+        {v: 'Grade', s: headerStyle},
+        {v: 'Remarks', s: headerStyle},
+        {v: 'Notes', s: headerStyle}
+    ]);
+    
+    // Student data rows
+    const dataStartRow = 9;
     data.students.forEach(student => {
-        sheetData.push([student.no, student.studentNo, student.studentName, student.grade, student.remarks]);
+        const remarksStyle = student.remarks === 'PASSED' ? passedStyle : (student.remarks === 'FAILED' ? failedStyle : dataCenter);
+        sheetData.push([
+            {v: student.no, s: dataCenter},
+            {v: student.studentNo, s: dataBorder},
+            {v: student.studentName, s: dataBorder},
+            {v: student.grade || '', s: dataCenter},
+            {v: student.remarks || '', s: remarksStyle},
+            {v: student.notes || '', s: dataBorder}
+        ]);
     });
     
-    // Add summary footer
+    // Footer
+    const footerRow = sheetData.length;
     sheetData.push(['']);
-    sheetData.push(['', 'Total Students:', data.totalStudents]);
+    sheetData.push([
+        '', {v: 'Total Students:', s: {font: {bold: true, sz: 10}}}, 
+        {v: data.totalStudents, s: {font: {bold: true, sz: 10}}}
+    ]);
     sheetData.push(['']);
-    sheetData.push(['Prepared by:', '____________________________', '', 'Date:', '____________________']);
     sheetData.push(['']);
-    sheetData.push(['Verified by:', '____________________________', '', 'Date:', '____________________']);
+    sheetData.push([
+        '', {v: 'Prepared by:', s: signatureStyle}, '', '',
+        {v: 'Verified by:', s: signatureStyle}, ''
+    ]);
+    sheetData.push(['']);
+    sheetData.push([
+        '', {v: '____________________________', s: signatureLineStyle}, '', '',
+        {v: '____________________________', s: signatureLineStyle}, ''
+    ]);
+    sheetData.push([
+        '', {v: 'Instructor', s: signatureStyle}, '', '',
+        {v: 'Department Head', s: signatureStyle}, ''
+    ]);
     
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
@@ -757,25 +817,20 @@ function exportToExcel(editable = true) {
         { wch: 35 },  // Names
         { wch: 10 },  // Grade
         { wch: 14 },  // Remarks
+        { wch: 18 },  // Notes
     ];
     
-    // Merge cells for header title
+    // Merge cells for title rows
     ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },  // Title
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },  // Subtitle
     ];
-
-    // Style the header row (bold) - SheetJS community doesn't support styles natively
-    // but we set the title row font via cell format
-    const headerRow = 7; // 0-indexed row for column headers (No., Student No., etc.)
-    const dataStartRow = headerRow + 1;
-
-    // Make header cells bold by adding cell type hints
-    for (let c = 0; c < 5; c++) {
-        const cellRef = XLSX.utils.encode_cell({ r: headerRow, c: c });
-        if (ws[cellRef]) {
-            ws[cellRef].s = { font: { bold: true } };
-        }
-    }
+    
+    // Set row heights
+    ws['!rows'] = [];
+    ws['!rows'][0] = { hpx: 30 };  // Title row
+    ws['!rows'][1] = { hpx: 22 };  // Subtitle
+    ws['!rows'][8] = { hpx: 25 };  // Header row
     
     // Add sheet protection only if not editable
     if (!editable) {
@@ -991,19 +1046,26 @@ function importGrades(input) {
                 return;
             }
             
-            // Find column indices
+            // Find column indices - prioritize specific headers over generic ones
             const headerRowData = jsonData[headerRow].map(cell => String(cell || '').toUpperCase().trim());
             let studentNoCol = -1, avgCol = -1, notesCol = -1;
             
             headerRowData.forEach((cell, idx) => {
-                if (cell.includes('STUDENT NUMBER') || cell.includes('STUDENT NO') || cell === 'NO.') studentNoCol = idx;
+                // Match 'STUDENT NUMBER' or 'STUDENT NO.' specifically (not just 'NO.')
+                if (cell.includes('STUDENT NUMBER') || cell.includes('STUDENT NO')) studentNoCol = idx;
                 if (cell.includes('AVERAGE') || cell === 'GRADE') avgCol = idx;
                 if (cell.includes('NOTES') || cell.includes('NOTE')) notesCol = idx;
             });
             
-            // If student number column not found by header, try second column (common pattern)
+            // Fallback: if student number column not found, try second column
             if (studentNoCol === -1) {
-                studentNoCol = 1; // Assume second column
+                // Check if any column is just 'NO.' - that's the sequence number, student no is next
+                headerRowData.forEach((cell, idx) => {
+                    if (cell === 'NO.' && idx + 1 < headerRowData.length) {
+                        studentNoCol = idx + 1; // Student No is the column AFTER 'No.'
+                    }
+                });
+                if (studentNoCol === -1) studentNoCol = 1; // Final fallback: assume second column
             }
             if (avgCol === -1) {
                 avgCol = 3; // Assume fourth column

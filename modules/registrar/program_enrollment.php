@@ -137,7 +137,7 @@ include '../../includes/header.php';
                 </div>
                 <div class="card-body p-3">
                     <input type="text" class="form-control form-control-sm mb-3 rounded-pill" id="searchStudent" placeholder="Search Student Identity...">
-                    <div class="d-flex gap-2 mb-3">
+                    <div class="d-flex gap-2 mb-2">
                         <select class="form-select form-select-sm rounded-pill" id="filterEnrollment">
                             <option value="">All Status</option>
                             <option value="enrolled">With Program</option>
@@ -147,6 +147,34 @@ include '../../includes/header.php';
                             <option value="">Sections</option>
                             <option value="has_section">Assigned</option>
                             <option value="no_section">Unassigned</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <select class="form-select form-select-sm rounded-pill" id="filterEducationType">
+                            <option value="">All Types</option>
+                            <option value="college">College</option>
+                            <option value="shs">SHS</option>
+                            <option value="none">No Program</option>
+                        </select>
+                        <select class="form-select form-select-sm rounded-pill" id="filterStudentType">
+                            <option value="">All Students</option>
+                            <option value="regular">Regular</option>
+                            <option value="irregular">Irregular</option>
+                            <option value="transferee">Transferee</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2 mb-3">
+                        <select class="form-select form-select-sm rounded-pill" id="filterProgram">
+                            <option value="">All Programs</option>
+                            <?php 
+                            $programs->data_seek(0);
+                            while ($fp = $programs->fetch_assoc()): ?>
+                                <option value="college_<?php echo $fp['id']; ?>"><?php echo htmlspecialchars($fp['program_code']); ?></option>
+                            <?php endwhile;
+                            $strands->data_seek(0);
+                            while ($fs = $strands->fetch_assoc()): ?>
+                                <option value="shs_<?php echo $fs['id']; ?>"><?php echo htmlspecialchars($fs['strand_code']); ?></option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
 
@@ -468,16 +496,49 @@ function onSemesterChanged() {
 
 /** 1. SEARCH & FILTER */
 function filterStudents() {
-    const s = document.getElementById('searchStudent').value.toLowerCase(), eF = document.getElementById('filterEnrollment').value, sF = document.getElementById('filterSection').value;
+    const s = document.getElementById('searchStudent').value.toLowerCase();
+    const eF = document.getElementById('filterEnrollment').value;
+    const sF = document.getElementById('filterSection').value;
+    const etF = document.getElementById('filterEducationType').value;
+    const stF = document.getElementById('filterStudentType').value;
+    const pF = document.getElementById('filterProgram').value;
+    
     document.querySelectorAll('.student-card').forEach(c => {
-        const n = c.dataset.studentName.toLowerCase(), no = c.dataset.studentNo.toLowerCase(), hP = c.dataset.hasProgram === '1', hS = c.dataset.hasSection === '1';
+        const n = c.dataset.studentName.toLowerCase(), no = c.dataset.studentNo.toLowerCase();
+        const hP = c.dataset.hasProgram === '1', hS = c.dataset.hasSection === '1';
+        const pType = c.dataset.programType || '';
+        const courseId = c.dataset.courseId || '';
+        const sType = c.dataset.studentType || 'regular';
+        
         let show = n.includes(s) || no.includes(s);
-        if (eF === 'enrolled' && !hP) show = false; if (eF === 'not_enrolled' && hP) show = false;
-        if (sF === 'has_section' && !hS) show = false; if (sF === 'no_section' && hS) show = false;
+        if (eF === 'enrolled' && !hP) show = false;
+        if (eF === 'not_enrolled' && hP) show = false;
+        if (sF === 'has_section' && !hS) show = false;
+        if (sF === 'no_section' && hS) show = false;
+        
+        // Education type filter
+        if (etF === 'college' && pType !== 'college') show = false;
+        if (etF === 'shs' && pType !== 'shs') show = false;
+        if (etF === 'none' && pType !== '') show = false;
+        
+        // Student type filter
+        if (stF && sType !== stF) show = false;
+        
+        // Program/Strand filter
+        if (pF) {
+            const [filterType, filterId] = pF.split('_');
+            if (filterType === 'college' && (pType !== 'college' || courseId !== filterId)) show = false;
+            if (filterType === 'shs' && (pType !== 'shs' || courseId !== filterId)) show = false;
+        }
+        
         c.style.display = show ? 'block' : 'none';
     });
 }
-['searchStudent', 'filterEnrollment', 'filterSection'].forEach(id => document.getElementById(id).addEventListener('input', filterStudents));
+['searchStudent', 'filterEnrollment', 'filterSection', 'filterEducationType', 'filterStudentType', 'filterProgram'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', filterStudents);
+    if (el) el.addEventListener('change', filterStudents);
+});
 
 /** 2. STUDENT SELECTION */
 document.querySelectorAll('.student-card').forEach(card => {

@@ -11,17 +11,24 @@ $page_title = "Assessments Management";
 $teacher_id = $_SESSION['user_id'];
 
 /** 
- * BACKEND LOGIC - UNTOUCHED 
+ * BACKEND LOGIC - Uses teacher_subject_assignments + sections (new structure)
  */
+
+// Get current academic year
+$active_ay = $conn->query("SELECT id FROM academic_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$active_ay_id = $active_ay['id'] ?? 0;
+
 $assessments = $conn->query("
     SELECT 
         a.*,
-        s.subject_code,
-        cl.section_name,
+        cs.subject_code,
+        sec.section_name,
         COUNT(ascore.id) as total_submissions,
         SUM(CASE WHEN ascore.status = 'graded' THEN 1 ELSE 0 END) as graded_count
     FROM assessments a
-    INNER JOIN classes cl ON a.class_id = cl.id
+    LEFT JOIN curriculum_subjects cs ON a.curriculum_subject_id = cs.id
+    LEFT JOIN sections sec ON a.section_id = sec.id
+    LEFT JOIN classes cl ON a.class_id = cl.id
     LEFT JOIN subjects s ON cl.subject_id = s.id
     LEFT JOIN assessment_scores ascore ON a.id = ascore.assessment_id
     WHERE a.created_by = $teacher_id
@@ -29,13 +36,57 @@ $assessments = $conn->query("
     ORDER BY a.created_at DESC
 ");
 
-$classes = $conn->query("
-    SELECT cl.id, cl.section_name, s.subject_code
-    FROM classes cl
-    LEFT JOIN subjects s ON cl.subject_id = s.id
-    WHERE cl.teacher_id = $teacher_id
-    ORDER BY s.subject_code
+// Get teacher's current classes from teacher_subject_assignments + sections
+$classes_raw = $conn->query("
+    SELECT 
+        tsa.id as tsa_id,
+        cs.id as curriculum_subject_id,
+        cs.subject_code,
+        cs.subject_title,
+        cs.program_id,
+        cs.year_level_id,
+        cs.shs_strand_id,
+        cs.shs_grade_level_id,
+        cs.semester,
+        tsa.branch_id,
+        tsa.academic_year_id
+    FROM teacher_subject_assignments tsa
+    INNER JOIN curriculum_subjects cs ON tsa.curriculum_subject_id = cs.id
+    WHERE tsa.teacher_id = $teacher_id
+    AND tsa.academic_year_id = $active_ay_id
+    AND tsa.is_active = 1
+    ORDER BY cs.subject_code
 ");
+
+// For each assignment, get matching sections
+$classes = [];
+while ($row = $classes_raw->fetch_assoc()) {
+    $semester_map = [1 => '1st', 2 => '2nd', 3 => 'summer'];
+    $sem_str = $semester_map[$row['semester']] ?? '1st';
+    
+    if (!empty($row['program_id'])) {
+        $sec_q = $conn->prepare("SELECT id, section_name FROM sections WHERE program_id = ? AND year_level_id = ? AND semester = ? AND branch_id = ? AND academic_year_id = ? AND is_active = 1");
+        $sec_q->bind_param("iisii", $row['program_id'], $row['year_level_id'], $sem_str, $row['branch_id'], $row['academic_year_id']);
+    } else {
+        // SHS: match by strand + grade_level NUMBER
+        $shs_gl = $conn->query("SELECT grade_level FROM shs_grade_levels WHERE id = " . (int)$row['shs_grade_level_id']);
+        $gl_num = $shs_gl ? ($shs_gl->fetch_assoc()['grade_level'] ?? 11) : 11;
+        $sec_q = $conn->prepare("SELECT s.id, s.section_name FROM sections s INNER JOIN shs_grade_levels sgl ON s.shs_grade_level_id = sgl.id WHERE s.shs_strand_id = ? AND sgl.grade_level = ? AND s.semester = ? AND s.branch_id = ? AND s.academic_year_id = ? AND s.is_active = 1");
+        $sec_q->bind_param("iisii", $row['shs_strand_id'], $gl_num, $sem_str, $row['branch_id'], $row['academic_year_id']);
+    }
+    $sec_q->execute();
+    $sections = $sec_q->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+    foreach ($sections as $sec) {
+        $classes[] = [
+            'section_id' => $sec['id'],
+            'curriculum_subject_id' => $row['curriculum_subject_id'],
+            'subject_code' => $row['subject_code'],
+            'section_name' => $sec['section_name'],
+            'display' => $row['subject_code'] . ' - ' . $sec['section_name']
+        ];
+    }
+}
 
 include '../../includes/header.php';
 ?>
@@ -88,8 +139,8 @@ include '../../includes/header.php';
                             <span class="type-badge <?php echo $type_class; ?> mt-1 d-inline-block"><?php echo $type; ?></span>
                         </td>
                         <td>
-                            <div class="small fw-bold text-maroon"><?php echo htmlspecialchars($assessment['subject_code']); ?></div>
-                            <div class="small text-muted"><?php echo htmlspecialchars($assessment['section_name']); ?></div>
+                            <div class="small fw-bold text-maroon"><?php echo htmlspecialchars($assessment['subject_code'] ?? 'N/A'); ?></div>
+                            <div class="small text-muted"><?php echo htmlspecialchars($assessment['section_name'] ?? 'N/A'); ?></div>
                         </td>
                         <td class="text-center fw-bold text-blue"><?php echo $assessment['max_score']; ?></td>
                         <td>
@@ -135,13 +186,11 @@ include '../../includes/header.php';
                             <label class="form-label small fw-bold text-muted text-uppercase">Target Class *</label>
                             <select class="form-select border-light shadow-sm" name="class_id" required>
                                 <option value="">-- Select Class --</option>
-                                <?php 
-                                $classes->data_seek(0);
-                                while ($class = $classes->fetch_assoc()): ?>
-                                    <option value="<?php echo $class['id']; ?>">
-                                        <?php echo htmlspecialchars($class['subject_code'] . ' - ' . $class['section_name']); ?>
+                                <?php foreach ($classes as $cls): ?>
+                                    <option value="<?php echo $cls['section_id'] . '_' . $cls['curriculum_subject_id']; ?>">
+                                        <?php echo htmlspecialchars($cls['display']); ?>
                                     </option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6">

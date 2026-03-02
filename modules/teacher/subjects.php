@@ -125,11 +125,18 @@ while ($class = $classes_result->fetch_assoc()) {
             );
         }
     } else {
+        // SHS: match sections by strand AND grade_level NUMBER (not ID) since
+        // curriculum_subjects.shs_grade_level_id uses STEM's IDs (1/2) for all strands
+        // while sections store strand-specific shs_grade_level_ids.
+        $shs_gl = $conn->query("SELECT grade_level FROM shs_grade_levels WHERE id = " . (int)$class['shs_grade_level_id']);
+        $grade_level_number = $shs_gl ? ($shs_gl->fetch_assoc()['grade_level'] ?? 11) : 11;
+
         $sections_query = $conn->prepare("
             SELECT s.id, s.section_name, s.room,
                    $student_count_sql
             FROM sections s
-            WHERE s.shs_strand_id = ? AND s.shs_grade_level_id = ?
+            INNER JOIN shs_grade_levels sgl_s ON s.shs_grade_level_id = sgl_s.id
+            WHERE s.shs_strand_id = ? AND sgl_s.grade_level = ?
             AND s.semester = ? AND s.branch_id = ? AND s.academic_year_id = ?
             AND s.is_active = 1
             ORDER BY s.section_name
@@ -139,14 +146,14 @@ while ($class = $classes_result->fetch_assoc()) {
                 $class['subject_id'],
                 $selected_ay_id,
                 $class['shs_strand_id'],
-                $class['shs_grade_level_id'],
+                $grade_level_number,
                 $semester_str,
                 $class['branch_id'],
                 $selected_ay_id
             );
         } else {
             $sections_query->bind_param("iisii",
-                $class['shs_strand_id'], $class['shs_grade_level_id'], $semester_str, $class['branch_id'], $selected_ay_id
+                $class['shs_strand_id'], $grade_level_number, $semester_str, $class['branch_id'], $selected_ay_id
             );
         }
     }
