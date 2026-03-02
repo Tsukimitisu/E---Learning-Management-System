@@ -254,7 +254,7 @@ include '../../includes/header.php';
 
 <!-- Modal: Add Student -->
 <div class="modal fade" id="addStudentModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header p-4 text-white" style="background-color: var(--maroon); border: none;">
                 <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>New Student Enrollment</h5>
@@ -281,7 +281,7 @@ include '../../includes/header.php';
                         <div class="col-md-4"><label class="form-label small fw-bold">City/Municipality *</label><input type="text" class="form-control border-light shadow-sm" name="addr_city" required placeholder="e.g. Quezon City"></div>
                         <div class="col-md-4"><label class="form-label small fw-bold">Province *</label><input type="text" class="form-control border-light shadow-sm" name="addr_province" required placeholder="e.g. Metro Manila"></div>
                         <div class="col-md-2"><label class="form-label small fw-bold">Zip Code</label><input type="text" class="form-control border-light shadow-sm" name="addr_zip" placeholder="e.g. 1100"></div>
-                        <div class="col-md-2"><label class="form-label small fw-bold">Country</label><input type="text" class="form-control border-light shadow-sm" name="addr_country" value="Philippines"></div>
+                       
                     </div>
 
                     <h6 class="text-blue fw-bold mb-3 text-uppercase small">Academic Assignment</h6>
@@ -792,14 +792,6 @@ function toggleOtherTypeField() {
         otherInput.value = '';
     }
 }
-
-// Listen for realtime updates - auto-refresh student list when a new student is created
-window.addEventListener('elms-realtime-update', function(e) {
-    if (e.detail && e.detail.event === 'data_updated' && e.detail.data && e.detail.data.type === 'student_created') {
-        // Reload the page to show the new student
-        location.reload();
-    }
-});
 
 </script>
 </body>

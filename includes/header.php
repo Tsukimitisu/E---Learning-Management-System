@@ -65,14 +65,13 @@ if ($session_role_key === '') {
             font-family: 'Public Sans', sans-serif;
             background-color: #f4f6f9;
             margin: 0;
-            /* Allow scrolling on body if content is long */
             overflow-x: hidden; 
         }
 
         .wrapper {
             display: flex;
             width: 100%;
-            min-height: 100vh; /* Changed to min-height */
+            min-height: 100vh;
             position: relative;
         }
 
@@ -85,17 +84,19 @@ if ($session_role_key === '') {
             background: linear-gradient(180deg, var(--blue) 0%, var(--blue-dark) 100%);
             color: var(--white);
             transition: margin-left var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
+            
+            /* STACKING ORDER: BACK */
+            z-index: 90; /* Low z-index ensures it stays behind modals */
+            
             display: flex;
             flex-direction: column;
             box-shadow: 5px 0 15px rgba(0, 0, 0, 0.05);
             border-right: 1px solid rgba(255,255,255,0.05);
             
             /* DESKTOP SPECIFIC: Sticks to the layout */
-            position: relative; 
-            height: 100vh;
             position: sticky;
             top: 0;
+            height: 100vh;
         }
 
         /* Hides sidebar to the left on Desktop */
@@ -113,9 +114,11 @@ if ($session_role_key === '') {
             min-height: 100vh;
             background-color: #f4f6f9;
             transition: all var(--transition-speed);
+            position: relative;
+            z-index: 1; /* Lowest Base Level */
         }
 
-        /* Sidebar Header Styles (Same as before) */
+        /* Sidebar Header Styles */
         .sidebar-header {
             padding: 25px 20px;
             background: rgba(0, 0, 0, 0.1);
@@ -138,7 +141,22 @@ if ($session_role_key === '') {
         #sidebar ul li a.active { color: #fff; background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%); box-shadow: 0 4px 15px rgba(128, 0, 0, 0.4); font-weight: 600; }
         #sidebar ul li a.active::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: white; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         .branch-badge { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; margin: 15px; padding: 12px; text-align: center; }
-        .navbar-custom { height: var(--header-height); background: #fff; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.03); z-index: 900; }
+        
+        .navbar-custom { 
+            height: var(--header-height); 
+            background: #fff; 
+            padding: 0 30px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            
+            /* STACKING ORDER: BACK */
+            z-index: 95; /* Just above Sidebar, but WAY below Modals */
+            position: sticky;
+            top: 0;
+        }
+
         .burger-btn { background: transparent; border: none; color: var(--blue); font-size: 1.6rem; cursor: pointer; padding: 5px; border-radius: 8px; transition: background 0.2s; }
         .burger-btn:hover { background: #f0f2f5; }
         .notification-wrapper { position: relative; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
@@ -179,18 +197,26 @@ if ($session_role_key === '') {
         .user-info-text .name { display: block; font-weight: 700; font-size: 0.9rem; color: #2c3e50; }
         .user-info-text .role { font-size: 0.7rem; color: var(--maroon); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
         .avatar-circle { width: 42px; height: 42px; background: linear-gradient(135deg, var(--maroon) 0%, #a00000 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(128, 0, 0, 0.2); border: 2px solid #fff; }
-        .profile-dropdown-menu { border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border-radius: 16px; padding: 10px; min-width: 240px; margin-top: 15px !important; animation: fadeInDropdown 0.2s ease-out; }
+        .profile-dropdown-menu { border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border-radius: 16px; padding: 10px; min-width: 240px; margin-top: 15px !important; animation: fadeInDropdown 0.2s ease-out; z-index: 1060; }
         @keyframes fadeInDropdown { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .profile-dropdown-menu .dropdown-item { padding: 12px 15px; font-size: 0.9rem; border-radius: 8px; margin-bottom: 2px; color: #555; }
         .profile-dropdown-menu .dropdown-item:hover { background-color: #f0f7ff; color: var(--blue); }
         .profile-dropdown-menu .dropdown-item.text-danger:hover { background-color: #fff1f1; color: #dc3545; }
         .main-content-body { flex: 1; overflow-y: auto; padding: 30px; }
 
-        /* Ensure modals always appear above sidebar (1000) and navbar (900) */
-        .modal { z-index: 1100 !important; }
-        .modal-backdrop { z-index: 1090 !important; }
-        .header-fixed-part { z-index: 50 !important; }
+        /* ============================
+           CRITICAL Z-INDEX FIXES
+           ============================ */
+        
+        /* Ensure modals always appear ABOVE sidebar and navbar */
+        .modal-backdrop { z-index: 1050 !important; }
+        .modal { z-index: 1060 !important; }
+        
+        /* Ensure SweetAlert is top-most */
         .swal2-container { z-index: 1200 !important; }
+        
+        /* Fixed Headers in Content */
+        .header-fixed-part { z-index: 50 !important; }
 
         /* ============================
            OVERLAY & MOBILE BEHAVIOR
@@ -209,6 +235,9 @@ if ($session_role_key === '') {
                 height: 100%;
                 margin-left: 0 !important; /* Reset desktop logic */
                 transition: left var(--transition-speed);
+                
+                /* On mobile, Sidebar must be higher than content, but lower than modal */
+                z-index: 1045 !important; 
             }
 
             /* On Mobile, Active means "Show it" */
@@ -225,7 +254,7 @@ if ($session_role_key === '') {
                 height: 100vh;
                 background: rgba(0, 0, 0, 0.4);
                 backdrop-filter: blur(3px);
-                z-index: 999;
+                z-index: 1040 !important; /* Just below mobile sidebar */
                 display: none !important; /* Hidden by default */
                 opacity: 0;
                 transition: opacity 0.3s;
