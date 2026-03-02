@@ -5,7 +5,7 @@
  */
 
 // Database Credentials
-define('DB_HOST', 'localhost');
+define('DB_HOST', 'https://dcsaelms.online');
 define('DB_USER', 'sjzyhderut');
 define('DB_PASS', '6AdqM3QBtQ');
 define('DB_NAME', 'sjzyhderut');
