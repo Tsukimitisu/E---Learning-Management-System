@@ -6,9 +6,9 @@
 
 // Database Credentials
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'elms_data');
+define('DB_USER', 'sjzyhderut');
+define('DB_PASS', '6AdqM3QBtQ');
+define('DB_NAME', 'sjzyhderut');
 
 // Initialize connection variable
 $conn = null;
