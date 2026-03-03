@@ -7,7 +7,9 @@
     const userId = Number(document.body.dataset.userId || window.USER_ID || 0);
     if (!userId) return;
 
-    const API_BASE = '/elms_system/api/notifications.php';
+    // Use ELMS_BASE_URL if available, otherwise fallback to root-relative path
+    const baseUrl = window.ELMS_BASE_URL || '/';
+    const API_BASE = baseUrl + 'api/notifications.php';
     const POLL_INTERVAL = 5000;          // 5-second polling — near-realtime
     let dropdownOpen = false;
     let lastKnownCount = -1;             // Track to detect new arrivals

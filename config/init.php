@@ -59,9 +59,29 @@ if (!function_exists('elms_env_bool')) {
 
 // Define System Constants
 define('SITE_NAME', 'ELMS - Datamex');
-$base_url = rtrim((string)elms_env('ELMS_BASE_URL', 'https://localhost/elms_system/'), '/') . '/';
-define('BASE_URL', $base_url);
-define('UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/elms_system/uploads/');
+
+// Dynamic BASE_URL Detection
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443 ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+// Security/InfinityFree Fix: If host appears to be a database host, fallback to a safer detection
+if (preg_match('/^sql\d+\.infinityfree\.com$/i', $host)) {
+    $host = $_SERVER['SERVER_NAME'] ?? $host;
+}
+
+// Robust path detection (Works on XAMPP and all shared hosts)
+$doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+$proj_root = str_replace('\\', '/', dirname(__DIR__));
+// Remove doc_root from proj_root to find the web-relative path
+$sub_path = str_ireplace($doc_root, '', $proj_root);
+$base_path = '/' . trim($sub_path, '/') . '/';
+if ($base_path === '//') $base_path = '/';
+
+$detected_base_url = $protocol . $host . $base_path;
+define('BASE_URL', elms_env('ELMS_BASE_URL', $detected_base_url));
+
+// Re-derive UPLOAD_DIR to be relative to this file's actual location to avoid DOCUMENT_ROOT issues
+define('UPLOAD_DIR', dirname(__DIR__) . '/uploads/');
 
 $realtime_server_url = trim((string)elms_env('ELMS_REALTIME_SERVER_URL', ''));
 $realtime_broadcast_url = trim((string)elms_env('ELMS_REALTIME_BROADCAST_URL', ''));
@@ -154,7 +174,15 @@ if (!empty($_SESSION['user_id']) && in_array($_SERVER['REQUEST_METHOD'] ?? '', [
     }
     if (!$skip_csrf) {
         // Check token from POST body, GET param, or X-CSRF-Token header
+        // Efficiently get token from various sources
         $token = $_POST['csrf_token'] ?? $_GET['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        
+        // Handle JSON input
+        if (empty($token) && strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
+            $json_input = json_decode(file_get_contents('php://input'), true);
+            $token = $json_input['csrf_token'] ?? '';
+        }
+
         if (!verify_csrf($token)) {
             http_response_code(403);
             $accepts_json = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;

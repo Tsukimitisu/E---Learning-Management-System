@@ -21,7 +21,7 @@ try {
     $email = clean_input($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $address = clean_input($_POST['address'] ?? '');
-    $send_email = isset($_POST['send_email']) && $_POST['send_email'] === 'true';
+    $send_email = isset($_POST['send_email']) && $_POST['send_email'] === '1';
     $branch_id = get_user_branch_id();
     if ($branch_id === null) {
         echo json_encode(['status' => 'error', 'message' => 'Access denied: Branch assignment required']);

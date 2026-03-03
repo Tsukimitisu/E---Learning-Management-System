@@ -1,5 +1,5 @@
 // ELMS Real-Time Client
-(function() {
+(function () {
   if (!window.ELMS_REALTIME_ENABLED) {
     return;
   }
@@ -110,7 +110,7 @@
       window.elmsSocket = socket;
 
       // Shared helper for pages that need to publish updates.
-      window.elmsEmitRealtime = function(targetRole, data) {
+      window.elmsEmitRealtime = function (targetRole, data) {
         const payload = data || {};
         const role = normalizeRole(targetRole);
 
@@ -122,7 +122,7 @@
         socket.emit('broadcast_update', payload);
       };
 
-      socket.on('connect', function() {
+      socket.on('connect', function () {
         socket.emit('join_role', getUserRole());
 
         const userId = getUserId();
@@ -136,20 +136,20 @@
         });
       });
 
-      socket.onAny(function(eventName, data) {
+      socket.onAny(function (eventName, data) {
         if (INTERNAL_EVENTS.has(eventName)) return;
         dispatchRealtimeEvent(eventName, data);
       });
 
-      socket.on('connect_error', function(err) {
+      socket.on('connect_error', function (err) {
         // Silent — notifications work via polling regardless
       });
 
-      socket.on('error', function(err) {
+      socket.on('error', function (err) {
         // Silent — notifications work via polling regardless
       });
 
-      socket.on('disconnect', function(reason) {
+      socket.on('disconnect', function (reason) {
         dispatchRealtimeEvent('realtime_disconnected', {
           reason: reason || 'unknown',
           disconnected_at: Date.now()
@@ -157,7 +157,7 @@
       });
 
       // Handle maintenance mode force-logout
-      socket.on('maintenance_mode', function(data) {
+      socket.on('maintenance_mode', function (data) {
         if (data && data.enabled) {
           // Show notification and force logout non-super-admin users
           const roleId = window.USER_ROLE_ID || 0;
@@ -174,11 +174,11 @@
                 timer: 5000,
                 timerProgressBar: true
               }).then(() => {
-                window.location.href = window.ELMS_BASE_URL ? window.ELMS_BASE_URL + 'logout.php' : '/elms_system/logout.php';
+                window.location.href = window.ELMS_BASE_URL ? window.ELMS_BASE_URL + 'logout.php' : 'logout.php';
               });
             } else {
               alert('System is entering maintenance mode. You will be logged out.');
-              window.location.href = '/elms_system/logout.php';
+              window.location.href = window.ELMS_BASE_URL ? window.ELMS_BASE_URL + 'logout.php' : 'logout.php';
             }
           } else {
             // Super admin just gets notified
@@ -188,7 +188,7 @@
       });
 
       // Handle data updates - dispatch events for page refresh
-      socket.on('data_updated', function(data) {
+      socket.on('data_updated', function (data) {
         dispatchRealtimeEvent('data_updated', data);
       });
     } catch (e) {

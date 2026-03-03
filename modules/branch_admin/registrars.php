@@ -1,5 +1,6 @@
 <?php
 require_once '../../config/init.php';
+require_once '../../includes/email_helper.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != ROLE_BRANCH_ADMIN) {
     header('Location: ../../index.php');
@@ -66,6 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_registrar'])) {
                     
                     $conn->commit();
                     $message = "Registrar account created successfully!";
+
+                    // Handle email notification
+                    if (isset($_POST['send_email']) && $_POST['send_email'] === '1') {
+                        $email_result = send_account_credentials($email, $first_name, $last_name, $password, 'Registrar', $branch_admin_id);
+                        if ($email_result['success']) {
+                            $message .= " Email verification sent.";
+                        } else {
+                            $error = "Account created, but email failed: " . ($email_result['message'] ?? 'Service unavailable');
+                        }
+                    }
                 } catch (Exception $e) {
                     $conn->rollback();
                     $error = "Failed to create registrar account: " . $e->getMessage();
@@ -252,6 +263,15 @@ include '../../includes/header.php';
                     <div class="mt-3">
                         <label class="form-label small fw-bold text-uppercase opacity-75">Contact Number</label>
                         <input type="text" class="form-control" name="contact_no">
+                    </div>
+                    <div class="mt-3">
+                        <div class="form-check form-switch p-3 bg-light rounded-3 border">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" name="send_email" value="1" id="sendEmail" checked>
+                            <label class="form-check-label small fw-bold text-uppercase opacity-75" for="sendEmail">
+                                <i class="bi bi-envelope-at me-1 text-maroon"></i> Send Welcome Email
+                            </label>
+                            <div class="form-text mt-1" style="font-size: 0.7rem;">Sends login credentials to the registrar's email address.</div>
+                        </div>
                     </div>
                     <div class="mt-4 p-3 bg-light rounded-3 border-start border-4 border-info">
                         <small class="text-muted d-flex">

@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Global notifications (role-aware; safe for all modules) -->
-    <script src="/elms_system/assets/js/notifications.js"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/notifications.js"></script>
 
     <script>
         // ============================================
@@ -124,7 +124,7 @@
             <div>
                 <i class="bi bi-shield-lock me-1"></i>
                 This site uses essential cookies to maintain your session and ensure proper functionality. No tracking or advertising cookies are used.
-                <a href="/elms_system/privacy_policy.php" style="color:#ffd54f; text-decoration:underline;">Privacy Policy</a>
+                <a href="<?php echo BASE_URL; ?>privacy_policy.php" style="color:#ffd54f; text-decoration:underline;">Privacy Policy</a>
             </div>
             <button id="acceptCookies" class="btn btn-sm btn-warning fw-bold px-4" style="white-space:nowrap;">I Understand</button>
         </div>

@@ -48,12 +48,26 @@ function validate_email_exists($email) {
     // Extract domain
     $domain = substr(strrchr($email, "@"), 1);
     
+    // Check if DNS check functions exist and are enabled
+    if (!function_exists('checkdnsrr')) {
+        return ['valid' => true, 'message' => 'DNS check unavailable, skipping'];
+    }
+
     // Check MX records
-    if (!checkdnsrr($domain, "MX")) {
-        // Fallback to A record check
-        if (!checkdnsrr($domain, "A")) {
-            return ['valid' => false, 'message' => 'Email domain does not exist'];
+    try {
+        if (!@checkdnsrr($domain, "MX")) {
+            // Fallback to A record check
+            if (!@checkdnsrr($domain, "A")) {
+                // Final check: allow if it's a common domain but lookup failed due to server restrictions
+                $common_domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+                if (in_array(strtolower($domain), $common_domains)) {
+                    return ['valid' => true, 'message' => 'Domain lookup failed, but accepted as common provider'];
+                }
+                return ['valid' => false, 'message' => 'Email domain does not exist'];
+            }
         }
+    } catch (Exception $e) {
+        return ['valid' => true, 'message' => 'DNS lookup error, skipping verification'];
     }
     
     return ['valid' => true, 'message' => 'Email appears valid'];

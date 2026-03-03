@@ -20,7 +20,7 @@ $last_name = trim($_POST['last_name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 $contact_no = trim($_POST['contact_no'] ?? '');
-$send_email = isset($_POST['send_email']) && $_POST['send_email'] === 'true';
+$send_email = isset($_POST['send_email']) && $_POST['send_email'] === '1';
 
 // Validate required fields
 if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {

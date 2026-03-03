@@ -734,3 +734,23 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\elms_system\modules\registrar\process\generate_certificate.php on line 84
+[03-Mar-2026 07:41:12 Asia/Manila] PHP Fatal error:  Uncaught Error: Undefined constant "SITE_NAME" in C:\xampp\htdocs\elms_system\includes\header.php:38
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\student\dashboard.php(131): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\includes\header.php on line 38
+[03-Mar-2026 07:41:25 Asia/Manila] PHP Fatal error:  Uncaught Error: Undefined constant "SITE_NAME" in C:\xampp\htdocs\elms_system\includes\header.php:38
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\student\dashboard.php(131): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\includes\header.php on line 38
+[03-Mar-2026 07:42:10 Asia/Manila] PHP Fatal error:  Uncaught Error: Undefined constant "SITE_NAME" in C:\xampp\htdocs\elms_system\includes\header.php:38
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\student\dashboard.php(131): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\includes\header.php on line 38
+[03-Mar-2026 07:42:14 Asia/Manila] PHP Fatal error:  Uncaught Error: Undefined constant "SITE_NAME" in C:\xampp\htdocs\elms_system\includes\header.php:38
+Stack trace:
+#0 C:\xampp\htdocs\elms_system\modules\student\dashboard.php(131): include()
+#1 {main}
+  thrown in C:\xampp\htdocs\elms_system\includes\header.php on line 38

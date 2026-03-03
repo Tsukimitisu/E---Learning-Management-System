@@ -28,10 +28,11 @@ if ($session_role_key === '') {
         window.USER_ROLE = <?php echo json_encode($session_role_key); ?>;
         window.USER_ROLE_ID = <?php echo json_encode($session_role_id); ?>;
         window.CSRF_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+        window.ELMS_BASE_URL = <?php echo json_encode(BASE_URL); ?>;
     </script>
     <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
-    <script src="/elms_system/assets/js/realtime_loader.js"></script>
-    <script src="/elms_system/assets/js/realtime_client.js"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/realtime_loader.js"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/realtime_client.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?php echo $page_title ?? 'Dashboard'; ?> - <?php echo SITE_NAME; ?></title>

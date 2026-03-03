@@ -254,6 +254,15 @@ include '../../includes/header.php';
                         <label class="form-label small fw-bold text-uppercase opacity-75">Residential Address</label>
                         <textarea class="form-control" name="address" rows="2" placeholder="Full address..."></textarea>
                     </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch p-3 bg-light rounded-3 border">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" name="send_email" value="1" id="sendEmailTeacher" checked>
+                            <label class="form-check-label small fw-bold text-uppercase opacity-75" for="sendEmailTeacher">
+                                <i class="bi bi-envelope-at me-1 text-maroon"></i> Send Welcome Email
+                            </label>
+                            <div class="form-text mt-1" style="font-size: 0.7rem;">Sends login credentials to the teacher's email address.</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-light btn-sm px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
@@ -320,7 +329,11 @@ document.getElementById('addTeacherForm').addEventListener('submit', async funct
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
 
     try {
-        const response = await fetch('process/add_teacher.php', { method: 'POST', body: formData });
+        const response = await fetch('process/add_teacher.php', { 
+            method: 'POST', 
+            headers: { 'X-CSRF-TOKEN': window.CSRF_TOKEN },
+            body: formData 
+        });
         const data = await response.json();
         if (data.status === 'success') {
             showAlert(data.message, 'success');
@@ -345,7 +358,11 @@ document.getElementById('editTeacherForm').addEventListener('submit', async func
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Updating...';
 
     try {
-        const response = await fetch('process/update_teacher.php', { method: 'POST', body: formData });
+        const response = await fetch('process/update_teacher.php', { 
+            method: 'POST', 
+            headers: { 'X-CSRF-TOKEN': window.CSRF_TOKEN },
+            body: formData 
+        });
         const data = await response.json();
         if (data.status === 'success') {
             showAlert(data.message, 'success');
@@ -387,7 +404,10 @@ function toggleStatus(id, currentStatus) {
     if (confirm(`Are you sure you want to ${action} this teacher?`)) {
         fetch('process/toggle_teacher_status.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.CSRF_TOKEN 
+            },
             body: JSON.stringify({ teacher_id: id, status: newStatus })
         })
         .then(response => response.json())
